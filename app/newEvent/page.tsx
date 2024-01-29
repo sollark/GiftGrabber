@@ -27,25 +27,31 @@ const NewEventPage: React.FC = () => {
     // history.push(`/event/${eventId}`);
   }
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle file upload logic here
+  }
+
   return (
-    <div>
+    <section className='full-screen flex align-center justify-center flex-col'>
       <h1>Create New Event</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Event Name:
+          Event Password:
           <input
             type='text'
             value={eventName}
             onChange={handleEventNameChange}
           />
         </label>
-        <button type='button' onClick={generateEventId}>
-          Generate Event ID
-        </button>
+        <label>
+          Upload Excel File:
+          <input type='file' accept='.xlsx,.xls' onChange={handleFileUpload} />
+        </label>
+
         <p>Event ID: {eventId}</p>
         <button type='submit'>Create Event</button>
       </form>
-    </div>
+    </section>
   )
 }
 
