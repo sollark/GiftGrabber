@@ -1,0 +1,7 @@
+/* basic */
+@import 'basic/basic.css';
+@import 'basic/helpers.css';
+
+/* setup  */
+@import 'setup/typography.css';
+@import 'setup/style.css';

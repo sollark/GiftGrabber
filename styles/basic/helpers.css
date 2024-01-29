@@ -1,0 +1,126 @@
+/* ========= FLEX ======== */
+.flex {
+  display: flex;
+}
+
+.flex.align-center {
+  align-items: center;
+}
+
+.flex.justify-center {
+  justify-content: center;
+}
+
+.flex.space-between {
+  justify-content: space-between;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+/*========= CARDS ========= */
+.grid-card-container {
+  display: grid;
+  grid-gap: 1em;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+.flex-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.cards {
+  display: flex;
+}
+
+.card {
+  flex-basis: 100%;
+  /* flex: 1;  //same */
+}
+
+/*=========== LIST ===========*/
+.clean-list {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+/* ======= LIMITED TEXT =======   */
+/* limit to 3 lines  */
+.limitedText {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* limit to 1 line  */
+.ellipsis {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ========= HIDDEN ======== */
+.hidden {
+  display: none;
+}
+
+/* mobile only  */
+@media (max-width: 600px) {
+  .hide-on-small-screen {
+    display: none;
+  }
+
+  .hide-on-big-screen {
+    display: initial;
+  }
+}
+
+/* small  */
+@media (min-width: 768px) {
+  .hide-on-small-screen {
+    display: initial;
+  }
+
+  .hide-on-big-screen {
+    display: none;
+  }
+}
+
+/* ========== OTHER ===========  */
+/* center icons in buttons  */
+.place-items-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Simple and useful CSS Debugging Technique */
+.debug * {
+  outline: 1px solid gold;
+}
+
+/* font awesome */
+.fa {
+  font-family: fa;
+}
+
+.fa.fa-facebook::before {
+  content: '\f39e';
+}
+
+.fa.fa-twitter::before {
+  content: '\f099';
+}
+
+.fa.fa-dribbble::before {
+  content: '\f17d';
+}
+
+.fa.fa-behance::before {
+  content: '\f1b4';
+}

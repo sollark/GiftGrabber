@@ -1,0 +1,7 @@
+.background {
+  background-image: url('../../assets/images/bg.jpg');
+  height: 100vh; /* This will make sure the background image covers the full height of the view. Adjust as needed. */
+  width: 100%; /* This will make sure the background image covers the full width of the view. Adjust as needed. */
+  background-size: cover; /* This will make sure the background image covers the entire area of the element. */
+  background-position: center; /* This will center the background image. */
+}
