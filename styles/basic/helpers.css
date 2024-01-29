@@ -64,6 +64,12 @@
   overflow: hidden;
 }
 
+/* ========= LAYOUTS ======== */
+/* full screen */
+.full-screen {
+  width: 100vw;
+  height: 100vh;
+}
 /* ========= HIDDEN ======== */
 .hidden {
   display: none;
