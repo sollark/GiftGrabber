@@ -2,19 +2,21 @@ import mongoose, { Schema } from 'mongoose'
 import Person from './person.model'
 
 type Event = {
-  hashPassword: string
-  id: string
-  applicantCodeImage: string
-  adminCodeImage: string
-  people: Person[]
+  email: string
+  eventId: string
+  ownerId: string
+  applicantRQCodeImage: string
+  ownerRQCodeImage: string
+  applicantList: Person[]
 }
 
 const eventSchema: Schema = new Schema({
-  hashPassword: { type: String, required: true },
-  id: { type: String, required: true },
-  applicantCodeImage: { type: String, required: true },
-  adminCodeImage: { type: String, required: true },
-  people: [Person],
+  email: { type: String, required: true },
+  eventId: { type: String, required: true },
+  ownerId: { type: String, required: true },
+  applicantRQCodeImage: { type: String, required: true },
+  ownerRQCodeImage: { type: String, required: true },
+  applicantList: [Person],
 })
 
 const Event = mongoose.model<Event>('Event', eventSchema)
