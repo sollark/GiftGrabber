@@ -10,19 +10,19 @@ export const metadata: Metadata = {
       rel: 'icon',
       type: 'image/png',
       sizes: '32x32',
-      url: '/public/assets/favicons/favicon-32x32.png',
+      url: '/assets/favicons/favicon-32x32.png',
     },
     {
       rel: 'icon',
       type: 'image/png',
       sizes: '16x16',
-      url: '/public/assets/favicons/favicon-16x16.png',
+      url: '/assets/favicons/favicon-16x16.png',
     },
     {
       rel: 'apple-touch-icon',
-      url: '/public/assets/favicons/apple-touch-icon.png',
+      url: '/assets/favicons/apple-touch-icon.png',
     },
-    { rel: 'manifest', url: '/public/assets/favicons/site.webmanifest' },
+    { rel: 'manifest', url: '/assets/favicons/site.webmanifest' },
   ],
 }
 
@@ -34,9 +34,7 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body>
-        <div className='main'>
-          <div className='background' />
-        </div>
+        <div className='background' />
         <main className='app'> {children}</main>
       </body>
     </html>

@@ -5,13 +5,11 @@ import { useState } from 'react'
 
 const NewEventPage: React.FC = () => {
   // const history = useHistory();
-  const [eventName, setEventName] = useState('')
+  const [email, setEmail] = useState('')
   const [eventId, setEventId] = useState('')
 
-  const handleEventNameChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setEventName(event.target.value)
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(event.target.value)
   }
 
   const generateEventId = () => {
@@ -37,19 +35,14 @@ const NewEventPage: React.FC = () => {
       <h1>Create New Event</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Event Password:
-          <input
-            type='text'
-            value={eventName}
-            onChange={handleEventNameChange}
-          />
+          Email:
+          <input type='email' value={email} onChange={handleEmailChange} />
         </label>
         <label>
           Upload Excel File:
           <input type='file' accept='.xlsx,.xls' onChange={handleFileUpload} />
         </label>
 
-        <p>Event ID: {eventId}</p>
         <StyledButton type='submit'>Create Event</StyledButton>
       </form>
     </section>
