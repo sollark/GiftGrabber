@@ -1,19 +1,20 @@
-import mongoose, { Schema } from 'mongoose'
+import mongoose, { Schema, Types } from 'mongoose'
 
 type Person = {
   firstName: string
   lastName: string
-  hasReceivedGift: boolean
-  giftReceiver: Person | null
-  hasOtherPeoplesGifts: Person[] | []
+  orders: Types.ObjectId[] | []
 }
 
 const personSchema: Schema = new Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  hasReceivedGift: { type: Boolean, required: true, default: false },
-  giftReceiver: this,
-  hasOtherPeoplesGifts: [this],
+  orders: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Order',
+    },
+  ],
 })
 
 const Person = mongoose.model<Person>('Person', personSchema)
