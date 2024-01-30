@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import Logo from '../Logo'
 
 const Header: FC = () => {
   return (
@@ -7,7 +8,7 @@ const Header: FC = () => {
         paddingBlock: '.5rem',
         paddingInline: '2rem',
       }}>
-      <h1>GIFT GRABBER</h1>
+      <Logo />
     </header>
   )
 }
