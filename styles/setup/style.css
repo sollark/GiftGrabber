@@ -2,7 +2,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  background-image: url('../../assets/images/bg.jpg');
+  background-image: url('../../public/assets/images/bg.jpg');
   height: 100vh;
   width: 100%;
   background-size: cover;

@@ -1,5 +1,4 @@
 import CreateEventForm from '@/components/createEventForm'
-import React from 'react'
 
 const Home = () => {
   return (

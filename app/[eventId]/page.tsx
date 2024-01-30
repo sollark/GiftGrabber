@@ -1,3 +1,4 @@
+import GrabGift from '@/components/GrabGift'
 import React from 'react'
 
 const PeoplePage: React.FC = () => {
@@ -15,6 +16,7 @@ const PeoplePage: React.FC = () => {
           <li key={person.id}>{person.name}</li>
         ))}
       </ul>
+      <GrabGift />
     </div>
   )
 }
