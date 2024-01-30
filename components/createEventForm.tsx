@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import StyledButton from './StyledButton'
 
 const CreateEventForm = () => {
   const router = useRouter()
@@ -27,7 +28,7 @@ const CreateEventForm = () => {
         Event Name:
         <input type='text' value={eventName} onChange={handleEventNameChange} />
       </label>
-      <button type='submit'>Create</button>
+      <StyledButton type='submit'>Create</StyledButton>
     </form>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import StyledButton from '@/components/StyledButton'
 import { useState } from 'react'
 
 const NewEventPage: React.FC = () => {
@@ -49,7 +50,7 @@ const NewEventPage: React.FC = () => {
         </label>
 
         <p>Event ID: {eventId}</p>
-        <button type='submit'>Create Event</button>
+        <StyledButton type='submit'>Create Event</StyledButton>
       </form>
     </section>
   )
