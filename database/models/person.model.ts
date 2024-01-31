@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types } from 'mongoose'
+import { Schema, Types, model, models } from 'mongoose'
 import connectionPlugin from '../connectionPlugin'
 import { Order } from './order.model'
 
@@ -26,6 +26,7 @@ const personSchema: Schema = new Schema({
 })
 
 personSchema.plugin(connectionPlugin)
-const PersonModel = mongoose.model<PersonDoc>('Person', personSchema)
+const PersonModel =
+  models.PersonModel || model<PersonDoc>('Person', personSchema)
 
 export default PersonModel

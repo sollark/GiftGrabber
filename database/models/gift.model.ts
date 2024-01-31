@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types } from 'mongoose'
+import { Schema, Types, model, models } from 'mongoose'
 import connectionPlugin from '../connectionPlugin'
 import { Order } from './order.model'
 import { Person } from './person.model'
@@ -21,6 +21,6 @@ const giftSchema: Schema = new Schema({
 })
 
 giftSchema.plugin(connectionPlugin)
-const GiftModel = mongoose.model<GiftDoc>('Gift', giftSchema)
+const GiftModel = models.GiftModel || model<GiftDoc>('Gift', giftSchema)
 
 export default GiftModel

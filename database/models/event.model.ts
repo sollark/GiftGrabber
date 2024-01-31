@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types } from 'mongoose'
+import { Schema, Types, model, models } from 'mongoose'
 import connectionPlugin from '../connectionPlugin'
 import { Person } from './person.model'
 
@@ -36,6 +36,6 @@ const eventSchema: Schema = new Schema({
 })
 
 eventSchema.plugin(connectionPlugin)
-const EventModel = mongoose.model<EventDoc>('Event', eventSchema)
+const EventModel = models.EventModel || model<EventDoc>('Event', eventSchema)
 
 export default EventModel
