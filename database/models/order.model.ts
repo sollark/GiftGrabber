@@ -3,29 +3,29 @@ import connectionPlugin from '../connectionPlugin'
 import { Person } from './person.model'
 
 export type Order = {
-  creationDate: Date
+  createdAt: Date
   applicant: Person
   giftHandlers: Person[]
   confirmationRQCode: string
-  approvedBy?: Person
-  confirmationDate?: Date
+  confirmedBy?: Person
+  confirmedAt?: Date
 }
 type OrderDoc = {
-  creationDate: Date
+  createdAt: Date
   applicant: Types.ObjectId
   giftHandlers: Types.ObjectId[]
   confirmationRQCode: string
-  confirmationDate?: Date
-  approvedBy?: Types.ObjectId
+  confirmedAt?: Date
+  confirmedBy?: Types.ObjectId
 }
 
 const orderSchema: Schema = new Schema({
-  creationDate: { type: Date, required: true },
+  createdAt: { type: Date, default: Date.now },
   applicant: { type: Types.ObjectId, ref: 'Person', required: true },
   giftHandlers: [{ type: Types.ObjectId, ref: 'Person', required: true }],
   confirmationRQCode: { type: String, required: true },
-  confirmationDate: { type: Date },
-  approvedBy: { type: Types.ObjectId, ref: 'Person' },
+  confirmedAt: { type: Date },
+  confirmedBy: { type: Types.ObjectId, ref: 'Person' },
 })
 
 orderSchema.plugin(connectionPlugin)
