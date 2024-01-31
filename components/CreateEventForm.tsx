@@ -1,34 +1,22 @@
 'use client'
 
-import { TextField, styled } from '@mui/material'
+import { EventSchema } from '@/utils/z/schema'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
-import StyledButton from './StyledButton'
+import ControlledTextInput from './form/ControlledTextInput'
+import ErrorMessage from './form/ErrorMessage'
+import Form from './form/Form'
 
-const StyledTextField = styled(TextField)({
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: 'white',
-    },
-  },
-})
+const defaultValues = {
+  eventName: '',
+  eventEmail: '',
+}
 
 const CreateEventForm = () => {
   const router = useRouter()
   const [eventName, setEventName] = useState('')
   const [eventEmail, setEventEmail] = useState('')
-
-  const handleEventNameChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setEventName(event.target.value)
-  }
-
-  const handleEventEmailChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setEventEmail(event.target.value)
-  }
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -41,40 +29,42 @@ const CreateEventForm = () => {
     }
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
-    // Do something with the event name
-    console.log(eventName)
-    // Navigate to events/newEvent
-    router.push(`/`)
+  const handleSubmit = (form: any) => {
+    const { eventName, eventEmail, file } = form
+    console.log('form', form, eventName, eventEmail, file)
+    // const newEvent = createEvent()
+    // router.push(`/`)
   }
 
   return (
-    <form
-      style={{
-        width: '100%',
-        maxWidth: '30rem',
-        padding: '1rem 2rem',
-        gap: '2rem',
-      }}
-      className='flex flex-col'
-      onSubmit={handleSubmit}>
-      <StyledTextField
-        id='event-name'
+    <Form
+      schema={EventSchema}
+      defaultValue={defaultValues}
+      submit={handleSubmit}>
+      <ControlledTextInput
+        name='eventName'
+        label='Event name'
+        type='text'
         variant='outlined'
-        onChange={handleEventNameChange}
         inputProps={{ style: { fontSize: 24 } }}
       />
-      <StyledTextField
-        id='event-email'
+      <ControlledTextInput
+        name='eventEmail'
+        label='Event email'
+        type='email'
         variant='outlined'
-        onChange={handleEventEmailChange}
         inputProps={{ style: { fontSize: 24 } }}
       />
-      <TextField type='file' onChange={handleFileUpload} />
-
-      <StyledButton type='submit'>Create</StyledButton>
-    </form>
+      <ControlledTextInput
+        name='file'
+        label='List'
+        type='file'
+        onChange={handleFileUpload}
+        variant='outlined'
+        inputProps={{ style: { fontSize: 24 } }}
+      />
+      <ErrorMessage message={errorMessage} />
+    </Form>
   )
 }
 
