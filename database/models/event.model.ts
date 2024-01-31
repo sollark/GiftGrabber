@@ -12,6 +12,7 @@ export type Event = {
 }
 
 type EventDoc = {
+  _id: Types.ObjectId
   email: string
   eventId: string
   ownerId: string

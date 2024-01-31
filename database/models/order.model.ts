@@ -11,6 +11,7 @@ export type Order = {
   confirmedAt?: Date
 }
 type OrderDoc = {
+  _id: Types.ObjectId
   createdAt: Date
   applicant: Types.ObjectId
   giftHandlers: Types.ObjectId[]

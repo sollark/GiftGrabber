@@ -9,6 +9,7 @@ export type Person = {
 }
 
 type PersonDoc = {
+  _id: Types.ObjectId
   firstName: string
   lastName: string
   orders: Types.ObjectId[] | []
