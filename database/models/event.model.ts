@@ -30,6 +30,7 @@ const eventSchema: Schema = new Schema({
     {
       type: Types.ObjectId,
       ref: 'Person',
+      required: true,
     },
   ],
 })
