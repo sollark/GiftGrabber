@@ -2,18 +2,23 @@ import Footer from '@/components/shared/Footer'
 import Header from '@/components/shared/Header'
 import { ReactNode } from 'react'
 
-type RootLayoutProps = {
+type AppLayoutProps = {
   children: ReactNode
 }
 
-const RootLayout = ({ children }: RootLayoutProps) => {
+const AppLayout = ({ children }: AppLayoutProps) => {
   return (
-    <div>
+    <>
       <Header />
-      <main>{children}</main>
+      <main
+        style={{
+          paddingBottom: '10rem',
+        }}>
+        {children}
+      </main>
       <Footer />
-    </div>
+    </>
   )
 }
 
-export default RootLayout
+export default AppLayout

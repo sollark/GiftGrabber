@@ -35,7 +35,7 @@ export default function RootLayout({
     <html lang='en'>
       <body>
         <div className='background' />
-        <main className='app'> {children}</main>
+        <div className='app flex flex-col min-h-screen'> {children}</div>
       </body>
     </html>
   )

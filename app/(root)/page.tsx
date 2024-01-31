@@ -10,7 +10,7 @@ const Home = () => {
           paddingTop: '10rem',
         }}
         className='flex align-center justify-center flex-col'>
-        <h1>Create an event</h1>
+        <h1>Name an event</h1>
         <CreateEventForm />
       </section>
     </>

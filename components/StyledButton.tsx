@@ -1,6 +1,7 @@
 import { Button, ButtonProps } from '@mui/material'
+import { FC } from 'react'
 
-const StyledButton: React.FC<ButtonProps> = ({ children, ...props }) => {
+const StyledButton: FC<ButtonProps> = ({ children, ...props }) => {
   return (
     <Button
       sx={{

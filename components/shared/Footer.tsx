@@ -5,8 +5,6 @@ const Footer: FC = () => {
     <footer
       className='flex flex-col align-center'
       style={{
-        position: 'absolute',
-        bottom: 0,
         width: '100%',
         backgroundColor: 'black',
         color: 'white',
