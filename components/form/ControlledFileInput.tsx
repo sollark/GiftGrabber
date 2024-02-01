@@ -18,19 +18,11 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
     formState: { errors },
     control,
     setValue,
-    getValues,
   } = useFormContext()
-
-  // const [file, setFile] = useState(null)
 
   const handleChange = async (newFile: any) => {
     const base64File = await convertFileToBase64(newFile)
     setValue(name, base64File)
-
-    const formValues = getValues()
-    // Log names
-    console.log('formvalue', Object.keys(formValues))
-    console.log('formvalue', name, formValues[name])
   }
 
   return (
