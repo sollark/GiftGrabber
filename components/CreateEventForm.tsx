@@ -2,7 +2,7 @@
 
 import { EventSchema } from '@/utils/z/schema'
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
@@ -10,6 +10,7 @@ import Form from './form/Form'
 const defaultValues = {
   eventName: '',
   eventEmail: '',
+  file: '',
 }
 
 const CreateEventForm = () => {
@@ -18,20 +19,9 @@ const CreateEventForm = () => {
   const [eventEmail, setEventEmail] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files[0]
-      const formData = new FormData()
-      formData.append('file', file)
-      // Rest of your code...
-    } else {
-      console.log('No file selected')
-    }
-  }
-
-  const handleSubmit = (form: any) => {
-    const { eventName, eventEmail, file } = form
-    console.log('form', form, eventName, eventEmail, file)
+  const handleSubmit = (data: any) => {
+    const { eventName, eventEmail, file } = data
+    console.log('form', data, eventName, eventEmail, file)
     // const newEvent = createEvent()
     // router.push(`/`)
   }
@@ -39,7 +29,7 @@ const CreateEventForm = () => {
   return (
     <Form
       schema={EventSchema}
-      defaultValue={defaultValues}
+      defaultValues={defaultValues}
       submit={handleSubmit}>
       <ControlledTextInput
         name='eventName'
@@ -52,14 +42,6 @@ const CreateEventForm = () => {
         name='eventEmail'
         label='Event email'
         type='email'
-        variant='outlined'
-        inputProps={{ style: { fontSize: 24 } }}
-      />
-      <ControlledTextInput
-        name='file'
-        label='List'
-        type='file'
-        onChange={handleFileUpload}
         variant='outlined'
         inputProps={{ style: { fontSize: 24 } }}
       />
