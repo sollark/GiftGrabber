@@ -3,6 +3,7 @@
 import { EventSchema } from '@/utils/z/schema'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
@@ -10,7 +11,6 @@ import Form from './form/Form'
 const defaultValues = {
   eventName: '',
   eventEmail: '',
-  file: '',
 }
 
 const CreateEventForm = () => {
@@ -42,6 +42,13 @@ const CreateEventForm = () => {
         name='eventEmail'
         label='Event email'
         type='email'
+        variant='outlined'
+        inputProps={{ style: { fontSize: 24 } }}
+      />
+      <ControlledFileInput
+        name='eventFile'
+        label='List of participants'
+        type='file'
         variant='outlined'
         inputProps={{ style: { fontSize: 24 } }}
       />

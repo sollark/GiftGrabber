@@ -27,6 +27,7 @@ const Form: FC<Props> = (props: Props) => {
   const { handleSubmit } = methods
 
   const onSubmit = (data: any) => {
+    console.log('data', data)
     submit(data)
   }
 

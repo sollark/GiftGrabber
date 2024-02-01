@@ -1,7 +1,7 @@
 'use server'
 
 import EventModel from '@/database/models/event.model'
-import { handleError } from '@/utils/handleError'
+import { handleError } from '@/utils/utils'
 
 export const createEvent = async (event: Event) => {
   try {
