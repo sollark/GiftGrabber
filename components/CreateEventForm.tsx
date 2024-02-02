@@ -11,6 +11,7 @@ import Form from './form/Form'
 const defaultValues = {
   eventName: '',
   eventEmail: '',
+  eventFile: undefined,
 }
 
 const CreateEventForm = () => {
@@ -20,8 +21,9 @@ const CreateEventForm = () => {
   const [errorMessage, setErrorMessage] = useState('')
 
   const handleSubmit = (data: any) => {
-    const { eventName, eventEmail, file } = data
-    console.log('form', data, eventName, eventEmail, file)
+    // const { eventName, eventEmail, eventFile } = data
+    // console.log('form', data)
+    alert(JSON.stringify(data))
     // const newEvent = createEvent()
     // router.push(`/`)
   }

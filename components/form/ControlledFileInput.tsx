@@ -3,7 +3,6 @@ import { MuiFileInput } from 'mui-file-input'
 import { FC } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 // import { textInputStyle } from '../../style/formStyle'
-// import TextInput from './StyledTextInput'
 
 type InputProps = {
   name: string
@@ -18,11 +17,31 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
     formState: { errors },
     control,
     setValue,
+    setError,
   } = useFormContext()
 
   const handleChange = async (newFile: any) => {
-    const base64File = await convertFileToBase64(newFile)
-    setValue(name, base64File)
+    console.log('errors', errors)
+    setValue(name, newFile)
+    try {
+      const base64File = await convertFileToBase64(newFile)
+      setValue('base64File', base64File)
+    } catch (e: any) {
+      setError(name, {
+        type: 'error',
+        message: 'Error uploading file',
+      })
+    }
+  }
+
+  const getErrorMessage = (fieldState: any) => {
+    const errorMessages = []
+    for (const prop in fieldState.error) {
+      if (fieldState.error[prop]?.message) {
+        errorMessages.push(fieldState.error[prop].message)
+      }
+    }
+    return errorMessages.join(' ')
   }
 
   return (
@@ -30,18 +49,23 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
       control={control}
       name={name}
       render={({ field, fieldState }) => {
-        const { value } = field
-
+        const errorMessage = getErrorMessage(fieldState)
+        console.log('errors in render', errorMessage)
         return (
           <MuiFileInput
             {...field}
             label={label}
             placeholder={label}
-            value={value}
             onChange={handleChange}
-            inputProps={{ accept: '.xls,.xlsx' }}
-            helperText={fieldState.invalid ? 'File is invalid' : ''}
+            InputProps={{
+              inputProps: {
+                accept: '.xls,.xlsx',
+              },
+            }}
+            // helperText={fieldState.invalid ? 'File is invalid' : ''}
+            // error={fieldState.invalid}
             error={!!errors[name]}
+            helperText={errorMessage}
             {...rest}
           />
         )

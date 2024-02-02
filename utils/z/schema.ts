@@ -14,4 +14,18 @@ export const EventSchema = z.object({
     .min(1, { message: 'Field can not be empty' })
     .max(24, { message: 'Email must be less than 24 characters' })
     .email({ message: 'Invalid email address' }),
+  eventFile: z.object({
+    name: z.string(),
+    size: z.number().max(1024, {
+      message: 'File size must be under 10 MB',
+    }),
+    type: z
+      .string()
+      .regex(
+        /^application\/(vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/,
+        {
+          message: 'File type must be .xls or .xlsx',
+        }
+      ),
+  }),
 })
