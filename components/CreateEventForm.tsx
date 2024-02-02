@@ -20,10 +20,11 @@ const CreateEventForm = () => {
   const [eventEmail, setEventEmail] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
-  const handleSubmit = (data: any) => {
-    // const { eventName, eventEmail, eventFile } = data
-    // console.log('form', data)
-    alert(JSON.stringify(data))
+  const handleSubmit = async (data: any) => {
+    const { base64File, eventFile } = data
+    console.log('handleSubmit', data)
+    console.log('handleSubmit', base64File, eventFile)
+
     // const newEvent = createEvent()
     // router.push(`/`)
   }

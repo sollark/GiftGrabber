@@ -16,7 +16,7 @@ export const EventSchema = z.object({
     .email({ message: 'Invalid email address' }),
   eventFile: z.object({
     name: z.string(),
-    size: z.number().max(1024, {
+    size: z.number().max(10 * 1024 * 1024, {
       message: 'File size must be under 10 MB',
     }),
     type: z
@@ -28,4 +28,5 @@ export const EventSchema = z.object({
         }
       ),
   }),
+  base64File: z.string(),
 })

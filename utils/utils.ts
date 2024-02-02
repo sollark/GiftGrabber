@@ -3,7 +3,7 @@ export const handleError = (error: unknown) => {
   throw new Error(typeof error === 'string' ? error : JSON.stringify(error))
 }
 
-export function convertFileToBase64(
+export async function convertFileToBase64(
   file: File
 ): Promise<string | ArrayBuffer | null> {
   return new Promise((resolve, reject) => {

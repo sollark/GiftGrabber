@@ -21,7 +21,6 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
   } = useFormContext()
 
   const handleChange = async (newFile: any) => {
-    console.log('errors', errors)
     setValue(name, newFile)
     try {
       const base64File = await convertFileToBase64(newFile)
@@ -29,7 +28,7 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
     } catch (e: any) {
       setError(name, {
         type: 'error',
-        message: 'Error uploading file',
+        message: 'Error converting file',
       })
     }
   }
@@ -50,7 +49,6 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
       name={name}
       render={({ field, fieldState }) => {
         const errorMessage = getErrorMessage(fieldState)
-        console.log('errors in render', errorMessage)
         return (
           <MuiFileInput
             {...field}
@@ -62,8 +60,6 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
                 accept: '.xls,.xlsx',
               },
             }}
-            // helperText={fieldState.invalid ? 'File is invalid' : ''}
-            // error={fieldState.invalid}
             error={!!errors[name]}
             helperText={errorMessage}
             {...rest}

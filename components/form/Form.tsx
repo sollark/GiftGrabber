@@ -24,13 +24,9 @@ const Form: FC<Props> = (props: Props) => {
     mode: 'onBlur',
     reValidateMode: 'onBlur',
   })
-  const { handleSubmit, getValues } = methods
+  const { handleSubmit } = methods
 
   const onSubmit = (data: any) => {
-    const { getValues } = methods
-    console.log('getValues in submit', getValues()) // i see file here
-    console.log('data in submit', data) // no file in data
-
     submit(data)
   }
 
