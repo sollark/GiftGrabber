@@ -8,6 +8,7 @@ import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
 import { convertExcelToJson } from '@/utils/excelToJson'
+import * as XLSX from 'xlsx'
 
 const defaultValues = {
   eventName: '',
@@ -26,7 +27,12 @@ const CreateEventForm = () => {
 
     const json = await convertExcelToJson(data.eventFile)
     console.log('handleSubmit json', json)
-    console.log(json[0]['First name'])
+
+    /* generate and display HTML */
+    const workbook = XLSX.read(await data.eventFile.arrayBuffer())
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+    const table = XLSX.utils.sheet_to_html(worksheet)
+    console.log('handleSubmit table', table)
 
     // const newEvent = createEvent()
     // router.push(`/`)
