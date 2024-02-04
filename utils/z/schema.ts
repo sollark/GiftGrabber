@@ -14,19 +14,14 @@ export const EventSchema = z.object({
     .min(1, { message: 'Field can not be empty' })
     .max(24, { message: 'Email must be less than 24 characters' })
     .email({ message: 'Invalid email address' }),
-  eventFile: z.object({
-    name: z.string(),
-    size: z.number().max(10 * 1024 * 1024, {
-      message: 'File size must be under 10 MB',
-    }),
-    type: z
-      .string()
-      .regex(
-        /^application\/(vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/,
-        {
-          message: 'File type must be .xls or .xlsx',
-        }
-      ),
-  }),
-  base64File: z.string(),
+  eventFile: z.instanceof(File).refine(
+    (file) => {
+      const ext = file.name.split('.').pop()
+      return ext === 'xls' || ext === 'xlsx'
+    },
+    {
+      message: 'File type must be .xls or .xlsx',
+    }
+  ),
+  // base64File: z.string(),
 })

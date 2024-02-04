@@ -1,4 +1,5 @@
 import { convertFileToBase64 } from '@/utils/utils'
+import { ErrorMessage } from '@hookform/error-message'
 import { MuiFileInput } from 'mui-file-input'
 import { FC } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
@@ -20,52 +21,50 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
     setError,
   } = useFormContext()
 
-  const handleChange = async (newFile: any) => {
-    setValue(name, newFile)
-    try {
-      const base64File = await convertFileToBase64(newFile)
-      setValue('base64File', base64File)
-    } catch (e: any) {
-      setError(name, {
-        type: 'error',
-        message: 'Error converting file',
-      })
-    }
-  }
+  // const handleChange = async (newFile: any) => {
+  //   setValue(name, newFile)
 
-  const getErrorMessage = (fieldState: any) => {
-    const errorMessages = []
-    for (const prop in fieldState.error) {
-      if (fieldState.error[prop]?.message) {
-        errorMessages.push(fieldState.error[prop].message)
-      }
-    }
-    return errorMessages.join(' ')
-  }
+  // try {
+  //   const arrayBuffer = await newFile.arrayBuffer()
+  //   setValue('arrayBuffer', arrayBuffer)
+  // } catch (e: any) {
+  //   setError(name, {
+  //     type: 'error',
+  //     message: 'Error buffering file',
+  //   })
+  // }
+
+  // try {
+  //   const base64File = await convertFileToBase64(newFile)
+  //   setValue('base64File', base64File)
+  // } catch (e: any) {
+  //   setError(name, {
+  //     type: 'error',
+  //     message: 'Error converting file',
+  //   })
+  // }
+  // }
 
   return (
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => {
-        const errorMessage = getErrorMessage(fieldState)
-        return (
-          <MuiFileInput
-            {...field}
-            label={label}
-            placeholder={label}
-            onChange={handleChange}
-            InputProps={{
-              inputProps: {
-                accept: '.xls,.xlsx',
-              },
-            }}
-            error={!!errors[name]}
-            helperText={errorMessage}
-            {...rest}
-          />
-        )
-      }}
+      render={({ field }) => (
+        <MuiFileInput
+          {...field}
+          label={label}
+          placeholder={label}
+          // onChange={handleChange}
+          InputProps={{
+            inputProps: {
+              accept: '.xls,.xlsx',
+            },
+          }}
+          error={!!errors[name]}
+          helperText={<ErrorMessage name={name} />}
+          {...rest}
+        />
+      )}
     />
   )
 }
