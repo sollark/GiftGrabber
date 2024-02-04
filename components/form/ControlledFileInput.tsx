@@ -1,4 +1,3 @@
-import { convertFileToBase64 } from '@/utils/utils'
 import { ErrorMessage } from '@hookform/error-message'
 import { MuiFileInput } from 'mui-file-input'
 import { FC } from 'react'
@@ -17,33 +16,7 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
   const {
     formState: { errors },
     control,
-    setValue,
-    setError,
   } = useFormContext()
-
-  // const handleChange = async (newFile: any) => {
-  //   setValue(name, newFile)
-
-  // try {
-  //   const arrayBuffer = await newFile.arrayBuffer()
-  //   setValue('arrayBuffer', arrayBuffer)
-  // } catch (e: any) {
-  //   setError(name, {
-  //     type: 'error',
-  //     message: 'Error buffering file',
-  //   })
-  // }
-
-  // try {
-  //   const base64File = await convertFileToBase64(newFile)
-  //   setValue('base64File', base64File)
-  // } catch (e: any) {
-  //   setError(name, {
-  //     type: 'error',
-  //     message: 'Error converting file',
-  //   })
-  // }
-  // }
 
   return (
     <Controller
@@ -54,7 +27,6 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
           {...field}
           label={label}
           placeholder={label}
-          // onChange={handleChange}
           InputProps={{
             inputProps: {
               accept: '.xls,.xlsx',

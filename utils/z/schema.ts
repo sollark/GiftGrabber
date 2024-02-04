@@ -23,5 +23,4 @@ export const EventSchema = z.object({
       message: 'File type must be .xls or .xlsx',
     }
   ),
-  // base64File: z.string(),
 })

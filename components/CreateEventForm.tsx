@@ -7,6 +7,7 @@ import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
+import { convertExcelToJson } from '@/utils/excelToJson'
 
 const defaultValues = {
   eventName: '',
@@ -21,9 +22,11 @@ const CreateEventForm = () => {
   const [errorMessage, setErrorMessage] = useState('')
 
   const handleSubmit = async (data: any) => {
-    // const { eventFile } = data
     console.log('handleSubmit', data)
-    // console.log('handleSubmit', base64File, eventFile)
+
+    const json = await convertExcelToJson(data.eventFile)
+    console.log('handleSubmit json', json)
+    console.log(json[0]['First name'])
 
     // const newEvent = createEvent()
     // router.push(`/`)
