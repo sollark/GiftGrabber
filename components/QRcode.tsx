@@ -6,7 +6,7 @@ const imageUrl = '/public/assets/logo/logo.svg'
 // const link = 'your-link' // Define your link
 
 type QRcodeProps = {
-  options: any
+  options?: any
   url: string
 }
 
@@ -47,7 +47,7 @@ const QRcode: FC<QRcodeProps> = (props: QRcodeProps) => {
   return (
     <Box>
       <QR value={props.url} {...options} />
-      <Button onClick={() => downloadCode()}>Download Code</Button>
+      {/* <Button onClick={() => downloadCode()}>Download Code</Button> */}
     </Box>
   )
 }

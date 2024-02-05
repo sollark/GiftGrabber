@@ -10,6 +10,7 @@ import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
+import QRcode from './QRcode'
 
 const defaultValues = {
   eventName: '',
@@ -58,34 +59,37 @@ const CreateEventForm = () => {
   }
 
   return (
-    <Form
-      schema={EventSchema}
-      defaultValues={defaultValues}
-      submit={handleSubmit}>
-      <ControlledTextInput
-        name='eventName'
-        label='Event name'
-        type='text'
-        variant='outlined'
-        inputProps={{ style: { fontSize: 24 } }}
-      />
-      <ControlledTextInput
-        name='eventEmail'
-        label='Event email'
-        type='email'
-        variant='outlined'
-        inputProps={{ style: { fontSize: 24 } }}
-      />
-      <ControlledFileInput
-        name='eventFile'
-        label='List of participants'
-        type='file'
-        variant='outlined'
-        inputProps={{ style: { fontSize: 24 } }}
-      />
-      <ErrorMessage message={errorMessage} />
-      <div>{table}</div>
-    </Form>
+    <>
+      <Form
+        schema={EventSchema}
+        defaultValues={defaultValues}
+        submit={handleSubmit}>
+        <ControlledTextInput
+          name='eventName'
+          label='Event name'
+          type='text'
+          variant='outlined'
+          inputProps={{ style: { fontSize: 24 } }}
+        />
+        <ControlledTextInput
+          name='eventEmail'
+          label='Event email'
+          type='email'
+          variant='outlined'
+          inputProps={{ style: { fontSize: 24 } }}
+        />
+        <ControlledFileInput
+          name='eventFile'
+          label='List of participants'
+          type='file'
+          variant='outlined'
+          inputProps={{ style: { fontSize: 24 } }}
+        />
+        <ErrorMessage message={errorMessage} />
+        {/* <div>{table}</div> */}
+      </Form>
+      <QRcode url='https://www.google.com' />
+    </>
   )
 }
 
