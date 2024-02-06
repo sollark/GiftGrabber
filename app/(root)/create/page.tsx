@@ -1,6 +1,6 @@
 import CreateEventForm from '@/components/CreateEventForm'
 
-const NewEventPage: React.FC = () => {
+const CreatePage: React.FC = () => {
   return (
     <section className='full-screen flex align-center justify-center flex-col'>
       <h1>Create New Event</h1>
@@ -9,4 +9,4 @@ const NewEventPage: React.FC = () => {
   )
 }
 
-export default NewEventPage
+export default CreatePage

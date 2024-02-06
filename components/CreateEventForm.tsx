@@ -1,7 +1,7 @@
 'use client'
 
 import { convertExcelToJson } from '@/utils/excelToJson'
-import { EventSchema } from '@/utils/z/schema'
+import { EventSchema } from '@/utils/validator'
 import parse from 'html-react-parser'
 import { useRouter } from 'next/navigation'
 import { ReactNode, useState } from 'react'
