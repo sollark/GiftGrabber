@@ -1,18 +1,48 @@
-import { connectToDatabase } from '@/database/connect'
-import { Box, Button } from '@mui/material'
+import { Box } from '@mui/material'
 import { FC, useRef } from 'react'
 import { QRCode as QR } from 'react-qrcode-logo'
 
 const imageUrl = '/public/assets/logo/logo.svg'
-// const link = 'your-link' // Define your link
 
+type EyeColor = string | InnerOuterEyeColor
+type InnerOuterEyeColor = {
+  inner: string
+  outer: string
+}
+type CornerRadii = number | [number, number, number, number] | InnerOuterRadii
+type InnerOuterRadii = {
+  inner: number | [number, number, number, number]
+  outer: number | [number, number, number, number]
+}
+type QRcodeOptions = {
+  value?: string
+  ecLevel?: 'L' | 'M' | 'Q' | 'H'
+  enableCORS?: boolean
+  size?: number
+  quietZone?: number
+  bgColor?: string
+  fgColor?: string
+  logoImage?: string
+  logoWidth?: number
+  logoHeight?: number
+  logoOpacity?: number
+  logoOnLoad?: () => void
+  removeQrCodeBehindLogo?: boolean
+  logoPadding?: number
+  logoPaddingStyle?: 'square' | 'circle'
+  eyeRadius?: CornerRadii | [CornerRadii, CornerRadii, CornerRadii]
+  eyeColor?: EyeColor | [EyeColor, EyeColor, EyeColor]
+  qrStyle?: 'squares' | 'dots'
+  style?: object
+  id?: string
+}
 type QRcodeProps = {
-  options?: any
+  options?: QRcodeOptions
   url: string
 }
 
 const QRcode: FC<QRcodeProps> = (props: QRcodeProps) => {
-  const defaultOptions = {
+  const defaultOptions: QRcodeOptions = {
     ecLevel: 'M',
     enableCORS: false,
     size: 250,
@@ -25,57 +55,44 @@ const QRcode: FC<QRcodeProps> = (props: QRcodeProps) => {
     logoOpacity: 1,
     eyeRadius: 10,
     qrStyle: 'squares',
-    // qrStyle : 'dots',
   }
 
   const options = { ...defaultOptions, ...props.options }
   const qrRef = useRef<HTMLDivElement>(null)
 
-  const downloadCode = () => {
-    if (qrRef.current) {
-      const canvas = qrRef.current.querySelector('canvas')
-      if (canvas) {
-        const pngUrl = canvas
-          .toDataURL('image/png')
-          .replace('image/png', 'image/octet-stream')
-        let downloadLink = document.createElement('a')
-        downloadLink.href = pngUrl
-        downloadLink.download = `your_name.png`
-        document.body.appendChild(downloadLink)
-        downloadLink.click()
-        document.body.removeChild(downloadLink)
-      }
-    }
-  }
-
-  const saveQRCodeToDB = async () => {
-    if (qrRef.current) {
-      const canvas = qrRef.current.querySelector('canvas')
-      if (canvas) {
-        const pngUrl = canvas.toDataURL('image/png')
-        const buffer = Buffer.from(pngUrl.split(',')[1], 'base64')
-
-        const db = await connectToDatabase()
-        const collection = db.collection('yourCollectionName')
-
-        const result = await collection.insertOne({
-          image: {
-            data: buffer,
-            contentType: 'image/png',
-          },
-        })
-
-        console.log('Saved to DB', result)
-      }
-    }
-  }
-
   return (
     <Box ref={qrRef}>
       <QR value={props.url} {...options} />
-      {/* <Button onClick={() => downloadCode()}>Download Code</Button> */}
     </Box>
   )
 }
 
 export default QRcode
+
+// Usage
+// const downloadCode = () => {
+//   if (qrRef.current) {
+//     const canvas = qrRef.current.querySelector('canvas')
+//     if (canvas) {
+//       const pngUrl = canvas
+//         .toDataURL('image/png')
+//         .replace('image/png', 'image/octet-stream')
+//       let downloadLink = document.createElement('a')
+//       downloadLink.href = pngUrl
+//       downloadLink.download = `your_name.png`
+//       document.body.appendChild(downloadLink)
+//       downloadLink.click()
+//       document.body.removeChild(downloadLink)
+//     }
+//   }
+// }
+
+// const getQRcodeBuffer = async () => {
+//   if (qrRef.current) {
+//     const canvas = qrRef.current.querySelector('canvas')
+//     if (canvas) {
+//       const pngUrl = canvas.toDataURL('image/png')
+//       const buffer = Buffer.from(pngUrl.split(',')[1], 'base64')
+//     }
+//   }
+// }
