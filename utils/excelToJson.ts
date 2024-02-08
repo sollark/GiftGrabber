@@ -5,15 +5,10 @@ export const convertExcelToJson = async (
 ): Promise<Record<string, any>[]> => {
   try {
     const arrayBuffer = await excelFile.arrayBuffer()
-
     const workbook = XLSX.read(arrayBuffer, { type: 'array' })
-
     const sheetName = workbook.SheetNames[0]
     const sheet = workbook.Sheets[sheetName]
-
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][]
-
-    console.log('json', jsonData)
 
     const resultArray = jsonData.map((row: any[]) => {
       const obj: Record<string, any> = {}

@@ -5,12 +5,12 @@ import { EventSchema } from '@/utils/validator'
 import parse from 'html-react-parser'
 import { useRouter } from 'next/navigation'
 import { ReactNode, useState } from 'react'
-import * as XLSX from 'xlsx'
 import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
 import QRcode from './QRcode'
+import { excelToTable } from '@/utils/excelToTable'
 
 const defaultValues = {
   eventName: '',
@@ -28,30 +28,10 @@ const CreateEventForm = () => {
   const handleSubmit = async (data: any) => {
     console.log('handleSubmit', data)
 
-    const json = await convertExcelToJson(data.eventFile)
-    console.log('handleSubmit json', json)
+    const eventListJson = await convertExcelToJson(data.eventFile)
+    console.log('handleSubmit, eventListJson:', eventListJson)
 
-    /* generate and display HTML */
-    const workbook = XLSX.read(await data.eventFile.arrayBuffer())
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-    const html = XLSX.utils.sheet_to_html(worksheet)
-
-    // Parse the HTML string into a DOM object
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(html, 'text/html')
-
-    // Extract the table element
-    const table = doc.querySelector('table')
-
-    if (!table) {
-      console.error('No table found in the worksheet')
-      return
-    }
-
-    // Convert the table element to a HTML string
-    const tableHtml = table ? table.outerHTML : '<div></div>'
-
-    const reactTable = parse(tableHtml)
+    const reactTable = excelToTable(data.eventFile)
     setTable(reactTable)
 
     // const newEvent = createEvent()

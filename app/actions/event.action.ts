@@ -12,3 +12,13 @@ export const createEvent = async (event: Event) => {
     handleError(error)
   }
 }
+
+export const getAllEvents = async () => {
+  try {
+    const events = await EventModel.find()
+    return JSON.parse(JSON.stringify(events))
+  } catch (error) {
+    console.log('Error in createEvent')
+    handleError(error)
+  }
+}
