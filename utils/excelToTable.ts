@@ -25,3 +25,11 @@ export async function excelToTable(file: File) {
 
   return reactTable
 }
+
+// Usage
+// {
+// const [table, setTable] = useState<ReactNode>()
+// const reactTable = excelToTable(eventFile)
+// setTable(reactTable)
+// return (<div>{table}</div>)
+// }

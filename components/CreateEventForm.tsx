@@ -2,15 +2,15 @@
 
 import { convertExcelToJson } from '@/utils/excelToJson'
 import { EventSchema } from '@/utils/validator'
-import parse from 'html-react-parser'
 import { useRouter } from 'next/navigation'
-import { ReactNode, useState } from 'react'
+import { useState } from 'react'
+import QRcode from './QRcode'
 import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
-import QRcode from './QRcode'
-import { excelToTable } from '@/utils/excelToTable'
+import { createEvent } from '@/app/actions/event.action'
+import { Person } from '@/database/models/person.model'
 
 const defaultValues = {
   eventName: '',
@@ -23,16 +23,23 @@ const CreateEventForm = () => {
   const [eventName, setEventName] = useState('')
   const [eventEmail, setEventEmail] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const [table, setTable] = useState<ReactNode>()
 
   const handleSubmit = async (data: any) => {
     console.log('handleSubmit', data)
+    const { eventName: name, eventEmail: email, eventFile } = data
 
-    const eventListJson = await convertExcelToJson(data.eventFile)
+    const eventListJson = await convertExcelToJson(eventFile)
     console.log('handleSubmit, eventListJson:', eventListJson)
 
-    const reactTable = excelToTable(data.eventFile)
-    setTable(reactTable)
+    const applicantList: Person[] = eventListJson.map((record) => ({
+      firstName: record['firstName'],
+      lastName: record['lastName'],
+      orders: [],
+    }))
+    console.log('handleSubmit, applicantList:', applicantList)
+
+    const response = await createEvent({ name, email, applicantList })
+    console.log('handleSubmit, response:', response)
 
     // const newEvent = createEvent()
     // router.push(`/`)
@@ -66,7 +73,6 @@ const CreateEventForm = () => {
           inputProps={{ style: { fontSize: 24 } }}
         />
         <ErrorMessage message={errorMessage} />
-        {/* <div>{table}</div> */}
       </Form>
       <QRcode url='https://www.google.com' />
     </>
