@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx'
 
 export const convertExcelToJson = async (
   excelFile: File
-): Promise<Record<string, any>[]> => {
+): Promise<Record<string, string>[]> => {
   try {
     const arrayBuffer = await excelFile.arrayBuffer()
     const workbook = XLSX.read(arrayBuffer, { type: 'array' })
@@ -10,8 +10,8 @@ export const convertExcelToJson = async (
     const sheet = workbook.Sheets[sheetName]
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][]
 
-    const resultArray = jsonData.map((row: any[]) => {
-      const obj: Record<string, any> = {}
+    const resultArray = jsonData.map((row: string[]) => {
+      const obj: Record<string, string> = {}
       for (let i = 0; i < jsonData[0].length; i++) {
         obj[jsonData[0][i]] = row[i]
       }
