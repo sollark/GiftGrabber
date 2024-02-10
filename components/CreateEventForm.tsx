@@ -11,7 +11,10 @@ import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
 import { createEvent } from '@/app/actions/event.action'
 import { Person } from '@/database/models/person.model'
+import { generateEventId, generateOwnerId } from '@/utils/utils'
+import { url } from 'inspector'
 
+const URL = 'http://gift-grabber.onrender.com/'
 const defaultValues = {
   eventName: '',
   eventEmail: '',
@@ -40,6 +43,11 @@ const CreateEventForm = () => {
 
     const response = await createEvent({ name, email, applicantList })
     console.log('handleSubmit, response:', response)
+
+    const eventId = generateEventId()
+    const ownerId = generateOwnerId()
+    // const applicantRQCode = QRcode({url: `${URL}${eventId}`})
+    // const ownerRQCode= QRcode({url:`${URL}${ownerId}`})
 
     // const newEvent = createEvent()
     // router.push(`/`)
@@ -74,7 +82,7 @@ const CreateEventForm = () => {
         />
         <ErrorMessage message={errorMessage} />
       </Form>
-      <QRcode url='https://www.google.com' />
+      {/* <QRcode url='https://www.google.com' /> */}
     </>
   )
 }

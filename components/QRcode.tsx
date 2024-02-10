@@ -37,8 +37,9 @@ type QRcodeOptions = {
   id?: string
 }
 type QRcodeProps = {
-  options?: QRcodeOptions
   url: string
+  qrRef: React.RefObject<HTMLDivElement>
+  options?: QRcodeOptions
 }
 
 const QRcode: FC<QRcodeProps> = (props: QRcodeProps) => {
@@ -58,10 +59,9 @@ const QRcode: FC<QRcodeProps> = (props: QRcodeProps) => {
   }
 
   const options = { ...defaultOptions, ...props.options }
-  const qrRef = useRef<HTMLDivElement>(null)
 
   return (
-    <Box ref={qrRef}>
+    <Box ref={props.qrRef}>
       <QR value={props.url} {...options} />
     </Box>
   )
@@ -87,7 +87,7 @@ export default QRcode
 //   }
 // }
 
-// const getQRcodeBuffer = async () => {
+// const getQRcodeBuffer = async (qrRef) => {
 //   if (qrRef.current) {
 //     const canvas = qrRef.current.querySelector('canvas')
 //     if (canvas) {
@@ -96,3 +96,8 @@ export default QRcode
 //     }
 //   }
 // }
+
+// create image from buffer
+// const fs = require('fs')
+// const buffer = //...
+// fs.writeFileSync('image.png', buffer)
