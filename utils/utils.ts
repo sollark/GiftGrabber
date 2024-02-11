@@ -1,4 +1,6 @@
+import { Person } from '@/database/models/person.model'
 import { customAlphabet } from 'nanoid'
+import { convertExcelToJson } from './excelToJson'
 
 export const handleError = (error: unknown) => {
   console.error('An error occurred:', error)
@@ -25,4 +27,29 @@ export function generateOwnerId(): string {
   const nanoid = customAlphabet('1234567890owner', 5)
   const ownerId = nanoid()
   return ownerId
+}
+
+export async function excelToPersonList(file: File) {
+  const eventListJson = await convertExcelToJson(file)
+  console.log('excelToList, eventListJson:', eventListJson)
+
+  const applicantList: Person[] = eventListJson.map((record) => ({
+    firstName: record['firstName'],
+    lastName: record['lastName'],
+    orders: [],
+  }))
+  console.log('excelToList, applicantList:', applicantList)
+  return applicantList
+}
+
+export const getQRcodeBuffer = async (qrRef: any) => {
+  if (qrRef.current) {
+    const canvas = qrRef.current.querySelector('canvas')
+    if (canvas) {
+      const pngUrl = canvas.toDataURL('image/png')
+      const buffer = Buffer.from(pngUrl.split(',')[1], 'base64')
+
+      return buffer
+    }
+  }
 }
