@@ -4,7 +4,8 @@ import EventModel, { Event } from '@/database/models/event.model'
 import { handleError } from '@/utils/utils'
 
 export const createEvent = async (event: Partial<Event>) => {
-  const { name, email, applicantList } = event
+  const { name, email, applicantList, eventQRCodeBuffer, ownerIdQRCodeBuffer } =
+    event
 
   console.log('in action, event"', event)
   // try {

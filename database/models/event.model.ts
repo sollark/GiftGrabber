@@ -7,8 +7,8 @@ export type Event = {
   email: string
   eventId: string
   ownerId: string
-  applicantRQCodeImage: string
-  ownerRQCodeImage: string
+  eventQRCodeBuffer: string
+  ownerIdQRCodeBuffer: string
   applicantList: Person[]
 }
 
@@ -18,8 +18,8 @@ type EventDoc = {
   email: string
   eventId: string
   ownerId: string
-  applicantRQCodeImageBuffer: string
-  ownerRQCodeImageBuffer: string
+  eventQRCodeBuffer: string
+  ownerIdQRCodeBuffer: string
   applicantList: Types.ObjectId[]
 }
 
@@ -28,8 +28,8 @@ export const eventSchema: Schema = new Schema({
   email: { type: String, required: true },
   eventId: { type: String, required: true },
   ownerId: { type: String, required: true },
-  applicantRQCodeImageBuffer: { type: String, required: true },
-  ownerRQCodeImageBuffer: { type: String, required: true },
+  eventQRCodeBuffer: { type: String, required: true },
+  ownerIdQRCodeBuffer: { type: String, required: true },
   applicantList: [
     {
       type: Types.ObjectId,

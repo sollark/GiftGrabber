@@ -1,53 +1,83 @@
 'use client'
 
+import { createEvent } from '@/app/actions/event.action'
+import { Person } from '@/database/models/person.model'
 import { convertExcelToJson } from '@/utils/excelToJson'
+import { generateEventId, generateOwnerId } from '@/utils/utils'
 import { EventSchema } from '@/utils/validator'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import QRcode from './QRcode'
 import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
-import { createEvent } from '@/app/actions/event.action'
-import { Person } from '@/database/models/person.model'
-import { generateEventId, generateOwnerId } from '@/utils/utils'
-import { url } from 'inspector'
 
-const URL = 'http://gift-grabber.onrender.com/'
 const defaultValues = {
   eventName: '',
   eventEmail: '',
   eventFile: undefined,
 }
 
+const URL = 'http://gift-grabber.onrender.com'
+const eventId = generateEventId()
+const ownerId = generateOwnerId()
+
+async function excelToList(file: File) {
+  const eventListJson = await convertExcelToJson(file)
+  console.log('excelToList, eventListJson:', eventListJson)
+
+  const applicantList: Person[] = eventListJson.map((record) => ({
+    firstName: record['firstName'],
+    lastName: record['lastName'],
+    orders: [],
+  }))
+  console.log('excelToList, applicantList:', applicantList)
+  return applicantList
+}
+
 const CreateEventForm = () => {
   const router = useRouter()
-  const [eventName, setEventName] = useState('')
-  const [eventEmail, setEventEmail] = useState('')
+
+  const [eventQRCodeB, setEventQRCode] = useState<ReactNode>(null)
+  const [ownerIdQRCode, setOwnerIdQRCode] = useState<ReactNode>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const eventQRCodeRef = useRef<HTMLDivElement>(null)
+  const ownerIdQRCodeRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const url = `${URL}/${eventId}`
+    console.log('url', url)
+    const qrCodeNode = QRcode({ url, qrRef: eventQRCodeRef })
+    setEventQRCode(qrCodeNode)
+  }, [])
+  useEffect(() => {
+    const url = `${URL}/${eventId}/${ownerId}`
+    console.log('url', url)
+    const qrCodeNode = QRcode({ url, qrRef: ownerIdQRCodeRef })
+    setOwnerIdQRCode(qrCodeNode)
+  }, [])
 
   const handleSubmit = async (data: any) => {
     console.log('handleSubmit', data)
+
     const { eventName: name, eventEmail: email, eventFile } = data
+    const applicantList = await excelToList(eventFile)
+    if (!applicantList) {
+      setErrorMessage('Error getting an applicant list')
+      return
+    }
+    console.log('eventQRCodeRef', eventQRCodeRef.current)
+    console.log('ownerIdQRCodeRef', ownerIdQRCodeRef.current)
 
-    const eventListJson = await convertExcelToJson(eventFile)
-    console.log('handleSubmit, eventListJson:', eventListJson)
-
-    const applicantList: Person[] = eventListJson.map((record) => ({
-      firstName: record['firstName'],
-      lastName: record['lastName'],
-      orders: [],
-    }))
-    console.log('handleSubmit, applicantList:', applicantList)
-
-    const response = await createEvent({ name, email, applicantList })
+    const response = await createEvent({
+      name,
+      email,
+      applicantList,
+      // eventQRCodeBuffer,
+      // ownerIdQRCodeBuffer,
+    })
     console.log('handleSubmit, response:', response)
-
-    const eventId = generateEventId()
-    const ownerId = generateOwnerId()
-    // const applicantRQCode = QRcode({url: `${URL}${eventId}`})
-    // const ownerRQCode= QRcode({url:`${URL}${ownerId}`})
 
     // const newEvent = createEvent()
     // router.push(`/`)
@@ -82,7 +112,8 @@ const CreateEventForm = () => {
         />
         <ErrorMessage message={errorMessage} />
       </Form>
-      {/* <QRcode url='https://www.google.com' /> */}
+      {eventQRCodeB ? eventQRCodeB : <div>No QR code</div>}
+      {ownerIdQRCode ? ownerIdQRCode : <div>No QR code</div>}
     </>
   )
 }
