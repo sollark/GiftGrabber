@@ -2,7 +2,7 @@ import { Box } from '@mui/material'
 import { FC, useEffect, useRef } from 'react'
 import { QRCode as QR } from 'react-qrcode-logo'
 
-const imageUrl = '/public/assets/logo/logo.svg'
+const imageUrl = '/assets/logo/logo.svg'
 
 type EyeColor = string | InnerOuterEyeColor
 type InnerOuterEyeColor = {
@@ -54,6 +54,7 @@ const QRcode: FC<QRcodeProps> = (props: QRcodeProps) => {
     logoWidth: 40,
     logoHeight: 40,
     logoOpacity: 1,
+    logoPadding: 5,
     eyeRadius: 10,
     qrStyle: 'squares',
   }
@@ -96,6 +97,11 @@ export default QRcode
 //     }
 //   }
 // }
+
+// Convert from Buffer to base64
+// const base64String = eventQRCodeBuffer.toString('base64')
+// Convert back to Buffer
+// const buffer = Buffer.from(base64String, 'base64')
 
 // create image from buffer
 // const fs = require('fs')

@@ -51,12 +51,17 @@ const CreateEventForm = () => {
       return
     }
 
+    const eventQRCodeBase64 = eventQRCodeBuffer.toString('base64')
+    const ownerIdQRCodeBase64 = ownerIdQRCodeBuffer.toString('base64')
+
     const response = await createEvent({
       name,
       email,
+      eventId,
+      ownerId,
+      eventQRCodeBase64,
+      ownerIdQRCodeBase64,
       applicantList,
-      eventQRCodeBuffer,
-      ownerIdQRCodeBuffer,
     })
     console.log('handleSubmit, response:', response)
 

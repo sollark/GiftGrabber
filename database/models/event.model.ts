@@ -1,5 +1,4 @@
 import { Schema, Types, model, models } from 'mongoose'
-import connectionPlugin from '../connectionPlugin'
 import { Person } from './person.model'
 
 export type Event = {
@@ -7,8 +6,8 @@ export type Event = {
   email: string
   eventId: string
   ownerId: string
-  eventQRCodeBuffer: Buffer
-  ownerIdQRCodeBuffer: Buffer
+  eventQRCodeBase64: string
+  ownerIdQRCodeBase64: string
   applicantList: Person[]
 }
 
@@ -18,8 +17,8 @@ type EventDoc = {
   email: string
   eventId: string
   ownerId: string
-  eventQRCodeBuffer: Buffer
-  ownerIdQRCodeBuffer: Buffer
+  eventQRCodeBase64: string
+  ownerIdQRCodeBase64: string
   applicantList: Types.ObjectId[]
 }
 
@@ -28,8 +27,8 @@ export const eventSchema: Schema = new Schema({
   email: { type: String, required: true },
   eventId: { type: String, required: true },
   ownerId: { type: String, required: true },
-  eventQRCodeBuffer: { type: Buffer, required: true },
-  ownerIdQRCodeBuffer: { type: Buffer, required: true },
+  eventQRCodeBase64: { type: String, required: true },
+  ownerIdQRCodeBase64: { type: String, required: true },
   applicantList: [
     {
       type: Types.ObjectId,
@@ -38,8 +37,6 @@ export const eventSchema: Schema = new Schema({
     },
   ],
 })
-
-eventSchema.plugin(connectionPlugin)
 
 const EventModel = models.Event || model<EventDoc>('Event', eventSchema)
 
