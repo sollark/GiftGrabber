@@ -38,7 +38,7 @@ export const createEvent = async (event: Event) => {
       applicantList: applicantIds,
     })
 
-    // return JSON.parse(JSON.stringify(newEvent))
+    return newEvent ? true : false
   } catch (error) {
     console.log('Error in createEvent')
     handleError(error)

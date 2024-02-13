@@ -65,8 +65,7 @@ const CreateEventForm = () => {
     })
     console.log('handleSubmit, response:', response)
 
-    // const newEvent = createEvent()
-    // router.push(`/`)
+    if (response) router.push(`/events/${eventId}`)
   }
 
   return (
