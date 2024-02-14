@@ -63,8 +63,6 @@ const CreateEventForm = () => {
       ownerIdQRCodeBase64,
       applicantList,
     })
-    console.log('handleSubmit, response:', response)
-
     if (response) router.push(`/events/${eventId}`)
   }
 

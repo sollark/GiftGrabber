@@ -49,7 +49,9 @@ export const getEvent = async (eventId: string) => {
   try {
     await connectToDatabase()
 
-    const event = await populateEvent(EventModel.findOne({ eventId }))
+    const event = await populateEvent(
+      EventModel.findOne({ eventId }, { name: 1, applicantList: 1 })
+    )
     if (!event) throw new Error('Event not found')
 
     return JSON.parse(JSON.stringify(event))
@@ -70,5 +72,9 @@ export const getAllEvents = async () => {
 }
 
 const populateEvent = async (query: any) => {
-  return query.populate({ path: 'applicantList', model: 'Person' })
+  return query.populate({
+    path: 'applicantList',
+    model: 'Person',
+    select: 'firstName lastName',
+  })
 }
