@@ -2,10 +2,11 @@
 
 import { connectToDatabase } from '@/database/connect'
 import EventModel, { Event } from '@/database/models/event.model'
+import GiftModel from '@/database/models/gift.model'
 import PersonModel from '@/database/models/person.model'
 import { handleError } from '@/utils/utils'
 
-export const createEvent = async (event: Event) => {
+export const createEvent = async (event: Omit<Event, 'giftList'>) => {
   const {
     name,
     email,
@@ -21,10 +22,20 @@ export const createEvent = async (event: Event) => {
   try {
     await connectToDatabase()
 
+    // Creates person for every applicant
     const applicantIds = await Promise.all(
       applicantList.map(async (person) => {
         const personDoc = await PersonModel.create(person)
         return personDoc._id
+      })
+    )
+
+    // Creates gift for every applicant
+    const giftIds = await Promise.all(
+      applicantIds.map(async (applicantId) => {
+        const giftDoc = await GiftModel.create({ owner: applicantId })
+        console.log('created giftDoc for applicant', giftDoc, applicantId)
+        return giftDoc._id
       })
     )
 
@@ -36,7 +47,10 @@ export const createEvent = async (event: Event) => {
       eventQRCodeBase64,
       ownerIdQRCodeBase64,
       applicantList: applicantIds,
+      giftList: giftIds,
     })
+
+    console.log('newEvent', newEvent)
 
     return newEvent ? true : false
   } catch (error) {
@@ -49,7 +63,7 @@ export const getEventApplicants = async (eventId: string) => {
   try {
     await connectToDatabase()
 
-    const event = await populateEvent(
+    const event = await populateEventApplicants(
       EventModel.findOne({ eventId }, { name: 1, applicantList: 1 })
     )
     if (!event) throw new Error('Event not found')
@@ -70,8 +84,6 @@ export const getEventDetails = async (eventId: string) => {
     )
     if (!event) throw new Error('Event not found')
 
-    // const gifts =
-
     return JSON.parse(JSON.stringify(event))
   } catch (error) {
     console.log('Error in createEvent')
@@ -89,10 +101,24 @@ export const getAllEvents = async () => {
   }
 }
 
-const populateEvent = async (query: any) => {
+const populateEventApplicants = async (query: any) => {
   return query.populate({
     path: 'applicantList',
     model: 'Person',
     select: 'firstName lastName',
   })
+}
+
+const populateEvent = async (query: any) => {
+  return query
+    .populate({
+      path: 'applicantList',
+      model: 'Person',
+      select: 'firstName lastName',
+    })
+    .populate({
+      path: 'giftList',
+      model: 'Gift',
+      select: 'owner receiver order',
+    })
 }
