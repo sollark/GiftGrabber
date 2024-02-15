@@ -1,5 +1,6 @@
 import { getEvent } from '@/app/actions/event.action'
 import ApplicantList from '@/components/ApplicantList'
+import StyledButton from '@/components/StyledButton'
 import { FC } from 'react'
 
 type SearchParamProps = {
@@ -15,10 +16,13 @@ const ApplicantPage: FC<SearchParamProps> = async ({
   console.log('event in people page', event)
 
   return (
-    <div>
-      <h1>List of People</h1>
-      <ApplicantList applicants={event.applicantList} />
-    </div>
+    <section className='full-screen flex align-center justify-center flex-col'>
+      <h1>Enter name</h1>
+      <div className='flex'>
+        <ApplicantList applicants={event.applicantList} />
+        <StyledButton>Identify</StyledButton>
+      </div>
+    </section>
   )
 }
 
