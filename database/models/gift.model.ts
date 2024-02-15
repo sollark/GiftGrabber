@@ -7,6 +7,7 @@ export type Gift = {
   receiver?: Person
   orderId?: Order
 }
+
 type GiftDoc = {
   _id: Types.ObjectId
   owner: Types.ObjectId

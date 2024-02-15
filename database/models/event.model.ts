@@ -1,5 +1,6 @@
 import { Schema, Types, model, models } from 'mongoose'
 import { Person } from './person.model'
+import { Gift } from './gift.model'
 
 export type Event = {
   name: string
@@ -9,6 +10,7 @@ export type Event = {
   eventQRCodeBase64: string
   ownerIdQRCodeBase64: string
   applicantList: Person[]
+  giftList: Gift[]
 }
 
 type EventDoc = {
@@ -20,6 +22,7 @@ type EventDoc = {
   eventQRCodeBase64: string
   ownerIdQRCodeBase64: string
   applicantList: Types.ObjectId[]
+  giftList: Types.ObjectId[]
 }
 
 export const eventSchema: Schema = new Schema({
@@ -33,6 +36,13 @@ export const eventSchema: Schema = new Schema({
     {
       type: Types.ObjectId,
       ref: 'Person',
+      required: true,
+    },
+  ],
+  giftList: [
+    {
+      type: Types.ObjectId,
+      ref: 'Gift',
       required: true,
     },
   ],
