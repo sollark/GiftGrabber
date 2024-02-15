@@ -45,7 +45,7 @@ export const createEvent = async (event: Event) => {
   }
 }
 
-export const getEvent = async (eventId: string) => {
+export const getEventApplicants = async (eventId: string) => {
   try {
     await connectToDatabase()
 
@@ -53,6 +53,24 @@ export const getEvent = async (eventId: string) => {
       EventModel.findOne({ eventId }, { name: 1, applicantList: 1 })
     )
     if (!event) throw new Error('Event not found')
+
+    return JSON.parse(JSON.stringify(event))
+  } catch (error) {
+    console.log('Error in createEvent')
+    handleError(error)
+  }
+}
+
+export const getEventDetails = async (eventId: string) => {
+  try {
+    await connectToDatabase()
+
+    const event = await populateEvent(
+      EventModel.findOne({ eventId }, { name: 1, email: 1, applicantList: 1 })
+    )
+    if (!event) throw new Error('Event not found')
+
+    // const gifts =
 
     return JSON.parse(JSON.stringify(event))
   } catch (error) {

@@ -63,7 +63,8 @@ const CreateEventForm = () => {
       ownerIdQRCodeBase64,
       applicantList,
     })
-    if (response) router.push(`/events/${eventId}`)
+    if (response) router.push(`/events/${eventId}/${ownerId}`)
+    // if (response) router.push(`/events/${eventId}`)
   }
 
   return (
