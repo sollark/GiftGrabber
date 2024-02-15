@@ -1,5 +1,4 @@
 import { Schema, Types, model, models } from 'mongoose'
-import connectionPlugin from '../connectionPlugin'
 import { Order } from './order.model'
 import { Person } from './person.model'
 
@@ -21,7 +20,6 @@ const giftSchema: Schema = new Schema({
   orderId: { type: Types.ObjectId, ref: 'Order' },
 })
 
-giftSchema.plugin(connectionPlugin)
-const GiftModel = models.GiftModel || model<GiftDoc>('Gift', giftSchema)
+const GiftModel = models.Gift || model<GiftDoc>('Gift', giftSchema)
 
 export default GiftModel

@@ -1,5 +1,4 @@
 import { Schema, Types, model, models } from 'mongoose'
-import connectionPlugin from '../connectionPlugin'
 import { Person } from './person.model'
 
 export type Order = {
@@ -29,7 +28,6 @@ const orderSchema: Schema = new Schema({
   confirmedBy: { type: Types.ObjectId, ref: 'Person' },
 })
 
-orderSchema.plugin(connectionPlugin)
-const OrderModel = models.OrderModel || model<OrderDoc>('Order', orderSchema)
+const OrderModel = models.Order || model<OrderDoc>('Order', orderSchema)
 
 export default OrderModel
