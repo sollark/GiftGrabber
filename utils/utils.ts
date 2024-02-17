@@ -53,3 +53,16 @@ export const getQRcodeBuffer = async (qrRef: any) => {
     }
   }
 }
+
+export const debounce = (
+  func: (...args: any[]) => void,
+  wait: number
+): ((...args: any[]) => void) => {
+  let timerId: NodeJS.Timeout | null = null
+  return (...args: any[]): void => {
+    if (timerId) clearTimeout(timerId)
+    timerId = setTimeout(() => {
+      func(...args)
+    }, wait)
+  }
+}
