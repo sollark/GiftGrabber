@@ -3,6 +3,7 @@ import { Order } from './order.model'
 import { Person } from './person.model'
 
 export type Gift = {
+  _id: string
   owner: Person
   receiver?: Person
   order?: Order

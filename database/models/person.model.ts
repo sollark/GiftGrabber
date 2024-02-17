@@ -2,6 +2,7 @@ import { Schema, Types, model, models } from 'mongoose'
 import { Order } from './order.model'
 
 export type Person = {
+  _id: string
   firstName: string
   lastName: string
   // orders: Order[] | []
