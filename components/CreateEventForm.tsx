@@ -15,6 +15,7 @@ import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
+import { sendQRCodesToOwner } from '@/app/actions/email.action'
 
 const defaultValues = {
   eventName: '',
@@ -54,7 +55,27 @@ const CreateEventForm = () => {
     const eventQRCodeBase64 = eventQRCodeBuffer.toString('base64')
     const ownerIdQRCodeBase64 = ownerIdQRCodeBuffer.toString('base64')
 
+    const emailResponse = await sendQRCodesToOwner({
+      to: email,
+      html: `<html>
+      <h1>QR codes</h1>
+      </html>`,
+      attachments: [
+        {
+          filename: 'event QR code.png',
+          path: eventQRCodeBase64,
+          encoding: 'base64',
+        },
+        {
+          filename: 'owner QR code.png',
+          path: ownerIdQRCodeBase64,
+          encoding: 'base64',
+        },
+      ],
+    })
+
     const response = await createEvent({
+      _id: '',
       name,
       email,
       eventId,

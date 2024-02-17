@@ -40,7 +40,7 @@ const EventDetails: FC<SearchParamProps> = async ({
             </tr>
           ))}
         </tbody>
-      </table>{' '}
+      </table>
     </div>
   )
 }
