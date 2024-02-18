@@ -1,6 +1,7 @@
 import { getEventDetails } from '@/app/actions/event.action'
 import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
+import { Types } from 'mongoose'
 import { FC } from 'react'
 
 type SearchParamProps = {
@@ -27,18 +28,22 @@ const EventDetails: FC<SearchParamProps> = async ({
           </tr>
         </thead>
         <tbody>
-          {event.applicantList.map((applicant: Person) => (
-            <tr key={applicant._id}>
-              <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
-              <td>
-                {event.giftList.find(
-                  (gift: Gift) => gift.owner._id === applicant._id
-                )
-                  ? 'Yes'
-                  : 'No'}
-              </td>
-            </tr>
-          ))}
+          {event.applicantList.map(
+            (applicant: Person & { _id: Types.ObjectId }) => (
+              <tr key={applicant._id.toString()}>
+                <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
+                <td>
+                  {event.giftList.find(
+                    (gift: Gift) =>
+                      gift.owner.firstName === applicant.firstName &&
+                      gift.owner.lastName === applicant.lastName
+                  )
+                    ? 'Yes'
+                    : 'No'}
+                </td>
+              </tr>
+            )
+          )}
         </tbody>
       </table>
     </div>

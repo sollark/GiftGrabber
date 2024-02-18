@@ -33,8 +33,7 @@ export async function excelToPersonList(file: File) {
   const eventListJson = await convertExcelToJson(file)
   console.log('excelToList, eventListJson:', eventListJson)
 
-  const applicantList: Person[] = eventListJson.map((record) => ({
-    _id: '',
+  const applicantList: Omit<Person, '_id'>[] = eventListJson.map((record) => ({
     firstName: record['firstName'],
     lastName: record['lastName'],
   }))
