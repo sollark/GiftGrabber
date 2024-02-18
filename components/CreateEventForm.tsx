@@ -36,8 +36,6 @@ const CreateEventForm = () => {
   const eventQRCodeRef = useRef<HTMLDivElement>(null)
   const ownerIdQRCodeRef = useRef<HTMLDivElement>(null)
   const handleSubmit = async (data: any) => {
-    console.log('handleSubmit', data)
-
     const { eventName: name, eventEmail: email, eventFile } = data
     const applicantList = await excelToPersonList(eventFile)
     if (!applicantList) {
@@ -63,12 +61,12 @@ const CreateEventForm = () => {
       attachments: [
         {
           filename: 'event QR code.png',
-          path: eventQRCodeBase64,
+          content: eventQRCodeBase64,
           encoding: 'base64',
         },
         {
           filename: 'owner QR code.png',
-          path: ownerIdQRCodeBase64,
+          content: ownerIdQRCodeBase64,
           encoding: 'base64',
         },
       ],

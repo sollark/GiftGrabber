@@ -9,7 +9,8 @@ type EmailPayload = {
 }
 
 export const sendQRCodesToOwner = async (data: EmailPayload) => {
-  console.log('Sending email ...')
+  console.log(`Sending email to ${data.to} ...`)
+
   try {
     await sendEmail({
       to: data.to,
