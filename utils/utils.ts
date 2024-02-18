@@ -34,9 +34,9 @@ export async function excelToPersonList(file: File) {
   console.log('excelToList, eventListJson:', eventListJson)
 
   const applicantList: Person[] = eventListJson.map((record) => ({
+    _id: '',
     firstName: record['firstName'],
     lastName: record['lastName'],
-    orders: [],
   }))
   console.log('excelToList, applicantList:', applicantList)
   return applicantList
