@@ -16,9 +16,6 @@ export const createEvent = async (event: Omit<Event, 'giftList'>) => {
     ownerIdQRCodeBase64,
     applicantList,
   } = event
-
-  console.log('in action, event"', event)
-
   try {
     await connectToDatabase()
 
@@ -34,7 +31,6 @@ export const createEvent = async (event: Omit<Event, 'giftList'>) => {
     const giftIds = await Promise.all(
       applicantIds.map(async (applicantId) => {
         const giftDoc = await GiftModel.create({ owner: applicantId })
-        console.log('created giftDoc for applicant', giftDoc, applicantId)
         return giftDoc._id
       })
     )
@@ -50,7 +46,7 @@ export const createEvent = async (event: Omit<Event, 'giftList'>) => {
       giftList: giftIds,
     })
 
-    console.log('newEvent', newEvent)
+    console.log('newEvent created:', newEvent)
 
     return newEvent ? true : false
   } catch (error) {

@@ -23,10 +23,10 @@ const defaultValues = {
   eventFile: undefined,
 }
 
-const URL = 'http://gift-grabber.onrender.com'
+const URL = 'https://gift-grabber.onrender.com'
 const eventId = generateEventId()
 const ownerId = generateOwnerId()
-const eventUrl = `${URL}/${eventId}}`
+const eventUrl = `${URL}/${eventId}`
 const ownerUrl = `${URL}/${eventId}/${ownerId}`
 
 const CreateEventForm = () => {
@@ -36,8 +36,6 @@ const CreateEventForm = () => {
   const eventQRCodeRef = useRef<HTMLDivElement>(null)
   const ownerIdQRCodeRef = useRef<HTMLDivElement>(null)
   const handleSubmit = async (data: any) => {
-    console.log('In handleSubmit')
-
     const { eventName: name, eventEmail: email, eventFile } = data
     const applicantList = await excelToPersonList(eventFile)
     if (!applicantList) {

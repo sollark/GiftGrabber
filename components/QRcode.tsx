@@ -1,5 +1,5 @@
 import { Box } from '@mui/material'
-import { FC, useEffect, useRef } from 'react'
+import { FC } from 'react'
 import { QRCode as QR } from 'react-qrcode-logo'
 
 const imageUrl = '/assets/logo/logo.svg'
