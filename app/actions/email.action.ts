@@ -18,6 +18,8 @@ export const sendQRCodesToOwner = async (data: EmailPayload) => {
       html: data.html,
       attachments: data.attachments,
     })
+
+    console.log('Email sent successfully')
   } catch (error) {
     console.error('Failed to send email:', error)
   }

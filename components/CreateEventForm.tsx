@@ -36,6 +36,8 @@ const CreateEventForm = () => {
   const eventQRCodeRef = useRef<HTMLDivElement>(null)
   const ownerIdQRCodeRef = useRef<HTMLDivElement>(null)
   const handleSubmit = async (data: any) => {
+    console.log('In handleSubmit')
+
     const { eventName: name, eventEmail: email, eventFile } = data
     const applicantList = await excelToPersonList(eventFile)
     if (!applicantList) {
@@ -83,6 +85,7 @@ const CreateEventForm = () => {
       applicantList,
     })
     if (response) router.push(`/events/${eventId}/${ownerId}`)
+    else console.log('Error creating event')
     // if (response) router.push(`/events/${eventId}`)
   }
 
