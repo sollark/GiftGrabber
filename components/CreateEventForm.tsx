@@ -23,7 +23,7 @@ const defaultValues = {
   eventFile: undefined,
 }
 
-const URL = 'https://gift-grabber.onrender.com'
+const URL = 'https://gift-grabber.onrender.com/events'
 const eventId = generateEventId()
 const ownerId = generateOwnerId()
 const eventUrl = `${URL}/${eventId}`
