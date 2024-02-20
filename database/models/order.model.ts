@@ -3,6 +3,7 @@ import { Person } from './person.model'
 import { Gift } from './gift.model'
 
 export type Order = {
+  _id: Types.ObjectId
   createdAt: Date
   applicant: Person
   gifts: Gift[]

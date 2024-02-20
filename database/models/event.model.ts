@@ -3,7 +3,7 @@ import { Person } from './person.model'
 import { Gift } from './gift.model'
 
 export type Event = {
-  _id: string
+  _id: Types.ObjectId
   name: string
   email: string
   eventId: string

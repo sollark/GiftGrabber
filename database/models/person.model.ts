@@ -1,6 +1,7 @@
 import { Schema, Types, model, models } from 'mongoose'
 
 export type Person = {
+  _id: Types.ObjectId
   firstName: string
   lastName: string
 }
