@@ -1,3 +1,4 @@
+import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
 import { Types } from 'mongoose'
 import {
@@ -10,47 +11,68 @@ import {
 } from 'react'
 
 type Context = {
-  applicants: (Person & { _id: Types.ObjectId })[]
+  // List of all applicants
+  applicantList: (Person & { _id: Types.ObjectId })[]
+  // Applicant that takes gifts
+  applicant: (Person & { _id: Types.ObjectId }) | null
+  setApplicant: Dispatch<
+    SetStateAction<(Person & { _id: Types.ObjectId }) | null>
+  >
+  // Selected person from applicant list
   selectedPerson: (Person & { _id: Types.ObjectId }) | null
   setSelectedPerson: Dispatch<
     SetStateAction<(Person & { _id: Types.ObjectId }) | null>
   >
-  selectedPeople: (Person & { _id: Types.ObjectId })[]
-  setSelectedPeople: Dispatch<
-    SetStateAction<(Person & { _id: Types.ObjectId })[]>
+  // List of all gifts
+  giftList: (Gift & { _id: Types.ObjectId })[]
+  // List of gifts for the applicant
+  applicantGifts: (Gift & { _id: Types.ObjectId })[]
+  setApplicantGifts: Dispatch<
+    SetStateAction<(Gift & { _id: Types.ObjectId })[]>
   >
 }
 
 type ApplicantProviderProps = {
-  applicants: (Person & { _id: Types.ObjectId })[]
+  applicantList: (Person & { _id: Types.ObjectId })[]
+  giftList: (Gift & { _id: Types.ObjectId })[]
   children: ReactNode
 }
 
 export const ApplicantContext = createContext<Context>({
-  applicants: [],
+  applicantList: [],
+  applicant: null,
+  setApplicant: () => null,
   selectedPerson: null,
   setSelectedPerson: () => null,
-  selectedPeople: [],
-  setSelectedPeople: () => [],
+  giftList: [],
+  applicantGifts: [],
+  setApplicantGifts: () => [],
 })
 
 export const ApplicantProvider: FC<ApplicantProviderProps> = ({
-  applicants,
+  applicantList,
+  giftList,
   children,
 }) => {
+  const [applicant, setApplicant] = useState<
+    (Person & { _id: Types.ObjectId }) | null
+  >(null)
   const [selectedPerson, setSelectedPerson] = useState<
     (Person & { _id: Types.ObjectId }) | null
   >(null)
-  const [selectedPeople, setSelectedPeople] = useState<
-    (Person & { _id: Types.ObjectId })[]
+  const [applicantGifts, setApplicantGifts] = useState<
+    (Gift & { _id: Types.ObjectId })[]
   >([])
 
   const value = {
-    applicants,
+    applicantList,
+    applicant,
+    setApplicant,
     selectedPerson,
     setSelectedPerson,
-    selectedPeople,
-    setSelectedPeople,
+    giftList,
+    applicantGifts,
+    setApplicantGifts,
   }
 
   return (

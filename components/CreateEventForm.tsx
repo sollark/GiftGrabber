@@ -35,6 +35,7 @@ const CreateEventForm = () => {
   const [errorMessage, setErrorMessage] = useState('')
   const eventQRCodeRef = useRef<HTMLDivElement>(null)
   const ownerIdQRCodeRef = useRef<HTMLDivElement>(null)
+
   const handleSubmit = async (data: any) => {
     const { eventName: name, eventEmail: email, eventFile } = data
     const applicantList = await excelToPersonList(eventFile)
@@ -73,7 +74,6 @@ const CreateEventForm = () => {
     })
 
     const response = await createEvent({
-      _id: '',
       name,
       email,
       eventId,

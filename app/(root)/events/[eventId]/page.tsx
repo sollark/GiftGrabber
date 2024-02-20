@@ -1,4 +1,4 @@
-import { getEventApplicants } from '@/app/actions/event.action'
+import { getEventDetails } from '@/app/actions/event.action'
 import OrderGifts from '@/components/order/OrderGifts'
 import { FC } from 'react'
 
@@ -11,8 +11,8 @@ type SearchParamProps = {
 const ApplicantPage: FC<SearchParamProps> = async ({
   params: { eventId },
 }: SearchParamProps) => {
-  const event = await getEventApplicants(eventId)
-  // console.log('event in people page', event)
+  const event = await getEventDetails(eventId)
+  console.log('event in people page', event)
 
   return (
     <section className='full-screen flex align-center justify-center flex-col'>
