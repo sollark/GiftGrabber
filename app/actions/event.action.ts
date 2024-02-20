@@ -3,10 +3,16 @@
 import { connectToDatabase } from '@/database/connect'
 import EventModel, { Event } from '@/database/models/event.model'
 import GiftModel from '@/database/models/gift.model'
-import PersonModel from '@/database/models/person.model'
+import PersonModel, { Person } from '@/database/models/person.model'
 import { handleError } from '@/utils/utils'
 
-export const createEvent = async (event: Omit<Event, 'giftList'>) => {
+type PersonWithoutId = Omit<Person, '_id'>
+
+type EventForm = Omit<Event, '_id' | 'giftList' | 'applicantList'> & {
+  applicantList: PersonWithoutId[]
+}
+
+export const createEvent = async (event: EventForm) => {
   const {
     name,
     email,
@@ -16,6 +22,7 @@ export const createEvent = async (event: Omit<Event, 'giftList'>) => {
     ownerIdQRCodeBase64,
     applicantList,
   } = event
+
   try {
     await connectToDatabase()
 
@@ -60,7 +67,10 @@ export const getEventApplicants = async (eventId: string) => {
     await connectToDatabase()
 
     const event = await populateEventApplicants(
-      EventModel.findOne({ eventId }, { name: 1, applicantList: 1 })
+      EventModel.findOne(
+        { eventId },
+        { name: 1, applicantList: 1, giftList: 1 }
+      )
     )
     if (!event) throw new Error('Event not found')
 
@@ -75,8 +85,12 @@ export const getEventDetails = async (eventId: string) => {
   try {
     await connectToDatabase()
 
+    // eror is here, event is not found
     const event = await populateEvent(
-      EventModel.findOne({ eventId }, { name: 1, email: 1, applicantList: 1 })
+      EventModel.findOne(
+        { eventId },
+        { name: 1, email: 1, applicantList: 1, giftList: 1 }
+      )
     )
     if (!event) throw new Error('Event not found')
 
@@ -116,5 +130,9 @@ const populateEvent = async (query: any) => {
       path: 'giftList',
       model: 'Gift',
       select: 'owner receiver order',
+      populate: {
+        path: 'owner',
+        model: 'Person',
+      },
     })
 }
