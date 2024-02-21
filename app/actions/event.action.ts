@@ -86,6 +86,7 @@ export const getEventDetails = async (eventId: string) => {
     await connectToDatabase()
 
     // eror is here, event is not found
+    console.log('getEventDetails, eventId:', eventId)
     const event = await populateEvent(
       EventModel.findOne(
         { eventId },

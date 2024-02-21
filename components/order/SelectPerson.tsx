@@ -1,30 +1,18 @@
+'use client'
+
 import { ApplicantContext } from '@/lib/ApplicantContext'
 import { useContext } from 'react'
 import ApplicantList from '../ApplicantList'
 import StyledButton from '../StyledButton'
 
 const SelectPerson = () => {
-  const {
-    applicant,
-    setApplicant,
-    selectedPerson,
-    setApplicantGifts,
-    giftList,
-  } = useContext(ApplicantContext)
+  const { applicant, setApplicant, selectedPerson } =
+    useContext(ApplicantContext)
 
+  // only for choice an applicant
   function handleSelect() {
     console.log('handleSelect')
     if (!applicant) setApplicant(selectedPerson)
-
-    if (selectedPerson) {
-      const foundGift = giftList.find(
-        (gift) => gift.owner._id === selectedPerson._id
-      )
-      if (foundGift) {
-        console.log('Gift is available')
-        setApplicantGifts((prev) => [...prev, foundGift])
-      }
-    }
   }
 
   return (
