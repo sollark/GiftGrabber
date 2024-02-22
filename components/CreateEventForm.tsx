@@ -34,7 +34,7 @@ const CreateEventForm = () => {
 
   const [errorMessage, setErrorMessage] = useState('')
   const eventQRCodeRef = useRef<HTMLDivElement>(null)
-  const ownerIdQRCodeRef = useRef<HTMLDivElement>(null)
+  const ownerQRCodeRef = useRef<HTMLDivElement>(null)
 
   const handleSubmit = async (data: any) => {
     const { eventName: name, eventEmail: email, eventFile } = data
@@ -45,7 +45,7 @@ const CreateEventForm = () => {
     }
 
     const eventQRCodeBuffer = await getQRcodeBuffer(eventQRCodeRef)
-    const ownerIdQRCodeBuffer = await getQRcodeBuffer(ownerIdQRCodeRef)
+    const ownerIdQRCodeBuffer = await getQRcodeBuffer(ownerQRCodeRef)
     if (!eventQRCodeBuffer || !ownerIdQRCodeBuffer) {
       setErrorMessage('Error getting QR code')
       return
@@ -117,7 +117,7 @@ const CreateEventForm = () => {
         <ErrorMessage message={errorMessage} />
       </Form>
       <QRcode url={eventUrl} qrRef={eventQRCodeRef} />
-      <QRcode url={ownerUrl} qrRef={ownerIdQRCodeRef} />
+      <QRcode url={ownerUrl} qrRef={ownerQRCodeRef} />
     </>
   )
 }

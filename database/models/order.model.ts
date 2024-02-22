@@ -7,6 +7,7 @@ export type Order = {
   createdAt: Date
   applicant: Person
   gifts: Gift[]
+  orderId: string
   confirmationRQCode: string
   confirmedBy?: Person
   confirmedAt?: Date
@@ -16,6 +17,7 @@ type OrderDoc = {
   createdAt: Date
   applicant: Types.ObjectId
   gifts: Types.ObjectId[]
+  orderId: string
   confirmationRQCode: string
   confirmedAt?: Date
   confirmedBy?: Types.ObjectId
@@ -25,6 +27,7 @@ const orderSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
   applicant: { type: Types.ObjectId, ref: 'Person', required: true },
   gifts: [{ type: Types.ObjectId, ref: 'Gift', required: true }],
+  orderId: { type: String, required: true },
   confirmationRQCode: { type: String, required: true },
   confirmedAt: { type: Date },
   confirmedBy: { type: Types.ObjectId, ref: 'Person' },
