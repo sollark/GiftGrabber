@@ -29,6 +29,12 @@ export function generateOwnerId(): string {
   return ownerId
 }
 
+export function generateOrderId(): string {
+  const nanoid = customAlphabet('1234567890order', 15)
+  const ownerId = nanoid()
+  return ownerId
+}
+
 export async function excelToPersonList(file: File) {
   const eventListJson = await convertExcelToJson(file)
   console.log('excelToList, eventListJson:', eventListJson)

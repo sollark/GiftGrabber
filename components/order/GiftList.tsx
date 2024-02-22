@@ -1,15 +1,44 @@
 import { Gift } from '@/database/models/gift.model'
 import { ApplicantContext } from '@/lib/ApplicantContext'
 import { Types } from 'mongoose'
-import { useContext } from 'react'
+import { useContext, useRef } from 'react'
 import StyledButton from '../StyledButton'
+import { makeOrder } from '@/app/actions/order.action'
+import QRcode from '../QRcode'
+import { generateOrderId, getQRcodeBuffer } from '@/utils/utils'
+
+const URL = 'https://gift-grabber.onrender.com/orders'
+const orderId = generateOrderId()
+const orderUrl = `${URL}/${orderId}`
 
 const GiftList = () => {
-  const { applicantGifts, setApplicantGifts } = useContext(ApplicantContext)!
+  const { applicant, applicantGifts, setApplicantGifts } =
+    useContext(ApplicantContext)!
+
+  const orderQRCodeRef = useRef<HTMLDivElement>(null)
 
   const handleRemove = (giftToRemove: Gift & { _id: Types.ObjectId }) => {
     setApplicantGifts((prev) =>
       prev.filter((gift) => gift._id !== giftToRemove._id)
+    )
+  }
+
+  const handleOrder = async () => {
+    console.log('Order')
+    if (!applicant) return
+
+    const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef)
+    if (!orderQRCodeBuffer) {
+      //  setErrorMessage('Error getting QR code')
+      return
+    }
+    const orderQRCodeBase64 = orderQRCodeBuffer.toString('base64')
+
+    const response = await makeOrder(
+      applicant,
+      applicantGifts,
+      orderId,
+      orderQRCodeBase64
     )
   }
 
@@ -26,6 +55,8 @@ const GiftList = () => {
           </li>
         ))}
       </ul>
+      <StyledButton onClick={handleOrder}>Take</StyledButton>
+      <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
     </>
   )
 }

@@ -1,0 +1,32 @@
+'use server'
+
+import { connectToDatabase } from '@/database/connect'
+import { Gift } from '@/database/models/gift.model'
+import OrderModel from '@/database/models/order.model'
+import { Person } from '@/database/models/person.model'
+import { handleError } from '@/utils/utils'
+
+export const makeOrder = async (
+  applicant: Person,
+  gifts: Gift[],
+  orderId: string,
+  confirmationRQCode: string
+) => {
+  try {
+    await connectToDatabase()
+
+    const newOrder = await OrderModel.create({
+      createdAt: new Date(),
+      applicant: applicant._id,
+      gifts: gifts.map((gift) => gift._id),
+      orderId,
+      confirmationRQCode,
+    })
+    console.log('newOrder created:', newOrder)
+
+    return newOrder ? true : false
+  } catch (error) {
+    console.log('Error in makeOrder')
+    handleError(error)
+  }
+}
