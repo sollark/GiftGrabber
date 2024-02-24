@@ -30,3 +30,36 @@ export const makeOrder = async (
     handleError(error)
   }
 }
+
+export const getOrder = async (orderId: string) => {
+  try {
+    await connectToDatabase()
+
+    const order = await populateOrder(OrderModel.findOne({ orderId }))
+
+    return order ? order : null
+  } catch (error) {
+    console.log('Error in getOrder')
+    handleError(error)
+  }
+  return null
+}
+
+const populateOrder = async (query: any) => {
+  return query
+    .populate({
+      path: 'applicant',
+      model: 'Person',
+      select: 'firstName lastName',
+    })
+    .populate({
+      path: 'gifts',
+      model: 'Gift',
+      select: 'owner',
+      populate: {
+        path: 'owner',
+        model: 'Person',
+        select: 'firstName lastName',
+      },
+    })
+}

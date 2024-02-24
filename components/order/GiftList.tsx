@@ -1,11 +1,10 @@
+import { makeOrder } from '@/app/actions/order.action'
 import { Gift } from '@/database/models/gift.model'
 import { ApplicantContext } from '@/lib/ApplicantContext'
-import { Types } from 'mongoose'
-import { useContext, useRef } from 'react'
-import StyledButton from '../StyledButton'
-import { makeOrder } from '@/app/actions/order.action'
-import QRcode from '../QRcode'
 import { generateOrderId, getQRcodeBuffer } from '@/utils/utils'
+import { useContext, useRef } from 'react'
+import QRcode from '../QRcode'
+import StyledButton from '../StyledButton'
 
 const URL = 'https://gift-grabber.onrender.com/orders'
 const orderId = generateOrderId()
@@ -17,14 +16,13 @@ const GiftList = () => {
 
   const orderQRCodeRef = useRef<HTMLDivElement>(null)
 
-  const handleRemove = (giftToRemove: Gift & { _id: Types.ObjectId }) => {
+  const handleRemove = (giftToRemove: Gift) => {
     setApplicantGifts((prev) =>
       prev.filter((gift) => gift._id !== giftToRemove._id)
     )
   }
 
   const handleOrder = async () => {
-    console.log('Order')
     if (!applicant) return
 
     const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef)
@@ -46,7 +44,7 @@ const GiftList = () => {
     <>
       <h3>Gift list</h3>
       <ul>
-        {applicantGifts.map((gift: Gift & { _id: Types.ObjectId }) => (
+        {applicantGifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>
             {gift.owner.firstName} {gift.owner.lastName}
             <StyledButton onClick={() => handleRemove(gift)}>
