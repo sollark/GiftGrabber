@@ -1,5 +1,6 @@
 'use client'
 
+import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
 import { ApplicantContext } from '@/lib/ApplicantContext'
 import Autocomplete from '@mui/material/Autocomplete'
@@ -13,38 +14,18 @@ type OptionType = {
   person: Person & { _id: Types.ObjectId }
 }
 
-function mapPersonListToOptionList(
-  people: (Person & { _id: Types.ObjectId })[]
-) {
-  return people.map((person, index) => ({
-    id: index + 1,
-    label: `${person.firstName} ${person.lastName}`,
-    person: person,
-  }))
-}
-
 const ApplicantList: FC = () => {
   const { applicantList, setSelectedPerson, giftList, setApplicantGifts } =
     useContext(ApplicantContext)
   const applicantsOptionList = mapPersonListToOptionList(applicantList)
 
-  console.log('applicantsOptionList', applicantsOptionList)
-
   function handleSelect(event: SyntheticEvent, value: OptionType | null) {
-    console.log('event', event)
-    console.log('value', value)
-
     if (value) {
       setSelectedPerson(value.person)
 
-      const foundGift = giftList.find(
-        (gift) => gift.owner._id === value.person._id
-      )
-
-      if (foundGift) {
-        console.log('Gift is available')
-        setApplicantGifts((prev) => [...prev, foundGift])
-      }
+      // if selected person has a gift, add it to the applicant's gift list
+      const gift = availableGift(value.person, giftList)
+      if (gift) setApplicantGifts((prev) => [...prev, gift])
     }
   }
 
@@ -62,3 +43,21 @@ const ApplicantList: FC = () => {
 }
 
 export default ApplicantList
+
+function mapPersonListToOptionList(people: Person[]) {
+  return people.map((person) => ({
+    id: person._id.toString(),
+    label: `${person.firstName} ${person.lastName}`,
+    person: person,
+  }))
+}
+
+function availableGift(person: Person, giftList: Gift[]) {
+  for (let gift of giftList) {
+    if (gift.owner._id === person._id && gift.receiver !== null) {
+      return gift
+    }
+  }
+
+  return null
+}
