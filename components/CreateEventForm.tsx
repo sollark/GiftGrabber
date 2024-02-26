@@ -48,8 +48,8 @@ const CreateEventForm = () => {
       setErrorMessage('Error getting an applicant list')
       return
     }
-    const approversList = await excelToPersonList(approversFile)
-    if (!approversList) {
+    const approverList = await excelToPersonList(approversFile)
+    if (!approverList) {
       setErrorMessage('Error getting an approvers list')
       return
     }
@@ -91,7 +91,7 @@ const CreateEventForm = () => {
       eventQRCodeBase64,
       ownerIdQRCodeBase64,
       applicantList,
-      approversList,
+      approverList,
     })
     if (response) router.push(`/events/${eventId}/${ownerId}`)
     else console.log('Error creating event')

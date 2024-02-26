@@ -8,8 +8,12 @@ import { handleError } from '@/utils/utils'
 
 type PersonWithoutId = Omit<Person, '_id'>
 
-type EventForm = Omit<Event, '_id' | 'giftList' | 'applicantList'> & {
+type EventForm = Omit<
+  Event,
+  '_id' | 'giftList' | 'applicantList' | 'approverList'
+> & {
   applicantList: PersonWithoutId[]
+  approverList: PersonWithoutId[]
 }
 
 export const createEvent = async (event: EventForm) => {
@@ -21,6 +25,7 @@ export const createEvent = async (event: EventForm) => {
     eventQRCodeBase64,
     ownerIdQRCodeBase64,
     applicantList,
+    approverList,
   } = event
 
   try {
@@ -29,6 +34,14 @@ export const createEvent = async (event: EventForm) => {
     // Creates person for every applicant
     const applicantIds = await Promise.all(
       applicantList.map(async (person) => {
+        const personDoc = await PersonModel.create(person)
+        return personDoc._id
+      })
+    )
+
+    // Creates person for every approver
+    const approverIds = await Promise.all(
+      approverList.map(async (person) => {
         const personDoc = await PersonModel.create(person)
         return personDoc._id
       })
@@ -51,6 +64,7 @@ export const createEvent = async (event: EventForm) => {
       ownerIdQRCodeBase64,
       applicantList: applicantIds,
       giftList: giftIds,
+      approverList: approverIds,
     })
 
     console.log('newEvent created:', newEvent)
@@ -85,7 +99,7 @@ export const getEventDetails = async (eventId: string) => {
   try {
     await connectToDatabase()
 
-    // eror is here, event is not found
+    // error is here, event is not found
     console.log('getEventDetails, eventId:', eventId)
     const event = await populateEvent(
       EventModel.findOne(

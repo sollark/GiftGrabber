@@ -12,6 +12,7 @@ export type Event = {
   ownerIdQRCodeBase64: string
   applicantList: Person[]
   giftList: Gift[]
+  approverList: Person[]
 }
 
 type EventDoc = {
@@ -24,6 +25,7 @@ type EventDoc = {
   ownerIdQRCodeBase64: string
   applicantList: Types.ObjectId[]
   giftList: Types.ObjectId[]
+  approverList: Types.ObjectId[]
 }
 
 export const eventSchema: Schema = new Schema({
@@ -44,6 +46,13 @@ export const eventSchema: Schema = new Schema({
     {
       type: Types.ObjectId,
       ref: 'Gift',
+      required: true,
+    },
+  ],
+  approverList: [
+    {
+      type: Types.ObjectId,
+      ref: 'Person',
       required: true,
     },
   ],
