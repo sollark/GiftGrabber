@@ -37,10 +37,20 @@ const CreateEventForm = () => {
   const ownerQRCodeRef = useRef<HTMLDivElement>(null)
 
   const handleSubmit = async (data: any) => {
-    const { eventName: name, eventEmail: email, eventFile } = data
-    const applicantList = await excelToPersonList(eventFile)
+    const {
+      eventName: name,
+      eventEmail: email,
+      applicantsFile,
+      approversFile,
+    } = data
+    const applicantList = await excelToPersonList(applicantsFile)
     if (!applicantList) {
       setErrorMessage('Error getting an applicant list')
+      return
+    }
+    const approversList = await excelToPersonList(approversFile)
+    if (!approversList) {
+      setErrorMessage('Error getting an approvers list')
       return
     }
 
@@ -81,6 +91,7 @@ const CreateEventForm = () => {
       eventQRCodeBase64,
       ownerIdQRCodeBase64,
       applicantList,
+      approversList,
     })
     if (response) router.push(`/events/${eventId}/${ownerId}`)
     else console.log('Error creating event')
@@ -108,8 +119,15 @@ const CreateEventForm = () => {
           inputProps={{ style: { fontSize: 24 } }}
         />
         <ControlledFileInput
-          name='eventFile'
-          label='List of participants'
+          name='applicantsFile'
+          label='List of applicants'
+          type='file'
+          variant='outlined'
+          inputProps={{ style: { fontSize: 24 } }}
+        />
+        <ControlledFileInput
+          name='approversFile'
+          label='List of approvers'
           type='file'
           variant='outlined'
           inputProps={{ style: { fontSize: 24 } }}
