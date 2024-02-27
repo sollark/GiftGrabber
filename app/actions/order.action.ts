@@ -7,6 +7,7 @@ import { Person } from '@/database/models/person.model'
 import { handleError } from '@/utils/utils'
 
 export const makeOrder = async (
+  approverList: Person[],
   applicant: Person,
   gifts: Gift[],
   orderId: string,
@@ -17,6 +18,7 @@ export const makeOrder = async (
 
     const newOrder = await OrderModel.create({
       createdAt: new Date(),
+      approverList: approverList.map((approver) => approver._id),
       applicant: applicant._id,
       gifts: gifts.map((gift) => gift._id),
       orderId,
@@ -71,6 +73,11 @@ export const confirmOrder = async (orderId: string, confirmedBy: Person) => {
 
 const populateOrder = async (query: any) => {
   return query
+    .populate({
+      path: 'approverList',
+      model: 'Person',
+      select: 'firstName lastName',
+    })
     .populate({
       path: 'applicant',
       model: 'Person',

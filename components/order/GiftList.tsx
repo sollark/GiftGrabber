@@ -5,13 +5,15 @@ import { generateOrderId, getQRcodeBuffer } from '@/utils/utils'
 import { useContext, useRef } from 'react'
 import QRcode from '../QRcode'
 import StyledButton from '../StyledButton'
+import { useRouter } from 'next/navigation'
 
 const URL = 'https://gift-grabber.onrender.com/orders'
 const orderId = generateOrderId()
 const orderUrl = `${URL}/${orderId}`
 
 const GiftList = () => {
-  const { applicant, applicantGifts, setApplicantGifts } =
+  const router = useRouter()
+  const { approverList, applicant, applicantGifts, setApplicantGifts } =
     useContext(ApplicantContext)!
 
   const orderQRCodeRef = useRef<HTMLDivElement>(null)
@@ -33,11 +35,16 @@ const GiftList = () => {
     const orderQRCodeBase64 = orderQRCodeBuffer.toString('base64')
 
     const response = await makeOrder(
+      approverList,
       applicant,
       applicantGifts,
       orderId,
       orderQRCodeBase64
     )
+
+    if (response) router.push(`/orders/${orderId}`)
+    else console.log('Error creating event')
+    // if (response) router.push(`/events/${eventId}`)
   }
 
   return (

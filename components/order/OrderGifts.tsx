@@ -14,6 +14,7 @@ const OrderGifts = (props: OrderGiftsProps) => {
 
   return (
     <ApplicantProvider
+      approverList={event.approverList}
       applicantList={event.applicantList}
       giftList={event.giftList}>
       <SelectPerson />
