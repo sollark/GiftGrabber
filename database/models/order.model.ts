@@ -1,6 +1,6 @@
 import { Schema, Types, model, models } from 'mongoose'
-import { Person } from './person.model'
 import { Gift } from './gift.model'
+import { Person } from './person.model'
 
 export type Order = {
   _id: Types.ObjectId
@@ -16,7 +16,7 @@ export type Order = {
 type OrderDoc = {
   _id: Types.ObjectId
   createdAt: Date
-
+  approverList: Types.ObjectId[]
   applicant: Types.ObjectId
   gifts: Types.ObjectId[]
   orderId: string
@@ -27,7 +27,7 @@ type OrderDoc = {
 
 const orderSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now },
-  approverList: [{ type: Types.ObjectId, ref: 'Person' }],
+  approverList: [{ type: Types.ObjectId, ref: 'Person', required: true }],
   applicant: { type: Types.ObjectId, ref: 'Person', required: true },
   gifts: [{ type: Types.ObjectId, ref: 'Gift', required: true }],
   orderId: { type: String, required: true },
