@@ -14,7 +14,16 @@ export const EventSchema = z.object({
     .min(1, { message: 'Field can not be empty' })
     .max(24, { message: 'Email must be less than 24 characters' })
     .email({ message: 'Invalid email address' }),
-  eventFile: z.instanceof(File).refine(
+  applicantsFile: z.instanceof(File).refine(
+    (file) => {
+      const ext = file.name.split('.').pop()
+      return ext === 'xls' || ext === 'xlsx'
+    },
+    {
+      message: 'File type must be .xls or .xlsx',
+    }
+  ),
+  approversFile: z.instanceof(File).refine(
     (file) => {
       const ext = file.name.split('.').pop()
       return ext === 'xls' || ext === 'xlsx'
