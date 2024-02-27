@@ -20,7 +20,8 @@ import { sendQRCodesToOwner } from '@/app/actions/email.action'
 const defaultValues = {
   eventName: '',
   eventEmail: '',
-  eventFile: undefined,
+  applicantsFile: undefined,
+  approversFile: undefined,
 }
 
 const URL = 'https://gift-grabber.onrender.com/events'
@@ -37,6 +38,8 @@ const CreateEventForm = () => {
   const ownerQRCodeRef = useRef<HTMLDivElement>(null)
 
   const handleSubmit = async (data: any) => {
+    console.log('Submitting...')
+
     const {
       eventName: name,
       eventEmail: email,
