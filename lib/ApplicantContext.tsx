@@ -11,34 +11,32 @@ import {
 } from 'react'
 
 type Context = {
+  // List of people that approves an order
+  approverList: Person[]
   // List of all applicants
-  applicantList: (Person & { _id: Types.ObjectId })[]
-  // Applicant that takes gifts
-  applicant: (Person & { _id: Types.ObjectId }) | null
-  setApplicant: Dispatch<
-    SetStateAction<(Person & { _id: Types.ObjectId }) | null>
-  >
+  applicantList: Person[]
+  // Selected applicant that takes gifts
+  applicant: Person | null
+  setApplicant: Dispatch<SetStateAction<Person | null>>
   // Selected person from applicant list
-  selectedPerson: (Person & { _id: Types.ObjectId }) | null
-  setSelectedPerson: Dispatch<
-    SetStateAction<(Person & { _id: Types.ObjectId }) | null>
-  >
+  selectedPerson: Person | null
+  setSelectedPerson: Dispatch<SetStateAction<Person | null>>
   // List of all gifts
-  giftList: (Gift & { _id: Types.ObjectId })[]
+  giftList: Gift[]
   // List of gifts for the applicant
-  applicantGifts: (Gift & { _id: Types.ObjectId })[]
-  setApplicantGifts: Dispatch<
-    SetStateAction<(Gift & { _id: Types.ObjectId })[]>
-  >
+  applicantGifts: Gift[]
+  setApplicantGifts: Dispatch<SetStateAction<Gift[]>>
 }
 
 type ApplicantProviderProps = {
-  applicantList: (Person & { _id: Types.ObjectId })[]
-  giftList: (Gift & { _id: Types.ObjectId })[]
+  approverList: Person[]
+  applicantList: Person[]
+  giftList: Gift[]
   children: ReactNode
 }
 
 export const ApplicantContext = createContext<Context>({
+  approverList: [],
   applicantList: [],
   applicant: null,
   setApplicant: () => null,
@@ -50,6 +48,7 @@ export const ApplicantContext = createContext<Context>({
 })
 
 export const ApplicantProvider: FC<ApplicantProviderProps> = ({
+  approverList,
   applicantList,
   giftList,
   children,
@@ -65,6 +64,7 @@ export const ApplicantProvider: FC<ApplicantProviderProps> = ({
   >([])
 
   const value = {
+    approverList,
     applicantList,
     applicant,
     setApplicant,
