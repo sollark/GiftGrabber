@@ -46,6 +46,22 @@ const EventDetails: FC<SearchParamProps> = async ({
           )}
         </tbody>
       </table>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          {event.approverList.map(
+            (approver: Person & { _id: Types.ObjectId }) => (
+              <tr key={approver._id.toString()}>
+                <td>{`${approver.firstName} ${approver.lastName}`}</td>
+              </tr>
+            )
+          )}
+        </tbody>
+      </table>
     </div>
   )
 }

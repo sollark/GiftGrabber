@@ -104,7 +104,7 @@ export const getEventDetails = async (eventId: string) => {
     const event = await populateEvent(
       EventModel.findOne(
         { eventId },
-        { name: 1, email: 1, applicantList: 1, giftList: 1 }
+        { name: 1, email: 1, applicantList: 1, giftList: 1, approverList: 1 }
       )
     )
     if (!event) throw new Error('Event not found')
@@ -149,5 +149,10 @@ const populateEvent = async (query: any) => {
         path: 'owner',
         model: 'Person',
       },
+    })
+    .populate({
+      path: 'approverList',
+      model: 'Person',
+      select: 'firstName lastName',
     })
 }

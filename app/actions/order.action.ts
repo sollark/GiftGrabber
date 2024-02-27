@@ -45,6 +45,30 @@ export const getOrder = async (orderId: string) => {
   return null
 }
 
+export const confirmOrder = async (orderId: string, confirmedBy: Person) => {
+  try {
+    await connectToDatabase()
+
+    const order = await populateOrder(
+      OrderModel.findOne({
+        orderId,
+        confirmedBy: { $exists: false },
+      })
+    )
+    if (!order) throw new Error('Order not found')
+
+    order.confirmedBy = confirmedBy._id
+    order.confirmedAt = new Date()
+    await order.save()
+
+    return order ? true : false
+  } catch (error) {
+    console.log('Error in confirmOrder')
+    handleError(error)
+  }
+  return false
+}
+
 const populateOrder = async (query: any) => {
   return query
     .populate({
