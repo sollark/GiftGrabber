@@ -99,7 +99,6 @@ export const getEventDetails = async (eventId: string) => {
   try {
     await connectToDatabase()
 
-    // error is here, event is not found
     console.log('getEventDetails, eventId:', eventId)
     const event = await populateEvent(
       EventModel.findOne(
@@ -138,12 +137,10 @@ const populateEvent = async (query: any) => {
   return query
     .populate({
       path: 'applicantList',
-      model: 'Person',
       select: 'firstName lastName',
     })
     .populate({
       path: 'giftList',
-      model: 'Gift',
       select: 'owner receiver order',
       populate: {
         path: 'owner',
@@ -152,7 +149,6 @@ const populateEvent = async (query: any) => {
     })
     .populate({
       path: 'approverList',
-      model: 'Person',
       select: 'firstName lastName',
     })
 }

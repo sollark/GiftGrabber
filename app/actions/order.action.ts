@@ -75,21 +75,17 @@ const populateOrder = async (query: any) => {
   return query
     .populate({
       path: 'approverList',
-      model: 'Person',
       select: 'firstName lastName',
     })
     .populate({
       path: 'applicant',
-      model: 'Person',
       select: 'firstName lastName',
     })
     .populate({
       path: 'gifts',
-      model: 'Gift',
       select: 'owner',
       populate: {
         path: 'owner',
-        model: 'Person',
         select: 'firstName lastName',
       },
     })
