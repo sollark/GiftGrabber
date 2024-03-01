@@ -28,7 +28,7 @@ type EventDoc = {
   approverList: Types.ObjectId[]
 }
 
-export const eventSchema: Schema = new Schema({
+const eventSchema: Schema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   eventId: { type: String, required: true },

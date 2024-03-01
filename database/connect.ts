@@ -1,4 +1,8 @@
 import mongoose from 'mongoose'
+import EventModel from './models/event.model'
+import GiftModel from './models/gift.model'
+import OrderModel from './models/order.model'
+import PersonModel from './models/person.model'
 
 const mongoUrl = process.env.MONGO_URL
 
@@ -16,6 +20,13 @@ export const connectToDatabase = async () => {
 
   try {
     await mongoose.connect(mongoUrl)
+
+    // Initialize models
+    PersonModel.init()
+    GiftModel.init()
+    EventModel.init()
+    OrderModel.init()
+
     console.log('Connected to MongoDB')
   } catch (error) {
     console.log(error)
