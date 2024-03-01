@@ -5,13 +5,12 @@ import { Person } from '@/database/models/person.model'
 import { ApplicantContext } from '@/lib/ApplicantContext'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-import { Types } from 'mongoose'
 import { FC, SyntheticEvent, useContext } from 'react'
 
 type OptionType = {
   id: number
   label: string
-  person: Person & { _id: Types.ObjectId }
+  person: Person // {_id: Types.ObjectId, firstName: string, lastName: string}
 }
 
 const ApplicantList: FC = () => {

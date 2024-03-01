@@ -1,7 +1,7 @@
 import { getOrder } from '@/app/actions/order.action'
 import GiftList from '@/components/GiftList'
-import StyledButton from '@/components/StyledButton'
-import { FC } from 'react'
+import { OptionType } from '@/components/PersonAutocomplete'
+import { FC, SyntheticEvent } from 'react'
 
 type SearchParamProps = {
   params: {
@@ -12,17 +12,27 @@ type SearchParamProps = {
 const OrderPage: FC<SearchParamProps> = async ({
   params: { orderId },
 }: SearchParamProps) => {
+  console.log('getting an order')
   const order = await getOrder(orderId)
-  const { applicant } = order
-  const orderApprover = null
+  console.log('order', order)
+  // const { approverList, applicant } = order
 
+  const onSelectApprover = (
+    event: SyntheticEvent,
+    value: OptionType | null
+  ) => {
+    console.log('onSelectApprover', value)
+  }
+
+  // TODO move it to client component
   function handleConfirm() {}
   return (
     <div>
       <h2>OrderPage</h2>
+      {/* 
       <p>{`applicant: ${applicant.firstName} ${applicant.lastName}`}</p>
-      <GiftList gifts={order.gifts} />
-      <StyledButton>Confirm </StyledButton>
+      <GiftList gifts={order.gifts} /> */}
+      {/* <StyledButton>Confirm</StyledButton> */}
     </div>
   )
 }
