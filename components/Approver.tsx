@@ -1,24 +1,27 @@
+'use client'
+
 import { Person } from '@/database/models/person.model'
-import { FC, SyntheticEvent } from 'react'
-import PersonAutocomplete, { OptionType } from './PersonAutocomplete'
-import StyledButton from './StyledButton'
+import { useState } from 'react'
+import PersonAutocomplete from './PersonAutocomplete'
 
 type ApproverProps = {
   approverList: Person[]
-  onSelectApprover: (event: SyntheticEvent, value: OptionType | null) => void
 }
 
-const Approver: FC<ApproverProps> = ({
-  approverList,
-  onSelectApprover,
-}: ApproverProps) => {
+const Approver = ({ approverList }: ApproverProps) => {
+  const [approver, setApprover] = useState<Person | null>(null)
+
+  function onSelectApprover(selectedPerson: Person) {
+    console.log('onSelectApprover', selectedPerson)
+    if (selectedPerson) setApprover(selectedPerson)
+  }
+
   return (
     <div>
-      {/* <PersonAutocomplete
+      <PersonAutocomplete
         peopleList={approverList}
-        onChange={onSelectApprover}
-      /> */}
-      <StyledButton>Confirm</StyledButton>
+        onSelectPerson={onSelectApprover}
+      />
     </div>
   )
 }

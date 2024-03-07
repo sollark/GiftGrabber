@@ -31,7 +31,6 @@ const ApplicantList: FC = () => {
   return (
     <Autocomplete
       disablePortal
-      id='combo-box-demo'
       options={applicantsOptionList}
       onChange={(event: any, value: any) => handleSelect(event, value)}
       sx={{ width: 300 }}
