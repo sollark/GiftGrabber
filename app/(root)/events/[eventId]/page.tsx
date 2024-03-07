@@ -12,7 +12,7 @@ const ApplicantPage: FC<SearchParamProps> = async ({
   params: { eventId },
 }: SearchParamProps) => {
   const event = await getEventDetails(eventId)
-  console.log('event in people page', event)
+  console.log('event in ApplicantPage', event)
 
   return (
     <section className='full-screen flex align-center justify-center flex-col'>
