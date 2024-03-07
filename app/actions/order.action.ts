@@ -2,7 +2,7 @@
 
 import { connectToDatabase } from '@/database/connect'
 import { Gift } from '@/database/models/gift.model'
-import OrderModel from '@/database/models/order.model'
+import OrderModel, { Order } from '@/database/models/order.model'
 import { Person } from '@/database/models/person.model'
 import { handleError } from '@/utils/utils'
 
@@ -33,13 +33,14 @@ export const makeOrder = async (
   }
 }
 
-export const getOrder = async (orderId: string) => {
+export const getOrder = async (orderId: string): Promise<Order | null> => {
   try {
     await connectToDatabase()
 
     const order = await populateOrder(OrderModel.findOne({ orderId }))
+    if (!order) throw new Error('Order not found')
 
-    return order ? order : null
+    return JSON.parse(JSON.stringify(order))
   } catch (error) {
     console.log('Error in getOrder')
     handleError(error)
@@ -63,7 +64,7 @@ export const confirmOrder = async (orderId: string, confirmedBy: Person) => {
     order.confirmedAt = new Date()
     await order.save()
 
-    return order ? true : false
+    return JSON.parse(JSON.stringify(order))
   } catch (error) {
     console.log('Error in confirmOrder')
     handleError(error)
