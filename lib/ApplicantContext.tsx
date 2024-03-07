@@ -35,7 +35,7 @@ type ApplicantProviderProps = {
   children: ReactNode
 }
 
-export const ApplicantContext = createContext<Context>({
+const initialContext: Context = {
   approverList: [],
   applicantList: [],
   applicant: null,
@@ -45,7 +45,9 @@ export const ApplicantContext = createContext<Context>({
   giftList: [],
   applicantGifts: [],
   setApplicantGifts: () => [],
-})
+}
+
+export const ApplicantContext = createContext<Context>(initialContext)
 
 export const ApplicantProvider: FC<ApplicantProviderProps> = ({
   approverList,
