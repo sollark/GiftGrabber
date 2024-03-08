@@ -1,4 +1,4 @@
-import { ApplicantContext } from '@/lib/ApplicantContext'
+import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import { useContext } from 'react'
 
 const PersonInfo = () => {

@@ -2,7 +2,7 @@
 
 import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
-import { ApplicantContext } from '@/lib/ApplicantContext'
+import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import { FC, SyntheticEvent, useContext } from 'react'

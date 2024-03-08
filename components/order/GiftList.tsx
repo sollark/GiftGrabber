@@ -1,6 +1,6 @@
 import { makeOrder } from '@/app/actions/order.action'
 import { Gift } from '@/database/models/gift.model'
-import { ApplicantContext } from '@/lib/ApplicantContext'
+import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import { generateOrderId, getQRcodeBuffer } from '@/utils/utils'
 import { useContext, useRef } from 'react'
 import QRcode from '../QRcode'

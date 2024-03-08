@@ -1,17 +1,22 @@
+'use client'
+
+import { OrderProvider } from '@/app/contexts/OrderContext'
 import { Order } from '@/database/models/order.model'
-import React, { FC } from 'react'
+import { FC } from 'react'
 import Approver from './Approver'
-import { OrderProvider } from '@/lib/OrderContext'
+import ConfirmOrderButton from './ConfirmOrderButton'
+import OrderDetails from './OrderDetails'
 
 type ConfirmOrderProps = {
   order: Order
 }
-const ConfirmOrder: FC<ConfirmOrderProps> = ({ order }: ConfirmOrderProps) => {
-  const { approverList } = order
 
+const ConfirmOrder: FC<ConfirmOrderProps> = ({ order }: ConfirmOrderProps) => {
   return (
-    <OrderProvider approverList={approverList}>
-      <Approver approverList={approverList} />
+    <OrderProvider order={order}>
+      <Approver />
+      <OrderDetails />
+      <ConfirmOrderButton />
     </OrderProvider>
   )
 }

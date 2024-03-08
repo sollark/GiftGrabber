@@ -1,6 +1,6 @@
 'use client'
 
-import { ApplicantProvider } from '@/lib/ApplicantContext'
+import { ApplicantProvider } from '@/app/contexts/ApplicantContext'
 import GiftList from './GiftList'
 import PersonInfo from './PersonInfo'
 import SelectPerson from './SelectPerson'
