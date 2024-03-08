@@ -12,11 +12,12 @@ type ConfirmOrderProps = {
 }
 
 const ConfirmOrder: FC<ConfirmOrderProps> = ({ order }: ConfirmOrderProps) => {
+  const { confirmedBy } = order
   return (
     <OrderProvider order={order}>
-      <Approver />
+      {!confirmedBy && <Approver />}
       <OrderDetails />
-      <ConfirmOrderButton />
+      {confirmedBy ? 'Order is confirmed' : <ConfirmOrderButton />}
     </OrderProvider>
   )
 }
