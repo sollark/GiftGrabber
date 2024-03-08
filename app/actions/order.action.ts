@@ -1,7 +1,7 @@
 'use server'
 
 import { connectToDatabase } from '@/database/connect'
-import { Gift } from '@/database/models/gift.model'
+import GiftModel, { Gift } from '@/database/models/gift.model'
 import OrderModel, { Order } from '@/database/models/order.model'
 import { Person } from '@/database/models/person.model'
 import { handleError } from '@/utils/utils'
@@ -68,6 +68,16 @@ export const confirmOrder = async (
     order.confirmedBy = confirmedBy
     order.confirmedAt = new Date()
     await order.save()
+
+    // update gifts status
+    const { applicant } = order
+    const gifts = order.gifts.map(async (gift: Gift) => {
+      const giftToUpdate = await GiftModel.findById(gift._id)
+      giftToUpdate.receiver = applicant._id
+      giftToUpdate.order = order._id
+      await giftToUpdate.save()
+      return giftToUpdate
+    })
 
     return JSON.parse(JSON.stringify(order))
   } catch (error) {
