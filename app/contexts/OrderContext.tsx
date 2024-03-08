@@ -14,6 +14,7 @@ type Context = {
   approverList: Person[]
   approver: Person | null
   setApprover: Dispatch<SetStateAction<Person | null>>
+  getApprover: () => Person | null
 }
 
 type OrderProviderProps = {
@@ -26,6 +27,7 @@ const initialContext: Context = {
   approverList: [],
   approver: null,
   setApprover: () => null,
+  getApprover: () => null,
 }
 
 export const OrderContext = createContext<Context>(initialContext)
@@ -33,7 +35,10 @@ export const OrderContext = createContext<Context>(initialContext)
 export const OrderProvider: FC<OrderProviderProps> = ({ order, children }) => {
   const { approverList } = order
   const [approver, setApprover] = useState<Person | null>(null)
-  const value = { order, approverList, approver, setApprover }
+
+  const getApprover = () => approver
+
+  const value = { order, approverList, approver, setApprover, getApprover }
 
   return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>
 }

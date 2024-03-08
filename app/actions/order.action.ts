@@ -5,6 +5,7 @@ import { Gift } from '@/database/models/gift.model'
 import OrderModel, { Order } from '@/database/models/order.model'
 import { Person } from '@/database/models/person.model'
 import { handleError } from '@/utils/utils'
+import { Types } from 'mongoose'
 
 export const makeOrder = async (
   approverList: Person[],
@@ -48,10 +49,14 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
   return null
 }
 
-export const confirmOrder = async (orderId: string, confirmedBy: Person) => {
+export const confirmOrder = async (
+  orderId: string,
+  confirmedBy: Types.ObjectId
+) => {
   try {
     await connectToDatabase()
 
+    console.log('in confirmOrder:', orderId, confirmedBy)
     const order = await populateOrder(
       OrderModel.findOne({
         orderId,
@@ -60,7 +65,7 @@ export const confirmOrder = async (orderId: string, confirmedBy: Person) => {
     )
     if (!order) throw new Error('Order not found')
 
-    order.confirmedBy = confirmedBy._id
+    order.confirmedBy = confirmedBy
     order.confirmedAt = new Date()
     await order.save()
 
