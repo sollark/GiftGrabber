@@ -95,6 +95,23 @@ export const getEventApplicants = async (eventId: string) => {
   }
 }
 
+export const getEventApprovers = async (eventId: string): Promise<Person[]> => {
+  try {
+    await connectToDatabase()
+
+    const event = await populateEventApprovers(
+      EventModel.findOne({ eventId }, { approverList: 1 })
+    )
+    if (!event) throw new Error('Event not found')
+
+    return JSON.parse(JSON.stringify(event.approverList))
+  } catch (error) {
+    console.log('Error in createEvent')
+    handleError(error)
+    return []
+  }
+}
+
 export const getEventDetails = async (eventId: string) => {
   try {
     await connectToDatabase()
@@ -128,6 +145,14 @@ export const getAllEvents = async () => {
 const populateEventApplicants = async (query: any) => {
   return query.populate({
     path: 'applicantList',
+    model: 'Person',
+    select: 'firstName lastName',
+  })
+}
+
+const populateEventApprovers = async (query: any) => {
+  return query.populate({
+    path: 'approverList',
     model: 'Person',
     select: 'firstName lastName',
   })
