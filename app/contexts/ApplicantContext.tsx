@@ -1,6 +1,5 @@
 import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
-import { Types } from 'mongoose'
 import {
   createContext,
   Dispatch,
@@ -10,7 +9,14 @@ import {
   useState,
 } from 'react'
 
-type Context = {
+type ApplicantProviderProps = {
+  approverList: Person[]
+  applicantList: Person[]
+  giftList: Gift[]
+  children: ReactNode
+}
+
+type ApplicantContextValues = {
   // List of people that approves an order
   approverList: Person[]
   // List of all applicants
@@ -28,26 +34,9 @@ type Context = {
   setApplicantGifts: Dispatch<SetStateAction<Gift[]>>
 }
 
-type ApplicantProviderProps = {
-  approverList: Person[]
-  applicantList: Person[]
-  giftList: Gift[]
-  children: ReactNode
-}
-
-const initialContext: Context = {
-  approverList: [],
-  applicantList: [],
-  applicant: null,
-  setApplicant: () => null,
-  selectedPerson: null,
-  setSelectedPerson: () => null,
-  giftList: [],
-  applicantGifts: [],
-  setApplicantGifts: () => [],
-}
-
-export const ApplicantContext = createContext<Context>(initialContext)
+export const ApplicantContext = createContext<
+  ApplicantContextValues | undefined
+>(undefined)
 
 export const ApplicantProvider: FC<ApplicantProviderProps> = ({
   approverList,

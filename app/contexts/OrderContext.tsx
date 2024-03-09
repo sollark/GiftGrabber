@@ -1,6 +1,6 @@
 import { Order } from '@/database/models/order.model'
 import { Person } from '@/database/models/person.model'
-import React, {
+import {
   Dispatch,
   FC,
   ReactNode,
@@ -9,7 +9,7 @@ import React, {
   useState,
 } from 'react'
 
-type Context = {
+type OrderContextValues = {
   order: Order | null
   approverList: Person[]
   approver: Person | null
@@ -19,26 +19,34 @@ type Context = {
 
 type OrderProviderProps = {
   order: Order
+  approverList: Person[]
   children: ReactNode
 }
 
-const initialContext: Context = {
-  order: null,
-  approverList: [],
-  approver: null,
-  setApprover: () => null,
-  getApprover: () => null,
-}
+export const OrderContext = createContext<OrderContextValues | undefined>(
+  undefined
+)
 
-export const OrderContext = createContext<Context>(initialContext)
-
-export const OrderProvider: FC<OrderProviderProps> = ({ order, children }) => {
-  const { approverList } = order
+export const OrderProvider: FC<OrderProviderProps> = ({
+  order,
+  approverList,
+  children,
+}) => {
   const [approver, setApprover] = useState<Person | null>(null)
 
   const getApprover = () => approver
 
-  const value = { order, approverList, approver, setApprover, getApprover }
+  const contextValue: OrderContextValues = {
+    order,
+    approverList,
+    approver,
+    setApprover,
+    getApprover,
+  }
 
-  return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>
+  return (
+    <OrderContext.Provider value={contextValue}>
+      {children}
+    </OrderContext.Provider>
+  )
 }
