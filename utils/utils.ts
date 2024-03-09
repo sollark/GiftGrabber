@@ -36,15 +36,15 @@ export function generateOrderId(): string {
 }
 
 export async function excelToPersonList(file: File) {
-  const eventListJson = await convertExcelToJson(file)
-  console.log('excelToList, eventListJson:', eventListJson)
+  const jsonList = await convertExcelToJson(file)
 
-  const applicantList: Omit<Person, '_id'>[] = eventListJson.map((record) => ({
+  // Convert json list to array of Person objects
+  const personArray: Omit<Person, '_id'>[] = jsonList.map((record) => ({
     firstName: record['firstName'],
     lastName: record['lastName'],
   }))
-  console.log('excelToList, applicantList:', applicantList)
-  return applicantList
+
+  return personArray
 }
 
 export const getQRcodeBuffer = async (qrRef: any) => {

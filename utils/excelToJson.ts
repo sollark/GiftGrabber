@@ -10,13 +10,22 @@ export const convertExcelToJson = async (
     const sheet = workbook.Sheets[sheetName]
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][]
 
-    const resultArray = jsonData.map((row: string[]) => {
-      const obj: Record<string, string> = {}
-      for (let i = 0; i < jsonData[0].length; i++) {
-        obj[jsonData[0][i]] = row[i]
-      }
-      return obj
-    })
+    const resultArray = jsonData.reduce(
+      (result: Record<string, string>[], row: string[]) => {
+        // Check if the row is not empty
+        if (
+          row.some((cell) => cell !== null && cell !== undefined && cell !== '')
+        ) {
+          const obj: Record<string, string> = {}
+          for (let i = 0; i < jsonData[0].length; i++) {
+            obj[jsonData[0][i]] = row[i]
+          }
+          result.push(obj)
+        }
+        return result
+      },
+      []
+    )
 
     return resultArray.slice(1)
   } catch (error) {
