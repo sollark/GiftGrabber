@@ -90,10 +90,6 @@ export const confirmOrder = async (
 const populateOrder = async (query: any) => {
   return query
     .populate({
-      path: 'approverList',
-      select: 'firstName lastName',
-    })
-    .populate({
       path: 'applicant',
       select: 'firstName lastName',
     })
