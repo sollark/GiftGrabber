@@ -1,17 +1,24 @@
 'use client'
 
+import { MultistepContext } from '@/app/contexts/MultistepContext'
 import { OrderContext } from '@/app/contexts/OrderContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { Person } from '@/database/models/person.model'
 import { FC } from 'react'
 import PersonAutocomplete from './PersonAutocomplete'
+import { OrderStatus } from '@/database/models/order.model'
 
 const Approver: FC = () => {
-  const { approverList, setApprover } = useSafeContext(OrderContext)
+  const { order, approverList, setApprover } = useSafeContext(OrderContext)
+  const { goToNextStep } = useSafeContext(MultistepContext)
 
-  console.log('Approver', approverList)
+  if (order.status === OrderStatus.COMPLETE) goToNextStep()
+
   function onSelectApprover(selectedPerson: Person) {
-    if (selectedPerson) setApprover(selectedPerson)
+    if (!selectedPerson) return
+
+    setApprover(selectedPerson)
+    goToNextStep()
   }
 
   return (

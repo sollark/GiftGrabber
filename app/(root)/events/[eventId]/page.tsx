@@ -12,6 +12,7 @@ const ApplicantPage: FC<SearchParamProps> = async ({
   params: { eventId },
 }: SearchParamProps) => {
   const event = await getEventDetails(eventId)
+  if (!event) return <div>Event not found</div>
   console.log('event in ApplicantPage', event)
 
   return (

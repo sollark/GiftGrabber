@@ -1,21 +1,26 @@
 import { makeOrder } from '@/app/actions/order.action'
-import { Gift } from '@/database/models/gift.model'
 import { ApplicantContext } from '@/app/contexts/ApplicantContext'
+import { Gift } from '@/database/models/gift.model'
 import { generateOrderId, getQRcodeBuffer } from '@/utils/utils'
+import { useRouter } from 'next/navigation'
 import { useContext, useRef } from 'react'
 import QRcode from '../QRcode'
 import StyledButton from '../StyledButton'
-import { useRouter } from 'next/navigation'
 
-const URL = 'https://gift-grabber.onrender.com/orders'
+const URL = 'https://gift-grabber.onrender.com'
 const orderId = generateOrderId()
-const orderUrl = `${URL}/${orderId}`
 
 const GiftList = () => {
   const router = useRouter()
-  const { approverList, applicant, applicantGifts, setApplicantGifts } =
-    useContext(ApplicantContext)!
+  const {
+    eventId,
+    approverList,
+    applicant,
+    applicantGifts,
+    setApplicantGifts,
+  } = useContext(ApplicantContext)!
 
+  const orderUrl = `${URL}/events/${eventId}/orders/${orderId}`
   const orderQRCodeRef = useRef<HTMLDivElement>(null)
 
   const handleRemove = (giftToRemove: Gift) => {
@@ -42,7 +47,7 @@ const GiftList = () => {
       orderQRCodeBase64
     )
 
-    if (response) router.push(`/orders/${orderId}`)
+    if (response) router.push(`/events/${eventId}/orders/${orderId}`)
     else console.log('Error creating event')
     // if (response) router.push(`/events/${eventId}`)
   }

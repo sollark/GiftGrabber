@@ -15,7 +15,11 @@ const EventDetails: FC<SearchParamProps> = async ({
   params: { eventId, ownerId },
 }: SearchParamProps) => {
   const event = await getEventDetails(eventId)
+  if (!event) return <div>Event not found</div>
+
   console.log('event in EventDetails', event)
+
+  const { applicantList, giftList, approverList } = event
 
   return (
     <div>
@@ -28,22 +32,17 @@ const EventDetails: FC<SearchParamProps> = async ({
           </tr>
         </thead>
         <tbody>
-          {event.applicantList.map(
-            (applicant: Person & { _id: Types.ObjectId }) => (
-              <tr key={applicant._id.toString()}>
-                <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
-                <td>
-                  {event.giftList.find(
-                    (gift: Gift) =>
-                      gift.owner.firstName === applicant.firstName &&
-                      gift.owner.lastName === applicant.lastName
-                  )
-                    ? 'Yes'
-                    : 'No'}
-                </td>
-              </tr>
-            )
-          )}
+          {applicantList.map((applicant: Person) => (
+            <tr key={applicant._id.toString()}>
+              <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
+              <td>
+                {giftList.find((gift: Gift) => gift.owner._id === applicant._id)
+                  ?.receiver
+                  ? 'Taken'
+                  : 'Available'}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       <table>
