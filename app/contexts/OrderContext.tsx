@@ -10,7 +10,7 @@ import {
 } from 'react'
 
 type OrderContextValues = {
-  order: Order | null
+  order: Order
   approverList: Person[]
   approver: Person | null
   setApprover: Dispatch<SetStateAction<Person | null>>
@@ -32,7 +32,7 @@ export const OrderProvider: FC<OrderProviderProps> = ({
   approverList,
   children,
 }) => {
-  const [approver, setApprover] = useState<Person | null>(null)
+  const [approver, setApprover] = useState<Person | null>(order.confirmedBy)
 
   const getApprover = () => approver
 

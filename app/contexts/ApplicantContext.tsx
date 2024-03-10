@@ -10,6 +10,7 @@ import {
 } from 'react'
 
 type ApplicantProviderProps = {
+  eventId: string
   approverList: Person[]
   applicantList: Person[]
   giftList: Gift[]
@@ -17,6 +18,8 @@ type ApplicantProviderProps = {
 }
 
 type ApplicantContextValues = {
+  // Event ID
+  eventId: string
   // List of people that approves an order
   approverList: Person[]
   // List of all applicants
@@ -39,6 +42,7 @@ export const ApplicantContext = createContext<
 >(undefined)
 
 export const ApplicantProvider: FC<ApplicantProviderProps> = ({
+  eventId,
   approverList,
   applicantList,
   giftList,
@@ -49,6 +53,7 @@ export const ApplicantProvider: FC<ApplicantProviderProps> = ({
   const [applicantGifts, setApplicantGifts] = useState<Gift[]>([])
 
   const value = {
+    eventId,
     approverList,
     applicantList,
     applicant,

@@ -31,8 +31,6 @@ export const createEvent = async (event: EventForm) => {
   try {
     await connectToDatabase()
 
-    console.log('in create event, lists:', applicantList, approverList)
-
     // Creates person for every applicant
     const applicantIds = await Promise.all(
       applicantList.map(async (person) => {

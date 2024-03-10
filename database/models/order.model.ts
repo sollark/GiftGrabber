@@ -16,7 +16,7 @@ export type Order = {
   gifts: Gift[]
   orderId: string
   confirmationRQCode: string
-  confirmedBy?: Person
+  confirmedBy: Person | null
   confirmedAt?: Date
   status: OrderStatus
 }
@@ -28,7 +28,7 @@ type OrderDoc = {
   orderId: string
   confirmationRQCode: string
   confirmedAt?: Date
-  confirmedBy?: Types.ObjectId
+  confirmedBy: Types.ObjectId | null
   status: OrderStatus
 }
 
@@ -39,7 +39,12 @@ const orderSchema: Schema = new Schema({
   orderId: { type: String, required: true },
   confirmationRQCode: { type: String, required: true },
   confirmedAt: { type: Date },
-  confirmedBy: { type: Types.ObjectId, ref: 'Person' },
+  confirmedBy: {
+    type: Types.ObjectId,
+    ref: 'Person',
+    required: false,
+    default: null,
+  },
   status: {
     type: String,
     enum: Object.values(OrderStatus),
