@@ -1,11 +1,12 @@
 'use client'
 
+import { ApplicantContext } from '@/app/contexts/ApplicantContext'
+import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
-import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-import { FC, SyntheticEvent, useContext } from 'react'
+import { FC, SyntheticEvent } from 'react'
 
 type OptionType = {
   id: number
@@ -15,7 +16,7 @@ type OptionType = {
 
 const ApplicantList: FC = () => {
   const { applicantList, setSelectedPerson, giftList, setApplicantGifts } =
-    useContext(ApplicantContext)
+    useSafeContext(ApplicantContext)
   const applicantsOptionList = mapPersonListToOptionList(applicantList)
 
   function handleSelect(event: SyntheticEvent, value: OptionType | null) {

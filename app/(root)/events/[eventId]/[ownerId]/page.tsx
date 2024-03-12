@@ -1,4 +1,5 @@
 import { getEventDetails } from '@/app/actions/event.action'
+import ApproverList from '@/components/ApproverList'
 import { Gift } from '@/database/models/gift.model'
 import { Person } from '@/database/models/person.model'
 import { Types } from 'mongoose'
@@ -45,22 +46,7 @@ const EventDetails: FC<SearchParamProps> = async ({
           ))}
         </tbody>
       </table>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          {event.approverList.map(
-            (approver: Person & { _id: Types.ObjectId }) => (
-              <tr key={approver._id.toString()}>
-                <td>{`${approver.firstName} ${approver.lastName}`}</td>
-              </tr>
-            )
-          )}
-        </tbody>
-      </table>
+      <ApproverList personArray={approverList} />
     </div>
   )
 }
