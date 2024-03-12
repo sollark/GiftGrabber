@@ -1,8 +1,8 @@
 import { ApplicantContext } from '@/app/contexts/ApplicantContext'
-import { useContext } from 'react'
+import { useSafeContext } from '@/app/hooks/useSafeContext'
 
 const PersonInfo = () => {
-  const { selectedPerson, setSelectedPerson } = useContext(ApplicantContext)
+  const { selectedPerson, setSelectedPerson } = useSafeContext(ApplicantContext)
 
   return (
     <div>

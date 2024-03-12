@@ -4,7 +4,8 @@ import { ApplicantProvider } from '@/app/contexts/ApplicantContext'
 import { Event } from '@/database/models/event.model'
 import GiftList from './GiftList'
 import PersonInfo from './PersonInfo'
-import SelectPerson from './SelectPerson'
+import SelectPerson from './Applicant'
+import MultistepNavigator from '../MultistepNavigator'
 
 type OrderGiftsProps = {
   event: Event
@@ -19,9 +20,13 @@ const OrderGifts = (props: OrderGiftsProps) => {
       approverList={event.approverList}
       applicantList={event.applicantList}
       giftList={event.giftList}>
-      <SelectPerson />
-      <PersonInfo />
-      <GiftList />
+      <MultistepNavigator>
+        <SelectPerson />
+        <>
+          <PersonInfo />
+          <GiftList />
+        </>
+      </MultistepNavigator>
     </ApplicantProvider>
   )
 }

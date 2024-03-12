@@ -11,10 +11,8 @@ type SearchParamProps = {
 const ApplicantPage: FC<SearchParamProps> = async ({
   params: { eventId },
 }: SearchParamProps) => {
-  // TODO ordergifts get eventId undefined
   const event = await getEventDetails(eventId)
   if (!event) return <div>Event not found</div>
-  console.log('event in ApplicantPage', event)
 
   return (
     <section className='full-screen flex align-center justify-center flex-col'>
