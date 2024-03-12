@@ -122,7 +122,14 @@ export const getEventDetails = async (
     const event = await populateEvent(
       EventModel.findOne(
         { eventId },
-        { name: 1, email: 1, applicantList: 1, giftList: 1, approverList: 1 }
+        {
+          eventId: 1,
+          name: 1,
+          email: 1,
+          applicantList: 1,
+          giftList: 1,
+          approverList: 1,
+        }
       )
     )
     if (!event) throw new Error('Event not found')
