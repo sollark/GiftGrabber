@@ -1,12 +1,14 @@
-import { OrderContext } from '@/app/contexts/OrderContext'
-import { FC, useContext } from 'react'
-import StyledButton from './StyledButton'
 import { confirmOrder } from '@/app/actions/order.action'
+import { OrderContext } from '@/app/contexts/OrderContext'
+import { useSafeContext } from '@/app/hooks/useSafeContext'
+import { FC } from 'react'
+import StyledButton from './StyledButton'
+import { OrderStatus } from './types/OrderStatus'
 
 const ConfirmOrderButton: FC = () => {
-  const { order, getApprover } = useContext(OrderContext)
+  const { order, getApprover } = useSafeContext(OrderContext)
 
-  let isOrderConfirmed = false
+  let isOrderCompleted = order.status === OrderStatus.COMPLETE
 
   const handleConfirmOrder = async () => {
     const approver = getApprover()
@@ -14,10 +16,13 @@ const ConfirmOrderButton: FC = () => {
 
     const confirmedOrder = await confirmOrder(order.orderId, approver._id)
 
-    if (confirmedOrder) isOrderConfirmed = true
+    if (confirmedOrder) {
+      isOrderCompleted = true
+      window.location.reload()
+    }
   }
 
-  return isOrderConfirmed ? (
+  return isOrderCompleted ? (
     'Congratulation'
   ) : (
     <StyledButton onClick={handleConfirmOrder}>Confirm</StyledButton>

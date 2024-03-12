@@ -1,5 +1,6 @@
 'use server'
 
+import { OrderStatus } from '@/components/types/OrderStatus'
 import { connectToDatabase } from '@/database/connect'
 import GiftModel, { Gift } from '@/database/models/gift.model'
 import OrderModel, { Order } from '@/database/models/order.model'
@@ -60,13 +61,14 @@ export const confirmOrder = async (
     const order = await populateOrder(
       OrderModel.findOne({
         orderId,
-        confirmedBy: { $exists: false },
+        confirmedBy: null,
       })
     )
-    if (!order) throw new Error('Order not found')
+    if (!order) throw new Error('Order not found or already confirmed')
 
     order.confirmedBy = confirmedBy
     order.confirmedAt = new Date()
+    order.status = OrderStatus.COMPLETE
     await order.save()
 
     // update gifts status

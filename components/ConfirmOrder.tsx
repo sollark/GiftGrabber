@@ -24,8 +24,10 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
     <OrderProvider order={order} approverList={approvers}>
       <MultistepNavigator>
         <Approver />
-        <OrderDetails />
-        <ConfirmOrderButton />
+        <>
+          <OrderDetails />
+          <ConfirmOrderButton />
+        </>
       </MultistepNavigator>
     </OrderProvider>
   )
