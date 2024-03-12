@@ -4,9 +4,9 @@ import { Gift } from './gift.model'
 
 export type Event = {
   _id: Types.ObjectId
+  eventId: string
   name: string
   email: string
-  eventId: string
   ownerId: string
   eventQRCodeBase64: string
   ownerIdQRCodeBase64: string
@@ -17,9 +17,9 @@ export type Event = {
 
 type EventDoc = {
   _id: Types.ObjectId
+  eventId: string
   name: string
   email: string
-  eventId: string
   ownerId: string
   eventQRCodeBase64: string
   ownerIdQRCodeBase64: string
@@ -29,9 +29,9 @@ type EventDoc = {
 }
 
 const eventSchema: Schema = new Schema({
+  eventId: { type: String, required: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
-  eventId: { type: String, required: true },
   ownerId: { type: String, required: true },
   eventQRCodeBase64: { type: String, required: true },
   ownerIdQRCodeBase64: { type: String, required: true },

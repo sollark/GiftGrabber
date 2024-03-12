@@ -1,13 +1,7 @@
 import { Schema, Types, model, models } from 'mongoose'
+import { OrderStatus } from '../../components/types/OrderStatus'
 import { Gift } from './gift.model'
 import { Person } from './person.model'
-
-export enum OrderStatus {
-  PENDING = 'Pending',
-  PROCESSING = 'Processing',
-  COMPLETE = 'Complete',
-  CANCELLED = 'Cancelled',
-}
 
 export type Order = {
   _id: Types.ObjectId
