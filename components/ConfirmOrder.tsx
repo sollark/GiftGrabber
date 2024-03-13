@@ -18,8 +18,6 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   approvers,
   order,
 }: ConfirmOrderProps) => {
-  const { status } = order
-
   return (
     <OrderProvider order={order} approverList={approvers}>
       <MultistepNavigator>
