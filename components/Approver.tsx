@@ -5,16 +5,16 @@ import { OrderContext } from '@/app/contexts/OrderContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { OrderStatus } from '@/components/types/OrderStatus'
 import { Person } from '@/database/models/person.model'
-import { FC, useEffect } from 'react'
+import { FC, useLayoutEffect } from 'react'
 import ConditionalRender from './ConditionalRender'
 import PersonAutocomplete from './PersonAutocomplete'
 
 const Approver: FC = () => {
   const { order, approverList, setApprover } = useSafeContext(OrderContext)
-  const { goToNextStep } = useSafeContext(MultistepContext)
+  const { goToNextStep, goTo } = useSafeContext(MultistepContext)
 
-  useEffect(() => {
-    if (order.status === OrderStatus.COMPLETE) goToNextStep()
+  useLayoutEffect(() => {
+    if (order.status === OrderStatus.COMPLETE) goTo(1)
   }, [])
 
   function onSelectApprover(selectedPerson: Person) {

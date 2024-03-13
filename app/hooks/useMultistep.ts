@@ -1,9 +1,11 @@
-import { ReactElement, useState } from 'react'
+'use client'
 
-export function useMultistep(steps: ReactElement[]): {
+import { ReactNode, useState } from 'react'
+
+export function useMultistep(steps: ReactNode[]): {
   currentStepIndex: number
-  step: ReactElement
-  steps: ReactElement[]
+  step: ReactNode
+  steps: ReactNode[]
   next: () => void
   back: () => void
   goTo: (stepIndex: number) => void

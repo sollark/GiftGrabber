@@ -2,18 +2,19 @@
 
 import { MultistepProvider } from '@/app/contexts/MultistepContext'
 import { useMultistep } from '@/app/hooks/useMultistep'
-import { FC, ReactElement } from 'react'
+import { FC, ReactNode } from 'react'
 
 type MultistepNavigatorProps = {
-  children: ReactElement[]
+  children: ReactNode[]
   [key: string]: any
 }
 const MultistepNavigator: FC<MultistepNavigatorProps> = ({ children }) => {
-  const { step, steps, back, next, currentStepIndex, isFirstStep, isLastStep } =
-    useMultistep([...children])
+  const { step, steps, back, next, currentStepIndex, goTo } = useMultistep([
+    ...children,
+  ])
 
   return (
-    <MultistepProvider goToPreviousStep={back} goToNextStep={next}>
+    <MultistepProvider goToPreviousStep={back} goToNextStep={next} goTo={goTo}>
       {step}
     </MultistepProvider>
   )
