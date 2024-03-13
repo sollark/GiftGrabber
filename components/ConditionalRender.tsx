@@ -1,3 +1,5 @@
+'use client'
+
 import { FC, ReactNode } from 'react'
 
 type ConditionalRenderProps = {
@@ -9,11 +11,7 @@ const ConditionalRender: FC<ConditionalRenderProps> = ({
   condition,
   children,
 }) => {
-  if (condition) {
-    return <>{children}</>
-  } else {
-    return null
-  }
+  return condition ? <>{children}</> : null
 }
 
 export default ConditionalRender

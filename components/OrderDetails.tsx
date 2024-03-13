@@ -1,9 +1,10 @@
 import { OrderContext } from '@/app/contexts/OrderContext'
-import React, { useContext } from 'react'
+import { useSafeContext } from '@/app/hooks/useSafeContext'
+import React from 'react'
 import GiftList from './GiftList'
 
 const OrderDetails: React.FC = () => {
-  const { order } = useContext(OrderContext)
+  const { order, approver } = useSafeContext(OrderContext)
   if (!order) return null
 
   const { createdAt, applicant, gifts } = order
@@ -13,9 +14,15 @@ const OrderDetails: React.FC = () => {
       <h2>Order Details</h2>
       {order ? (
         <div>
-          <p>Order date: {createdAt.toString()}</p>
+          <p>Order date: {new Date(createdAt).toLocaleString()}</p>
           <p>
             Applicant: {applicant.firstName} {applicant.lastName}
+          </p>
+          <p>
+            Approver:{' '}
+            {approver
+              ? `${approver.firstName} ${approver.lastName}`
+              : 'No approver'}
           </p>
           <GiftList gifts={gifts} />
         </div>

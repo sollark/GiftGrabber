@@ -12,7 +12,7 @@ const GiftList: FC<GiftListProps> = ({ gifts }) => {
       <ul>
         {gifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>
-            {gift.owner.firstName} {gift.owner.lastName}
+            {gift.owner.firstName} {gift.owner.lastName}&apos;s gift
           </li>
         ))}
       </ul>
