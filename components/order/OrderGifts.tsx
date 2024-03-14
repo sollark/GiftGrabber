@@ -3,10 +3,10 @@
 import { ApplicantProvider } from '@/app/contexts/ApplicantContext'
 import { Event } from '@/database/models/event.model'
 import MultistepNavigator from '../MultistepNavigator'
+import SelectUnclaimedGift from '../SelectUnclaimedGift'
 import Applicant from './Applicant'
 import GiftList from './GiftList'
-import PersonInfo from './PersonInfo'
-import SelectUnclaimedGift from '../SelectUnclaimedGift'
+import PersonInfo from './PersonGiftInfo'
 
 type OrderGiftsProps = {
   event: Event

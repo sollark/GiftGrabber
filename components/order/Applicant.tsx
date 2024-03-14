@@ -7,13 +7,16 @@ import { Person } from '@/database/models/person.model'
 import PersonAutocomplete from '../PersonAutocomplete'
 
 const Applicant = () => {
-  const { applicantList, setApplicant } = useSafeContext(ApplicantContext)
+  const { applicantList, setApplicant, setSelectedPerson } =
+    useSafeContext(ApplicantContext)
   const { goToNextStep } = useSafeContext(MultistepContext)
 
   function onSelectApplicant(selectedPerson: Person) {
     if (!selectedPerson) return
 
     setApplicant(selectedPerson)
+    setSelectedPerson(selectedPerson)
+
     goToNextStep()
   }
 
