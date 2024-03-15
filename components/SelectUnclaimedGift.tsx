@@ -17,7 +17,7 @@ const SelectUnclaimedGift: FC = () => {
       (gift) => gift.owner._id === selectedPerson._id
     )
 
-    if (selectedGift && selectedGift.receiver!!)
+    if (selectedGift && !selectedGift.receiver)
       setApplicantGifts((prev) => [...prev, selectedGift])
   }
 
