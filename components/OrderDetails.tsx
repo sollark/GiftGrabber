@@ -8,7 +8,6 @@ const OrderDetails: React.FC = () => {
   if (!order) return null
 
   const { createdAt, applicant, gifts } = order
-
   return (
     <div>
       <h2>Order Details</h2>
@@ -20,9 +19,11 @@ const OrderDetails: React.FC = () => {
           </p>
           <p>
             Approver:{' '}
-            {approver
+            {order.confirmedBy
+              ? `${order.confirmedBy.firstName} ${order.confirmedBy.lastName}`
+              : approver
               ? `${approver.firstName} ${approver.lastName}`
-              : 'No approver'}
+              : ''}
           </p>
           <GiftList gifts={gifts} />
         </div>

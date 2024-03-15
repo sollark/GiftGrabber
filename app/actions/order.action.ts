@@ -103,4 +103,8 @@ const populateOrder = async (query: any) => {
         select: 'firstName lastName',
       },
     })
+    .populate({
+      path: 'confirmedBy',
+      select: 'firstName lastName',
+    })
 }
