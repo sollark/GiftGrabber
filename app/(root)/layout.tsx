@@ -1,12 +1,12 @@
 import Footer from '@/components/shared/Footer'
 import Header from '@/components/shared/Header'
-import { ReactNode } from 'react'
+import { FC, ReactNode } from 'react'
 
 type AppLayoutProps = {
   children: ReactNode
 }
 
-const AppLayout = ({ children }: AppLayoutProps) => {
+const AppLayout:FC<AppLayoutProps> = ({ children }: AppLayoutProps) => {
   return (
     <>
       <Header />

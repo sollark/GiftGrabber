@@ -15,6 +15,7 @@ const OrderPage: FC<SearchParamProps> = async ({
 }: SearchParamProps) => {
   const approvers = await getEventApprovers(eventId)
   if (!approvers) return <div>Event not found</div>
+
   const order = await getOrder(orderId)
   if (!order) return <div>Order not found</div>
 
