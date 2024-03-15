@@ -7,15 +7,28 @@ import { Person } from '@/database/models/person.model'
 import PersonAutocomplete from '../PersonAutocomplete'
 
 const Applicant = () => {
-  const { applicantList, setApplicant, setSelectedPerson } =
-    useSafeContext(ApplicantContext)
+  const {
+    applicantList,
+    setApplicant,
+    setSelectedPerson,
+    giftList,
+    setApplicantGifts,
+  } = useSafeContext(ApplicantContext)
   const { goToNextStep } = useSafeContext(MultistepContext)
 
   function onSelectApplicant(selectedPerson: Person) {
     if (!selectedPerson) return
 
     setApplicant(selectedPerson)
+
     setSelectedPerson(selectedPerson)
+
+    const selectedGift = giftList.find(
+      (gift) => gift.owner._id === selectedPerson._id
+    )
+
+    if (selectedGift && selectedGift.receiver!!)
+      setApplicantGifts((prev) => [...prev, selectedGift])
 
     goToNextStep()
   }

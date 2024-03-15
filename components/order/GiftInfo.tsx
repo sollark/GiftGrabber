@@ -1,7 +1,7 @@
 import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
 
-const PersonGiftInfo = () => {
+const GiftInfo = () => {
   const { selectedPerson, giftList } = useSafeContext(ApplicantContext)
 
   const isGiftAvailable =
@@ -21,4 +21,4 @@ const PersonGiftInfo = () => {
   )
 }
 
-export default PersonGiftInfo
+export default GiftInfo

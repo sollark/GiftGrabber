@@ -13,12 +13,12 @@ const SelectUnclaimedGift: FC = () => {
 
     setSelectedPerson(selectedPerson)
 
-    const selectedPersonsGift = giftList.find(
+    const selectedGift = giftList.find(
       (gift) => gift.owner._id === selectedPerson._id
     )
 
-    if (selectedPersonsGift)
-      setApplicantGifts((prev) => [...prev, selectedPersonsGift])
+    if (selectedGift && selectedGift.receiver!!)
+      setApplicantGifts((prev) => [...prev, selectedGift])
   }
 
   return (

@@ -5,8 +5,8 @@ import { Event } from '@/database/models/event.model'
 import MultistepNavigator from '../MultistepNavigator'
 import SelectUnclaimedGift from '../SelectUnclaimedGift'
 import Applicant from './Applicant'
+import GiftInfo from './GiftInfo'
 import GiftList from './GiftList'
-import PersonInfo from './PersonGiftInfo'
 
 type OrderGiftsProps = {
   event: Event
@@ -25,7 +25,7 @@ const OrderGifts = (props: OrderGiftsProps) => {
         <Applicant />
         <>
           <SelectUnclaimedGift />
-          <PersonInfo />
+          <GiftInfo />
           <GiftList />
         </>
       </MultistepNavigator>
