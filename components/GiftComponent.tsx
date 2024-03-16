@@ -9,7 +9,7 @@ const GiftComponent: FC<GiftProps> = ({ gift }) => {
   if (!gift) return <></>
 
   const { owner, receiver } = gift
-  const giftStatus = receiver === null ? 'Available' : 'Claimed'
+  const giftStatus = receiver ? 'Claimed' : 'Available'
 
   return <p>{`${owner.firstName} ${owner.lastName}: ${giftStatus}`}</p>
 }
