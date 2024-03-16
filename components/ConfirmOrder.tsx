@@ -25,7 +25,8 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
     isValidating: orderLoading,
   } = useSWR(
     () => `orders/${orderId}`,
-    () => getOrder(orderId)
+    () => getOrder(orderId),
+    { revalidateOnFocus: false } // stop rerender when user navigates away
   )
 
   const {
@@ -34,7 +35,8 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
     isValidating: approversLoading,
   } = useSWR(
     () => `events/${eventId}/approvers`,
-    () => getEventApprovers(eventId)
+    () => getEventApprovers(eventId),
+    { revalidateOnFocus: false } // stop rerender when user navigates away
   )
 
   if (orderLoading || approversLoading) return <div>Loading...</div>
