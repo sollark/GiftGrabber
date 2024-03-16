@@ -1,9 +1,11 @@
 import { makeOrder } from '@/app/actions/order.action'
 import { ApplicantContext } from '@/app/contexts/ApplicantContext'
+import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { Gift } from '@/database/models/gift.model'
 import { generateOrderId, getQRcodeBuffer } from '@/utils/utils'
 import { useRouter } from 'next/navigation'
-import { useContext, useRef } from 'react'
+import { useRef } from 'react'
+import GiftComponent from '../GiftComponent'
 import QRcode from '../QRcode'
 import StyledButton from '../StyledButton'
 
@@ -18,7 +20,7 @@ const GiftList = () => {
     applicant,
     applicantGifts,
     setApplicantGifts,
-  } = useContext(ApplicantContext)!
+  } = useSafeContext(ApplicantContext)
 
   const orderUrl = `${URL}/events/${eventId}/orders/${orderId}`
   const orderQRCodeRef = useRef<HTMLDivElement>(null)
@@ -58,7 +60,7 @@ const GiftList = () => {
       <ul>
         {applicantGifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>
-            {gift.owner.firstName} {gift.owner.lastName}
+            <GiftComponent gift={gift} />
             <StyledButton onClick={() => handleRemove(gift)}>
               Remove
             </StyledButton>

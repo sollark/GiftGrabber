@@ -46,11 +46,13 @@ const CreateEventForm = () => {
       applicantsFile,
       approversFile,
     } = data
+
     const applicantList = await excelToPersonList(applicantsFile)
     if (!applicantList) {
       setErrorMessage('Error getting an applicant list')
       return
     }
+
     const approverList = await excelToPersonList(approversFile)
     if (!approverList) {
       setErrorMessage('Error getting an approvers list')

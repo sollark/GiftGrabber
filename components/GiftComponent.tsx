@@ -5,7 +5,7 @@ type GiftProps = {
   gift: Gift
 }
 
-const Gift: FC<GiftProps> = ({ gift }) => {
+const GiftComponent: FC<GiftProps> = ({ gift }) => {
   if (!gift) return <></>
 
   const { owner, receiver } = gift
@@ -14,4 +14,4 @@ const Gift: FC<GiftProps> = ({ gift }) => {
   return <p>{`${owner.firstName} ${owner.lastName}: ${giftStatus}`}</p>
 }
 
-export default Gift
+export default GiftComponent

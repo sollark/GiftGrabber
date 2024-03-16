@@ -29,7 +29,7 @@ export const convertExcelToJson = async (
 
     return resultArray.slice(1)
   } catch (error) {
-    console.error('Error converting Excel to JSON:', error)
+    console.error('Error converting Excel file to JSON:', error)
     throw error
   }
 }

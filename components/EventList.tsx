@@ -1,6 +1,6 @@
-import React from 'react'
+import { FC } from 'react'
 
-const EventList = () => {
+const EventList: FC = () => {
   return <div>EventList</div>
 }
 

@@ -1,5 +1,6 @@
 import { Gift } from '@/database/models/gift.model'
 import { FC } from 'react'
+import GiftComponent from './GiftComponent'
 
 type GiftListProps = {
   gifts: Gift[]
@@ -12,7 +13,7 @@ const GiftList: FC<GiftListProps> = ({ gifts }) => {
       <ul>
         {gifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>
-            {gift.owner.firstName} {gift.owner.lastName}&apos;s gift
+            <GiftComponent gift={gift} />
           </li>
         ))}
       </ul>
