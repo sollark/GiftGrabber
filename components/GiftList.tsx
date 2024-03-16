@@ -9,7 +9,7 @@ type GiftListProps = {
 const GiftList: FC<GiftListProps> = ({ gifts }) => {
   return (
     <div>
-      <h3>GiftList</h3>
+      <h3>Gift list</h3>
       <ul>
         {gifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>

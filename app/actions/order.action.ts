@@ -37,6 +37,8 @@ export const makeOrder = async (
 
 export const getOrder = async (orderId: string): Promise<Order | null> => {
   try {
+    console.log('Getting an order...')
+
     await connectToDatabase()
 
     const order = await populateOrder(OrderModel.findOne({ orderId }))

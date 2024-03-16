@@ -18,6 +18,7 @@ const ConfirmOrderButton: FC = () => {
 
     if (confirmedOrder) {
       isOrderCompleted = true
+
       window.location.reload()
     }
   }

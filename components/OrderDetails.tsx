@@ -13,12 +13,15 @@ const OrderDetails: React.FC = () => {
       <h2>Order Details</h2>
       {order ? (
         <div>
-          <p>Order date: {new Date(createdAt).toLocaleString()}</p>
           <p>
-            Applicant: {applicant.firstName} {applicant.lastName}
+            <strong>Order date:</strong> {new Date(createdAt).toLocaleString()}
           </p>
           <p>
-            Approver:{' '}
+            <strong>Applicant:</strong> {applicant.firstName}{' '}
+            {applicant.lastName}
+          </p>
+          <p>
+            <strong>Approver:</strong>{' '}
             {order.confirmedBy
               ? `${order.confirmedBy.firstName} ${order.confirmedBy.lastName}`
               : approver
