@@ -1,21 +1,17 @@
 import Footer from '@/components/shared/Footer'
 import Header from '@/components/shared/Header'
+import Main from '@/components/shared/Main'
 import { FC, ReactNode } from 'react'
 
 type AppLayoutProps = {
   children: ReactNode
 }
 
-const AppLayout:FC<AppLayoutProps> = ({ children }: AppLayoutProps) => {
+const AppLayout: FC<AppLayoutProps> = ({ children }: AppLayoutProps) => {
   return (
     <>
       <Header />
-      <main
-        style={{
-          paddingBottom: '10rem',
-        }}>
-        {children}
-      </main>
+      <Main>{children}</Main>
       <Footer />
     </>
   )

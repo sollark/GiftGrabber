@@ -33,9 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body>
-        <div className='background' />
-        <div className='app flex flex-col min-h-screen'> {children}</div>
+      <body className='app flex flex-col min-h-screen'>
+        {/* <div className='background' /> */}
+        {children}
       </body>
     </html>
   )

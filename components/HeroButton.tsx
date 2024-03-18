@@ -6,7 +6,9 @@ const HeroButton = () => {
   const router = useRouter()
 
   return (
-    <StyledButton onClick={() => router.push('/create')}>
+    <StyledButton
+      className='hero-button'
+      onClick={() => router.push('/create')}>
       Create an event
     </StyledButton>
   )

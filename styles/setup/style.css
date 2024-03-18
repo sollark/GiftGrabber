@@ -13,27 +13,49 @@
 }
 
 .hero-section {
-  max-width: 50rem;
+  max-width: 60rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 2rem;
+  padding: 10rem 10rem 2rem 10rem;
+  font-size: 1.2rem;
   h1 {
-    font-size: 3rem;
+    font-size: 3em;
     font-weight: 700;
-    color: #fff;
-    margin-bottom: 3rem;
+    color: #000000;
+    margin-bottom: 1em;
   }
   h3 {
     font-size: 1.3rem;
     font-weight: 500;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1em;
     letter-spacing: 1.2pt;
   }
   p {
     font-size: 1.2rem;
     font-weight: 400;
-    line-height: 2rem;
+    line-height: 1.8em;
     letter-spacing: 1.5pt;
+    max-width: 70ch;
+    margin-bottom: 1em;
+  }
+  .hero-button {
+    width: 15rem;
+    font-size: 1em;
+  }
+}
+
+/* For tablets: */
+@media screen and (max-width: 768px) {
+  .hero-section {
+    padding: 2rem 5rem;
+    font-size: 1rem;
+  }
+}
+
+/* For mobile phones: */
+@media screen and (max-width: 480px) {
+  .hero-section {
+    padding: 2rem;
   }
 }
