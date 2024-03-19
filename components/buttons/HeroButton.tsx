@@ -1,16 +1,17 @@
 'use client'
+
 import { useRouter } from 'next/navigation'
-import StyledButton from './StyledButton'
+import AccentButton from './AccentButton'
 
 const HeroButton = () => {
   const router = useRouter()
 
   return (
-    <StyledButton
+    <AccentButton
       className='hero-button'
       onClick={() => router.push('/create')}>
       Create an event
-    </StyledButton>
+    </AccentButton>
   )
 }
 

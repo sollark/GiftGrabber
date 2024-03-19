@@ -2,7 +2,7 @@ import { confirmOrder } from '@/app/actions/order.action'
 import { OrderContext } from '@/app/contexts/OrderContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { FC } from 'react'
-import StyledButton from './StyledButton'
+import StyledButton from './AccentButton'
 import { OrderStatus } from '../types/OrderStatus'
 
 const ConfirmOrderButton: FC = () => {
