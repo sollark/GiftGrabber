@@ -1,12 +1,13 @@
 import CreateEventForm from '@/components/CreateEventForm'
+import Section from '@/components/Section'
 import { FC } from 'react'
 
 const CreatePage: FC = () => {
   return (
-    <section className='full-screen flex align-center justify-center flex-col'>
-      <h1>Create New Event</h1>
+    <Section>
+      <Section.Title>Create New Event</Section.Title>
       <CreateEventForm />
-    </section>
+    </Section>
   )
 }
 

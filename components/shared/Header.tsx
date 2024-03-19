@@ -5,7 +5,7 @@ const Header: FC = () => {
   return (
     <header
       style={{
-        paddingBlock: '.5rem',
+        paddingBlock: '1rem',
         paddingInline: '2rem',
       }}>
       <Logo />

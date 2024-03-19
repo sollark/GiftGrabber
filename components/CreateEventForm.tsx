@@ -1,5 +1,6 @@
 'use client'
 
+import { sendQRCodesToOwner } from '@/app/actions/email.action'
 import { createEvent } from '@/app/actions/event.action'
 import {
   excelToPersonList,
@@ -15,7 +16,6 @@ import ControlledFileInput from './form/ControlledFileInput'
 import ControlledTextInput from './form/ControlledTextInput'
 import ErrorMessage from './form/ErrorMessage'
 import Form from './form/Form'
-import { sendQRCodesToOwner } from '@/app/actions/email.action'
 
 const defaultValues = {
   eventName: '',
@@ -109,34 +109,38 @@ const CreateEventForm = () => {
         schema={EventSchema}
         defaultValues={defaultValues}
         submit={handleSubmit}>
-        <ControlledTextInput
-          name='eventName'
-          label='Event name'
-          type='text'
-          variant='outlined'
-          inputProps={{ style: { fontSize: 24 } }}
-        />
-        <ControlledTextInput
-          name='eventEmail'
-          label='Event email'
-          type='email'
-          variant='outlined'
-          inputProps={{ style: { fontSize: 24 } }}
-        />
-        <ControlledFileInput
-          name='applicantsFile'
-          label='List of applicants'
-          type='file'
-          variant='outlined'
-          inputProps={{ style: { fontSize: 24 } }}
-        />
-        <ControlledFileInput
-          name='approversFile'
-          label='List of approvers'
-          type='file'
-          variant='outlined'
-          inputProps={{ style: { fontSize: 24 } }}
-        />
+        <div>
+          <ControlledTextInput
+            name='eventName'
+            label='Event name'
+            type='text'
+            variant='outlined'
+            inputProps={{ style: { fontSize: 24 } }}
+          />
+          <ControlledTextInput
+            name='eventEmail'
+            label='Event email'
+            type='email'
+            variant='outlined'
+            inputProps={{ style: { fontSize: 24 } }}
+          />
+        </div>
+        <div>
+          <ControlledFileInput
+            name='applicantsFile'
+            label='List of applicants'
+            type='file'
+            variant='outlined'
+            inputProps={{ style: { fontSize: 24 } }}
+          />
+          <ControlledFileInput
+            name='approversFile'
+            label='List of approvers'
+            type='file'
+            variant='outlined'
+            inputProps={{ style: { fontSize: 24 } }}
+          />
+        </div>
         <ErrorMessage message={errorMessage} />
       </Form>
       <QRcode url={eventUrl} qrRef={eventQRCodeRef} />

@@ -12,6 +12,7 @@
   z-index: -1;
 }
 
+/****** Hero Section ******/
 .hero-section {
   max-width: 60rem;
   display: flex;
@@ -45,10 +46,38 @@
   }
 }
 
+/****** Main Section ******/
+.main-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding-inline: 10rem;
+  font-size: 1.2rem;
+
+  h1 {
+    font-size: 2em;
+    padding-top: 1em;
+    padding-bottom: 2em;
+  }
+
+  .input {
+    padding-inline-end: 2em;
+    padding-bottom: 3em;
+  }
+}
+
+/****** Responsive Design ******/
+
 /* For tablets: */
 @media screen and (max-width: 768px) {
   .hero-section {
     padding: 2rem 5rem;
+    font-size: 1rem;
+  }
+
+  .main-section {
+    padding-inline: 5rem;
     font-size: 1rem;
   }
 }
@@ -57,5 +86,10 @@
 @media screen and (max-width: 480px) {
   .hero-section {
     padding: 2rem;
+  }
+
+  .main-section {
+    padding-inline: 2rem;
+    font-size: 0.8rem;
   }
 }

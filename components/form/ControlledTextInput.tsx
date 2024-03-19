@@ -26,6 +26,7 @@ const ControlledTextInput: FC<InputProps> = (props: InputProps) => {
       render={({ field }) => (
         <TextField
           {...field}
+          className='input'
           label={label}
           placeholder={label}
           error={!!errors[name]}

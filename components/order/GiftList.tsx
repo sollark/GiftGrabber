@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useRef } from 'react'
 import GiftComponent from '../GiftComponent'
 import QRcode from '../QRcode'
-import StyledButton from '../buttons/StyledButton'
+import StyledButton from '../buttons/AccentButton'
 
 const URL = 'https://gift-grabber.onrender.com'
 const orderId = generateOrderId()

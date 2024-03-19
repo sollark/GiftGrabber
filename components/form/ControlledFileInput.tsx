@@ -2,7 +2,6 @@ import { ErrorMessage } from '@hookform/error-message'
 import { MuiFileInput } from 'mui-file-input'
 import { FC } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
-// import { textInputStyle } from '../../style/formStyle'
 
 type InputProps = {
   name: string
@@ -25,6 +24,7 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
       render={({ field }) => (
         <MuiFileInput
           {...field}
+          className='input'
           label={label}
           placeholder={label}
           InputProps={{

@@ -9,6 +9,8 @@ const Main: FC<MainProps> = ({ children }) => {
     <main
       style={{
         flexGrow: 1,
+        paddingBlock: '1rem',
+        paddingInline: '2rem',
         paddingBottom: '10rem',
       }}>
       {children}
