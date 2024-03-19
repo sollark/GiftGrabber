@@ -6,7 +6,7 @@ import { OrderProvider } from '@/app/contexts/OrderContext'
 import { FC } from 'react'
 import useSWR from 'swr'
 import Approver from './Approver'
-import ConfirmOrderButton from './ConfirmOrderButton'
+import ConfirmOrderButton from './buttons/ConfirmOrderButton'
 import MultistepNavigator from './MultistepNavigator'
 import OrderDetails from './OrderDetails'
 
