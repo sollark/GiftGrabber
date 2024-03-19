@@ -3,7 +3,7 @@
 import { Person } from '@/database/models/person.model'
 import { Autocomplete, TextField } from '@mui/material'
 import { FC, SyntheticEvent, useState } from 'react'
-import StyledButton from './StyledButton'
+import StyledButton from './buttons/StyledButton'
 
 export type OptionType = {
   id: string

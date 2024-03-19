@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, ReactElement, ReactNode } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import StyledButton from '../StyledButton'
+import StyledButton from '../buttons/StyledButton'
 
 type Props = {
   children: ReactNode

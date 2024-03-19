@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import HeroButton from './HeroButton'
+import HeroButton from './buttons/HeroButton'
 
 const HeroSection: FC = () => {
   return (
