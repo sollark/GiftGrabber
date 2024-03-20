@@ -1,24 +1,17 @@
 import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
+import GiftComponent from '../GiftComponent'
 
 const GiftInfo = () => {
   const { selectedPerson, giftList } = useSafeContext(ApplicantContext)
+  if (!selectedPerson) return <></>
 
-  const isGiftAvailable =
-    selectedPerson &&
-    giftList.find(
-      (gift) => selectedPerson._id === gift.owner._id && !gift.receiver
-    )
-
-  return (
-    <div>
-      {selectedPerson && (
-        <p>{`${selectedPerson.firstName} ${selectedPerson.lastName} ${
-          isGiftAvailable ? 'Available' : 'Taken'
-        }`}</p>
-      )}
-    </div>
+  const gift = giftList.find(
+    (gift) => selectedPerson._id === gift.owner._id && !gift.receiver
   )
+  if (!gift) return <></>
+
+  return <GiftComponent gift={gift} />
 }
 
 export default GiftInfo

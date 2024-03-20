@@ -4,7 +4,7 @@ import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import { MultistepContext } from '@/app/contexts/MultistepContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { Person } from '@/database/models/person.model'
-import PersonAutocomplete from '../PersonAutocomplete'
+import PersonAutocomplete from '../form/PersonAutocomplete'
 
 const Applicant = () => {
   const {
@@ -34,13 +34,10 @@ const Applicant = () => {
   }
 
   return (
-    <div>
-      <h2>Your name:</h2>
-      <PersonAutocomplete
-        peopleList={applicantList}
-        onSelectPerson={onSelectApplicant}
-      />
-    </div>
+    <PersonAutocomplete
+      peopleList={applicantList}
+      onSelectPerson={onSelectApplicant}
+    />
   )
 }
 

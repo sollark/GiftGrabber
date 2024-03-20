@@ -1,4 +1,5 @@
 import { getEventDetails } from '@/app/actions/event.action'
+import Section from '@/components/Section'
 import OrderGifts from '@/components/order/OrderGifts'
 import { FC } from 'react'
 
@@ -15,10 +16,10 @@ const ApplicantPage: FC<SearchParamProps> = async ({
   if (!event) return <div>Event not found</div>
 
   return (
-    <section className='full-screen flex align-center justify-center flex-col'>
-      <h1>{event.name}</h1>
+    <Section>
+      <Section.Title>{event.name}</Section.Title>
       <OrderGifts event={event} />
-    </section>
+    </Section>
   )
 }
 

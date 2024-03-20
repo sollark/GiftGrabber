@@ -10,7 +10,7 @@ const SecondaryButton: FC<ButtonProps> = ({ children, ...props }) => {
       sx={{
         backgroundColor: palette.secondary[200],
         color: palette.secondary[700],
-        padding: '1rem',
+        padding: '1.1rem',
         '&:hover': {
           backgroundColor: palette.secondary[200],
           color: palette.secondary[800],

@@ -2,7 +2,7 @@ import { ApplicantContext } from '@/app/contexts/ApplicantContext'
 import { useSafeContext } from '@/app/hooks/useSafeContext'
 import { Person } from '@/database/models/person.model'
 import { FC } from 'react'
-import PersonAutocomplete from './PersonAutocomplete'
+import PersonAutocomplete from './form/PersonAutocomplete'
 
 const SelectUnclaimedGift: FC = () => {
   const { giftList, setApplicantGifts, applicantList, setSelectedPerson } =

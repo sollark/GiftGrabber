@@ -1,4 +1,5 @@
 import { Gift } from '@/database/models/gift.model'
+import { Box } from '@mui/material'
 import { FC } from 'react'
 
 type GiftProps = {
@@ -11,7 +12,12 @@ const GiftComponent: FC<GiftProps> = ({ gift }) => {
   const { owner, receiver } = gift
   const giftStatus = receiver ? 'Claimed' : 'Available'
 
-  return <p>{`${owner.firstName} ${owner.lastName}: ${giftStatus}`}</p>
+  return (
+    <Box
+      sx={{
+        padding: '1rem',
+      }}>{`${owner.firstName} ${owner.lastName}: ${giftStatus}`}</Box>
+  )
 }
 
 export default GiftComponent

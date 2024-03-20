@@ -8,6 +8,7 @@ import { useRef } from 'react'
 import GiftComponent from '../GiftComponent'
 import QRcode from '../QRcode'
 import StyledButton from '../buttons/AccentButton'
+import SecondaryButton from '../buttons/SecondaryButton'
 
 const URL = 'https://gift-grabber.onrender.com'
 const orderId = generateOrderId()
@@ -60,10 +61,12 @@ const GiftList = () => {
       <ul>
         {applicantGifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>
-            <GiftComponent gift={gift} />
-            <StyledButton onClick={() => handleRemove(gift)}>
-              Remove
-            </StyledButton>
+            <div className='flex flex-row' style={{ marginBottom: '1rem' }}>
+              <GiftComponent gift={gift} />
+              <SecondaryButton onClick={() => handleRemove(gift)}>
+                Remove
+              </SecondaryButton>
+            </div>
           </li>
         ))}
       </ul>

@@ -7,7 +7,7 @@ import { OrderStatus } from '@/components/types/OrderStatus'
 import { Person } from '@/database/models/person.model'
 import { FC, useLayoutEffect } from 'react'
 import ConditionalRender from './ConditionalRender'
-import PersonAutocomplete from './PersonAutocomplete'
+import PersonAutocomplete from './form/PersonAutocomplete'
 
 const Approver: FC = () => {
   const { order, approverList, setApprover } = useSafeContext(OrderContext)
