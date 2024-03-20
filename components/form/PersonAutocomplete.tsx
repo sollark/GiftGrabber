@@ -3,7 +3,7 @@
 import { Person } from '@/database/models/person.model'
 import { Autocomplete, TextField } from '@mui/material'
 import { FC, SyntheticEvent, useState } from 'react'
-import StyledButton from './buttons/AccentButton'
+import SecondaryButton from '../buttons/SecondaryButton'
 
 export type OptionType = {
   id: string
@@ -32,18 +32,17 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   }
 
   return (
-    <div>
+    <div className='flex flex-row align-start'>
       <Autocomplete
         disablePortal
+        className='input'
         options={optionList}
         onChange={(event: any, value: any) => handleSelect(event, value)}
         sx={{ width: 300 }}
-        renderInput={(params) => (
-          <TextField {...params} label='Select option' />
-        )}
+        renderInput={(params) => <TextField {...params} label='Type name' />}
         isOptionEqualToValue={(option, value) => option.id === value.id}
       />
-      <StyledButton onClick={confirm}>Select</StyledButton>
+      <SecondaryButton onClick={confirm}>Select</SecondaryButton>
     </div>
   )
 }
