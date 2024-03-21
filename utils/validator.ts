@@ -7,7 +7,9 @@ export const EventSchema = z.object({
     .min(1, { message: 'Field can not be empty' })
     .min(3, { message: 'Event name must be at least 3 characters' })
     .max(20, { message: 'Event name must be less than 20 characters' })
-    .regex(/^[a-zA-Z0-9]*$/, { message: 'Event name must be alphanumeric' }),
+    .regex(/^[a-zA-Z0-9 .\/-]*$/, {
+      message: 'Event name must be alphanumeric',
+    }),
   eventEmail: z
     .string()
     .trim()
