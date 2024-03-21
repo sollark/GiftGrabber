@@ -9,6 +9,7 @@ import GiftComponent from '../GiftComponent'
 import QRcode from '../QRcode'
 import StyledButton from '../buttons/AccentButton'
 import SecondaryButton from '../buttons/SecondaryButton'
+import { Box } from '@mui/material'
 
 const URL = 'https://gift-grabber.onrender.com'
 const orderId = generateOrderId()
@@ -56,8 +57,8 @@ const GiftList = () => {
   }
 
   return (
-    <>
-      <h3>Gift list</h3>
+    <Box sx={{ paddingTop: '3rem' }}>
+      <h3>{applicant?.firstName} gifts:</h3>
       <ul>
         {applicantGifts.map((gift: Gift) => (
           <li key={gift._id.toString()}>
@@ -72,7 +73,7 @@ const GiftList = () => {
       </ul>
       <StyledButton onClick={handleOrder}>Take</StyledButton>
       <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
-    </>
+    </Box>
   )
 }
 

@@ -8,10 +8,14 @@ const SelectUnclaimedGift: FC = () => {
   const { giftList, setApplicantGifts, applicantList, setSelectedPerson } =
     useSafeContext(ApplicantContext)
 
+  // On change person in autocomplete, how gift information for the selected person
+  function onChangePerson(selectedPerson: Person) {
+    setSelectedPerson(selectedPerson)
+  }
+
+  // On select person, add his gift to the applicant's gift list
   function onSelectGiftPasser(selectedPerson: Person) {
     if (!selectedPerson) return
-
-    setSelectedPerson(selectedPerson)
 
     const selectedGift = giftList.find(
       (gift) => gift.owner._id === selectedPerson._id
@@ -26,6 +30,7 @@ const SelectUnclaimedGift: FC = () => {
       <PersonAutocomplete
         peopleList={applicantList}
         onSelectPerson={onSelectGiftPasser}
+        onChangePerson={onChangePerson}
       />
     </div>
   )

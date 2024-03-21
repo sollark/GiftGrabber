@@ -14,17 +14,22 @@ export type OptionType = {
 type PersonAutocompleteProps = {
   peopleList: Person[]
   onSelectPerson: (person: Person) => void
+  onChangePerson: (person: Person) => void
 }
 
 const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   peopleList,
   onSelectPerson,
+  onChangePerson,
 }: PersonAutocompleteProps) => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
   const optionList = mapPersonListToOptionList(peopleList)
 
   function handleSelect(event: SyntheticEvent, value: OptionType | null) {
-    if (value) setSelectedPerson(value.person)
+    if (!value) return
+
+    setSelectedPerson(value.person)
+    onChangePerson(value.person)
   }
 
   function confirm() {
