@@ -37,6 +37,7 @@ const Applicant = () => {
     <PersonAutocomplete
       peopleList={applicantList}
       onSelectPerson={onSelectApplicant}
+      onChangePerson={(person) => {}}
     />
   )
 }
