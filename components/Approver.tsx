@@ -30,6 +30,7 @@ const Approver: FC = () => {
         <PersonAutocomplete
           peopleList={approverList}
           onSelectPerson={onSelectApprover}
+          onChangePerson={(person) => {}}
         />
       </ConditionalRender>
     </div>
