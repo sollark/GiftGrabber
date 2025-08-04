@@ -5,25 +5,45 @@ import {
 } from "@/app/contexts/EnhancedApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
-import { FC, useCallback } from "react";
+import { FC, useCallback, useMemo } from "react";
 import PersonAutocomplete from "./form/PersonAutocomplete";
 
 /**
- * Configuration constants for the SelectUnclaimedGift component
+ * Finds an available unclaimed gift for a specific person
+ * @param selectedPerson - The person to find a gift for
+ * @param gifts - Array of available gifts
+ * @returns The found unclaimed gift or undefined if none available
  */
-const COMPONENT_CONFIG = {
-  CONTAINER_ELEMENT: "div",
-} as const;
+const findUnclaimedGift = (
+  selectedPerson: Person,
+  gifts: Gift[]
+): Gift | undefined => {
+  return gifts.find(
+    (gift) => gift.owner._id === selectedPerson._id && !gift.receiver
+  );
+};
 
 /**
- * Main component for selecting unclaimed gifts through person selection
+ * Component for selecting unclaimed gifts through person selection.
+ * Allows users to search for people and automatically assigns their unclaimed gifts.
  */
 const SelectUnclaimedGift: FC = () => {
   const { applicantList } = useApplicantSelection();
   const { giftList, addGift } = useGiftManagement();
   const { selectPerson } = usePersonSelection();
 
-  // Memoized handler for person selection changes
+  // Extract values from Maybe types for easier consumption
+  const availableApplicants = useMemo(
+    () => (applicantList._tag === "Some" ? applicantList.value : []),
+    [applicantList]
+  );
+
+  const availableGifts = useMemo(
+    () => (giftList._tag === "Some" ? giftList.value : []),
+    [giftList]
+  );
+
+  // Handler for person selection changes (tracking only)
   const handlePersonChange = useCallback(
     (selectedPerson: Person) => {
       selectPerson(selectedPerson);
@@ -31,45 +51,28 @@ const SelectUnclaimedGift: FC = () => {
     [selectPerson]
   );
 
-  // Memoized handler for gift selection process
+  // Handler for gift selection and assignment
   const handleGiftSelection = useCallback(
     (selectedPerson: Person) => {
       if (!selectedPerson) return;
 
-      const availableGift = findAvailableGiftForPerson(
-        selectedPerson,
-        giftList._tag === "Some" ? giftList.value : []
-      );
-      if (availableGift) {
-        addGift(availableGift);
+      const unclaimedGift = findUnclaimedGift(selectedPerson, availableGifts);
+
+      if (unclaimedGift) {
+        addGift(unclaimedGift);
       }
     },
-    [giftList, addGift]
+    [availableGifts, addGift]
   );
 
   return (
-    <COMPONENT_CONFIG.CONTAINER_ELEMENT>
+    <div>
       <PersonAutocomplete
-        peopleList={applicantList._tag === "Some" ? applicantList.value : []}
+        peopleList={availableApplicants}
         onSelectPerson={handleGiftSelection}
         onChangePerson={handlePersonChange}
       />
-    </COMPONENT_CONFIG.CONTAINER_ELEMENT>
-  );
-};
-
-/**
- * Finds an available unclaimed gift for a specific person
- * @param selectedPerson - The person to find a gift for
- * @param giftList - Array of available gifts
- * @returns Gift | undefined - The found unclaimed gift or undefined if none available
- */
-const findAvailableGiftForPerson = (
-  selectedPerson: Person,
-  giftList: Gift[]
-): Gift | undefined => {
-  return giftList.find(
-    (gift) => gift.owner._id === selectedPerson._id && !gift.receiver
+    </div>
   );
 };
 

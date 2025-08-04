@@ -1,23 +1,52 @@
-'use client'
+"use client";
 
-import { MultistepProvider } from '@/app/contexts/MultistepContext'
-import { useMultistep } from '@/app/hooks/useMultistep'
-import { FC, ReactNode } from 'react'
+import {
+  MultistepProvider,
+  useStepNavigation,
+} from "@/app/contexts/EnhancedMultistepContext";
+import { FC, ReactNode, useMemo } from "react";
 
-type MultistepNavigatorProps = {
-  children: ReactNode[]
-  [key: string]: any
+/**
+ * Props for the MultistepNavigator component
+ */
+interface MultistepNavigatorProps {
+  children: ReactNode[];
+  [key: string]: any;
 }
+
+/**
+ * Internal component that renders the current step content
+ */
+const StepRenderer: FC<{ children: ReactNode[] }> = ({ children }) => {
+  const { currentStepIndex } = useStepNavigation();
+
+  // Render the current step content
+  const currentStepContent = children[currentStepIndex] || null;
+
+  return <>{currentStepContent}</>;
+};
+
+/**
+ * Component that provides multistep navigation functionality to its children.
+ * Converts ReactNode children into step definitions for the Enhanced context.
+ */
 const MultistepNavigator: FC<MultistepNavigatorProps> = ({ children }) => {
-  const { step, steps, back, next, currentStepIndex, goTo } = useMultistep([
-    ...children,
-  ])
+  // Convert ReactNode children to StepDefinition format
+  const steps = useMemo(() => {
+    return children.map((child, index) => ({
+      id: `step-${index}`,
+      title: `Step ${index + 1}`,
+      component: child,
+      isRequired: false,
+      canSkip: false,
+    }));
+  }, [children]);
 
   return (
-    <MultistepProvider goToPreviousStep={back} goToNextStep={next} goTo={goTo}>
-      {step}
+    <MultistepProvider steps={steps}>
+      <StepRenderer children={children} />
     </MultistepProvider>
-  )
-}
+  );
+};
 
-export default MultistepNavigator
+export default MultistepNavigator;

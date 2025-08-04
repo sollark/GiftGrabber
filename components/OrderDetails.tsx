@@ -1,40 +1,72 @@
-import { OrderContext } from '@/app/contexts/OrderContext'
-import { useSafeContext } from '@/app/hooks/useSafeContext'
-import React from 'react'
-import GiftList from './GiftList'
+import {
+  useOrderStatus,
+  useApproverSelection,
+} from "@/app/contexts/EnhancedOrderContext";
+import React, { useMemo } from "react";
+import GiftList from "./GiftList";
 
+/**
+ * Formats a person's full name
+ * @param person - Person object with firstName and lastName
+ * @returns Formatted full name string
+ */
+const formatPersonName = (person: {
+  firstName: string;
+  lastName: string;
+}): string => {
+  return `${person.firstName} ${person.lastName}`;
+};
+
+/**
+ * Component for displaying detailed order information including applicant, approver, and gifts
+ */
 const OrderDetails: React.FC = () => {
-  const { order, approver } = useSafeContext(OrderContext)
-  if (!order) return null
+  const orderStatus = useOrderStatus();
+  const approverSelection = useApproverSelection();
 
-  const { createdAt, applicant, gifts } = order
+  // Extract order and approver from Maybe types
+  const order =
+    orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
+  const approver =
+    approverSelection.selectedApprover._tag === "Some"
+      ? approverSelection.selectedApprover.value
+      : null;
+
+  // Memoized approver name calculation
+  const approverName = useMemo(() => {
+    if (order?.confirmedBy) {
+      return formatPersonName(order.confirmedBy);
+    }
+    if (approver) {
+      return formatPersonName(approver);
+    }
+    return "";
+  }, [order?.confirmedBy, approver]);
+
+  // Early return if no order exists
+  if (!order) {
+    return null;
+  }
+
+  const { createdAt, applicant, gifts } = order;
+
   return (
     <div>
       <h2>Order Details</h2>
-      {order ? (
-        <div>
-          <p>
-            <strong>Order date:</strong> {new Date(createdAt).toLocaleString()}
-          </p>
-          <p>
-            <strong>Applicant:</strong> {applicant.firstName}{' '}
-            {applicant.lastName}
-          </p>
-          <p>
-            <strong>Approver:</strong>{' '}
-            {order.confirmedBy
-              ? `${order.confirmedBy.firstName} ${order.confirmedBy.lastName}`
-              : approver
-              ? `${approver.firstName} ${approver.lastName}`
-              : ''}
-          </p>
-          <GiftList gifts={gifts} />
-        </div>
-      ) : (
-        <p>No order found.</p>
-      )}
+      <div>
+        <p>
+          <strong>Order date:</strong> {new Date(createdAt).toLocaleString()}
+        </p>
+        <p>
+          <strong>Applicant:</strong> {formatPersonName(applicant)}
+        </p>
+        <p>
+          <strong>Approver:</strong> {approverName}
+        </p>
+        <GiftList gifts={gifts} />
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default OrderDetails
+export default OrderDetails;
