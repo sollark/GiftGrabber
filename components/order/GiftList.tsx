@@ -4,7 +4,7 @@ import { useSafeContext } from "@/app/hooks/useSafeContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useCallback, useMemo } from "react";
 import GiftComponent from "../GiftComponent";
 import QRcode from "../QRcode";
 import StyledButton from "../buttons/AccentButton";
@@ -12,7 +12,18 @@ import SecondaryButton from "../buttons/SecondaryButton";
 import { Box } from "@mui/material";
 
 const BASE_URL = "https://gift-grabber.onrender.com";
-const ORDER_ID = generateOrderId();
+
+const GIFT_LIST_STYLES = {
+  container: { paddingTop: "3rem" },
+  giftItem: { marginBottom: "1rem" },
+} as const;
+
+const MESSAGES = {
+  NO_GIFTS: "No gifts selected",
+  QR_CODE_ERROR: "Failed to generate QR code buffer",
+  NO_APPLICANT_ERROR: "No applicant selected",
+  ORDER_ERROR: "Error creating order:",
+} as const;
 
 const GiftList = () => {
   const router = useRouter();
@@ -24,56 +35,104 @@ const GiftList = () => {
     setApplicantGifts,
   } = useSafeContext(ApplicantContext);
 
-  const orderUrl = `${BASE_URL}/events/${eventId}/orders/${ORDER_ID}`;
   const orderQRCodeRef = useRef<HTMLDivElement>(null!);
 
-  const handleRemoveGift = (giftToRemove: Gift) => {
-    setApplicantGifts((previousGifts) =>
-      previousGifts.filter((gift) => gift._id !== giftToRemove._id)
-    );
-  };
-
-  const processOrder = async () => {
-    if (!applicant) return;
-
-    const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef);
-    if (!orderQRCodeBuffer) {
-      console.error("Error getting QR code");
-      return;
-    }
-
-    const orderQRCodeBase64 = orderQRCodeBuffer.toString("base64");
-
-    const response = await makeOrder(
-      approverList,
-      applicant,
-      applicantGifts,
-      ORDER_ID,
-      orderQRCodeBase64
-    );
-
-    if (response) {
-      router.push(`/events/${eventId}/orders/${ORDER_ID}`);
-    } else {
-      console.error("Error creating order");
-    }
-  };
-
-  const renderGiftItem = (gift: Gift) => (
-    <li key={gift._id.toString()}>
-      <div className="flex flex-row" style={{ marginBottom: "1rem" }}>
-        <GiftComponent gift={gift} />
-        <SecondaryButton onClick={() => handleRemoveGift(gift)}>
-          Remove
-        </SecondaryButton>
-      </div>
-    </li>
+  // Memoize computed values that don't change frequently
+  const orderId = useMemo(() => generateOrderId(), []);
+  const orderUrl = useMemo(
+    () => `${BASE_URL}/events/${eventId}/orders/${orderId}`,
+    [eventId, orderId]
   );
 
+  const applicantDisplayName = useMemo(
+    () => applicant?.firstName || "Unknown",
+    [applicant?.firstName]
+  );
+
+  const hasGifts = useMemo(
+    () => applicantGifts.length > 0,
+    [applicantGifts.length]
+  );
+
+  const handleRemoveGift = useCallback(
+    (giftToRemove: Gift) => {
+      setApplicantGifts((previousGifts) =>
+        previousGifts.filter((gift) => gift._id !== giftToRemove._id)
+      );
+    },
+    [setApplicantGifts]
+  );
+
+  const generateQRCodeData = useCallback(async (): Promise<string | null> => {
+    const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef);
+    if (!orderQRCodeBuffer) {
+      console.error(MESSAGES.QR_CODE_ERROR);
+      return null;
+    }
+    return orderQRCodeBuffer.toString("base64");
+  }, []);
+
+  const submitOrder = useCallback(
+    async (qrCodeData: string): Promise<boolean> => {
+      if (!applicant) {
+        console.error(MESSAGES.NO_APPLICANT_ERROR);
+        return false;
+      }
+
+      try {
+        const response = await makeOrder(
+          approverList,
+          applicant,
+          applicantGifts,
+          orderId,
+          qrCodeData
+        );
+        return !!response;
+      } catch (error) {
+        console.error(MESSAGES.ORDER_ERROR, error);
+        return false;
+      }
+    },
+    [approverList, applicant, applicantGifts, orderId]
+  );
+
+  const processOrder = useCallback(async () => {
+    if (!applicant) return;
+
+    const qrCodeData = await generateQRCodeData();
+    if (!qrCodeData) return;
+
+    const isSuccess = await submitOrder(qrCodeData);
+    if (isSuccess) {
+      router.push(`/events/${eventId}/orders/${orderId}`);
+    }
+  }, [applicant, eventId, orderId, router, generateQRCodeData, submitOrder]);
+
+  const renderGiftItem = useCallback(
+    (gift: Gift) => (
+      <li key={gift._id.toString()}>
+        <div className="flex flex-row" style={GIFT_LIST_STYLES.giftItem}>
+          <GiftComponent gift={gift} />
+          <SecondaryButton onClick={() => handleRemoveGift(gift)}>
+            Remove
+          </SecondaryButton>
+        </div>
+      </li>
+    ),
+    [handleRemoveGift]
+  );
+
+  const renderGiftsList = useCallback(() => {
+    if (!hasGifts) {
+      return <p>{MESSAGES.NO_GIFTS}</p>;
+    }
+    return <ul>{applicantGifts.map(renderGiftItem)}</ul>;
+  }, [hasGifts, applicantGifts, renderGiftItem]);
+
   return (
-    <Box sx={{ paddingTop: "3rem" }}>
-      <h3>{applicant?.firstName} gifts:</h3>
-      <ul>{applicantGifts.map(renderGiftItem)}</ul>
+    <Box sx={GIFT_LIST_STYLES.container}>
+      <h3>{applicantDisplayName} gifts:</h3>
+      {renderGiftsList()}
       <StyledButton onClick={processOrder}>Take</StyledButton>
       <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
     </Box>
