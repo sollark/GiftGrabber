@@ -1,10 +1,14 @@
 "use server";
 
 import { OrderStatus } from "@/components/types/OrderStatus";
-import { connectToDatabase } from "@/database/connect";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
+import {
+  withDatabase,
+  withDatabaseBoolean,
+  withDatabaseNullable,
+} from "@/lib/withDatabase";
 import { handleError } from "@/utils/utils";
 import { Types } from "mongoose";
 
@@ -74,7 +78,7 @@ interface OrderCreationData {
  * @param confirmationRQCode - QR code for order confirmation
  * @returns Promise<boolean | undefined> - True if order created successfully
  */
-export const makeOrder = async (
+const makeOrderInternal = async (
   approverList: Person[],
   applicant: Person,
   gifts: Gift[],
@@ -82,8 +86,6 @@ export const makeOrder = async (
   confirmationRQCode: string
 ): Promise<boolean | undefined> => {
   try {
-    await connectToDatabase();
-
     const orderData = createOrderData(
       approverList,
       applicant,
@@ -101,16 +103,16 @@ export const makeOrder = async (
   }
 };
 
+export const makeOrder = withDatabaseBoolean(makeOrderInternal);
+
 /**
  * Retrieves an order by its ID with populated fields
  * @param orderId - Unique identifier for the order
  * @returns Promise<Order | null> - The order with populated fields or null if not found
  */
-export const getOrder = async (orderId: string): Promise<Order | null> => {
+const getOrderInternal = async (orderId: string): Promise<Order | null> => {
   try {
     logOrderRetrieval();
-
-    await connectToDatabase();
 
     const order = await findOrderWithPopulation(orderId);
     validateOrderExists(order);
@@ -123,19 +125,19 @@ export const getOrder = async (orderId: string): Promise<Order | null> => {
   return null;
 };
 
+export const getOrder = withDatabaseNullable(getOrderInternal);
+
 /**
  * Confirms an order and updates associated gifts
  * @param orderId - Unique identifier for the order
  * @param confirmedBy - ID of the person confirming the order
  * @returns Promise<Order | false> - Confirmed order or false if failed
  */
-export const confirmOrder = async (
+const confirmOrderInternal = async (
   orderId: string,
   confirmedBy: Types.ObjectId
 ): Promise<any | false> => {
   try {
-    await connectToDatabase();
-
     logOrderConfirmation(orderId, confirmedBy);
 
     const order = await findUnconfirmedOrder(orderId);
@@ -151,6 +153,8 @@ export const confirmOrder = async (
   }
   return false;
 };
+
+export const confirmOrder = withDatabase(confirmOrderInternal);
 
 /**
  * Creates order data object from parameters

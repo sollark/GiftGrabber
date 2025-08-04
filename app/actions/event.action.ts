@@ -1,9 +1,14 @@
 "use server";
 
-import { connectToDatabase } from "@/database/connect";
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
+import {
+  withDatabase,
+  withDatabaseBoolean,
+  withDatabaseNullable,
+  withDatabaseArray,
+} from "@/lib/withDatabase";
 import { handleError } from "@/utils/utils";
 
 /**
@@ -78,7 +83,7 @@ interface CreateEventData {
  * @param event - The event form data containing all necessary information
  * @returns Promise<boolean> - True if event was created successfully, undefined on error
  */
-export const createEvent = async (
+const createEventInternal = async (
   event: EventForm
 ): Promise<boolean | undefined> => {
   const {
@@ -93,8 +98,6 @@ export const createEvent = async (
   } = event;
 
   try {
-    await connectToDatabase();
-
     const applicantIds = await createPersonList(applicantList);
     const approverIds = await createPersonList(approverList);
     const giftIds = await createGiftList(applicantIds);
@@ -121,17 +124,17 @@ export const createEvent = async (
   }
 };
 
+export const createEvent = withDatabaseBoolean(createEventInternal);
+
 /**
  * Gets event applicants with populated data
  * @param eventId - The unique identifier for the event
  * @returns Promise<Event | undefined> - Event with populated applicants or undefined on error
  */
-export const getEventApplicants = async (
+const getEventApplicantsInternal = async (
   eventId: string
 ): Promise<Event | undefined> => {
   try {
-    await connectToDatabase();
-
     const event = await populateEventApplicants(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPLICANTS)
     );
@@ -147,15 +150,17 @@ export const getEventApplicants = async (
   }
 };
 
+export const getEventApplicants = withDatabase(getEventApplicantsInternal);
+
 /**
  * Gets event approvers list
  * @param eventId - The unique identifier for the event
  * @returns Promise<Person[]> - Array of approver persons or empty array on error
  */
-export const getEventApprovers = async (eventId: string): Promise<Person[]> => {
+const getEventApproversInternal = async (
+  eventId: string
+): Promise<Person[]> => {
   try {
-    await connectToDatabase();
-
     const event = await populateEventApprovers(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPROVERS)
     );
@@ -172,17 +177,17 @@ export const getEventApprovers = async (eventId: string): Promise<Person[]> => {
   }
 };
 
+export const getEventApprovers = withDatabaseArray(getEventApproversInternal);
+
 /**
  * Gets complete event details with all populated relationships
  * @param eventId - The unique identifier for the event
  * @returns Promise<Event | null> - Complete event data or null on error
  */
-export const getEventDetails = async (
+const getEventDetailsInternal = async (
   eventId: string
 ): Promise<Event | null> => {
   try {
-    await connectToDatabase();
-
     console.log(LOG_MESSAGES.GET_EVENT_DETAILS, eventId);
 
     const event = await populateEvent(
@@ -201,14 +206,14 @@ export const getEventDetails = async (
   }
 };
 
+export const getEventDetails = withDatabaseNullable(getEventDetailsInternal);
+
 /**
  * Gets all events from the database
  * @returns Promise<Event[] | undefined> - Array of all events or undefined on error
  */
-export const getAllEvents = async (): Promise<Event[] | undefined> => {
+const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
   try {
-    await connectToDatabase();
-
     const events = await EventModel.find();
     return parseEventData(events);
   } catch (error) {
@@ -216,6 +221,8 @@ export const getAllEvents = async (): Promise<Event[] | undefined> => {
     handleError(error);
   }
 };
+
+export const getAllEvents = withDatabase(getAllEventsInternal);
 
 /**
  * Populates event with applicant data

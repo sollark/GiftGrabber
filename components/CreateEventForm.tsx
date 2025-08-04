@@ -10,7 +10,7 @@ import {
 } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import QRcode from "./QRcode";
 import ControlledFileInput from "./form/ControlledFileInput";
 import ControlledTextInput from "./form/ControlledTextInput";
@@ -31,21 +31,9 @@ const FORM_CONFIG = {
 } as const;
 
 /**
- * URL configuration for the event system
+ * Base URL configuration for the event system
  */
-const URL_CONFIG = {
-  BASE_URL: "https://gift-grabber.onrender.com/events",
-  EVENT_ID: generateEventId(),
-  OWNER_ID: generateOwnerId(),
-} as const;
-
-/**
- * Derived URLs from the base configuration
- */
-const URLS = {
-  EVENT_URL: `${URL_CONFIG.BASE_URL}/${URL_CONFIG.EVENT_ID}`,
-  OWNER_URL: `${URL_CONFIG.BASE_URL}/${URL_CONFIG.EVENT_ID}/${URL_CONFIG.OWNER_ID}`,
-} as const;
+const BASE_URL = "https://gift-grabber.onrender.com/events";
 
 /**
  * Error messages for form processing
@@ -72,6 +60,19 @@ const EMAIL_CONFIG = {
 const CreateEventForm = () => {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Generate unique IDs for this component instance
+  const eventId = useMemo(() => generateEventId(), []);
+  const ownerId = useMemo(() => generateOwnerId(), []);
+
+  // Memoize URLs based on generated IDs
+  const urls = useMemo(
+    () => ({
+      EVENT_URL: `${BASE_URL}/${eventId}`,
+      OWNER_URL: `${BASE_URL}/${eventId}/${ownerId}`,
+    }),
+    [eventId, ownerId]
+  );
 
   // Initialize QR code refs for capturing QR code elements
   const eventQRCodeRef = useRef<HTMLDivElement>(
@@ -138,27 +139,6 @@ const CreateEventForm = () => {
     []
   );
 
-  // Main form submission handler
-  const handleSubmit = useCallback(
-    async (data: any) => {
-      console.log("Submitting...");
-
-      const processedData = await processFormData(data);
-      if (!processedData) return;
-
-      const qrCodes = await generateQRCodes();
-      if (!qrCodes) return;
-
-      const success = await submitEventData(processedData, qrCodes);
-      if (success) {
-        router.push(`/events/${URL_CONFIG.EVENT_ID}/${URL_CONFIG.OWNER_ID}`);
-      } else {
-        console.log(ERROR_MESSAGES.EVENT_CREATION_ERROR);
-      }
-    },
-    [processFormData, generateQRCodes, createEmailAttachments, router]
-  );
-
   // Handle event creation and email sending
   const submitEventData = useCallback(
     async (processedData: any, qrCodes: any) => {
@@ -177,15 +157,43 @@ const CreateEventForm = () => {
       return await createEvent({
         name,
         email,
-        eventId: URL_CONFIG.EVENT_ID,
-        ownerId: URL_CONFIG.OWNER_ID,
+        eventId,
+        ownerId,
         eventQRCodeBase64,
         ownerIdQRCodeBase64,
         applicantList,
         approverList,
       });
     },
-    [createEmailAttachments]
+    [createEmailAttachments, eventId, ownerId]
+  );
+
+  // Main form submission handler
+  const handleSubmit = useCallback(
+    async (data: any) => {
+      console.log("Submitting...");
+
+      const processedData = await processFormData(data);
+      if (!processedData) return;
+
+      const qrCodes = await generateQRCodes();
+      if (!qrCodes) return;
+
+      const success = await submitEventData(processedData, qrCodes);
+      if (success) {
+        router.push(`/events/${eventId}/${ownerId}`);
+      } else {
+        console.log(ERROR_MESSAGES.EVENT_CREATION_ERROR);
+      }
+    },
+    [
+      processFormData,
+      generateQRCodes,
+      submitEventData,
+      router,
+      eventId,
+      ownerId,
+    ]
   );
 
   return (
@@ -202,6 +210,8 @@ const CreateEventForm = () => {
       <QRCodeSection
         eventQRCodeRef={eventQRCodeRef}
         ownerQRCodeRef={ownerQRCodeRef}
+        eventUrl={urls.EVENT_URL}
+        ownerUrl={urls.OWNER_URL}
       />
     </>
   );
@@ -257,15 +267,19 @@ const FormFileSection = () => (
 interface QRCodeSectionProps {
   eventQRCodeRef: React.RefObject<HTMLDivElement>;
   ownerQRCodeRef: React.RefObject<HTMLDivElement>;
+  eventUrl: string;
+  ownerUrl: string;
 }
 
 const QRCodeSection = ({
   eventQRCodeRef,
   ownerQRCodeRef,
+  eventUrl,
+  ownerUrl,
 }: QRCodeSectionProps) => (
   <>
-    <QRcode url={URLS.EVENT_URL} qrRef={eventQRCodeRef} />
-    <QRcode url={URLS.OWNER_URL} qrRef={ownerQRCodeRef} />
+    <QRcode url={eventUrl} qrRef={eventQRCodeRef} />
+    <QRcode url={ownerUrl} qrRef={ownerQRCodeRef} />
   </>
 );
 
