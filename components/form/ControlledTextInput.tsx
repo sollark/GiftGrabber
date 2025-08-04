@@ -1,23 +1,32 @@
-import { ErrorMessage } from '@hookform/error-message'
-import { TextField } from '@mui/material'
-import { FC } from 'react'
-import { Controller, useFormContext } from 'react-hook-form'
-// import { textInputStyle } from '../../style/formStyle'
-// import TextInput from './StyledTextInput'
+import { ErrorMessage } from "@hookform/error-message";
+import { TextField } from "@mui/material";
+import { FC } from "react";
+import { Controller, useFormContext } from "react-hook-form";
 
-type InputProps = {
-  name: string
-  label: string
-  [key: string]: any // allow any other prop that is not explicitly defined
+/**
+ * Props for the ControlledTextInput component
+ */
+interface ControlledTextInputProps {
+  name: string;
+  label: string;
+  [key: string]: any; // Allow additional props to be passed through
 }
 
-const ControlledTextInput: FC<InputProps> = (props: InputProps) => {
-  const { label, name, ...rest } = props
-
+/**
+ * Controlled text input component integrated with React Hook Form.
+ * Provides automatic form validation and error handling.
+ */
+const ControlledTextInput: FC<ControlledTextInputProps> = ({
+  name,
+  label,
+  ...additionalProps
+}) => {
   const {
     formState: { errors },
     control,
-  } = useFormContext()
+  } = useFormContext();
+
+  const hasError = !!errors[name];
 
   return (
     <Controller
@@ -26,17 +35,16 @@ const ControlledTextInput: FC<InputProps> = (props: InputProps) => {
       render={({ field }) => (
         <TextField
           {...field}
-          className='input'
+          className="input"
           label={label}
           placeholder={label}
-          error={!!errors[name]}
+          error={hasError}
           helperText={<ErrorMessage name={name} />}
-          //   {...textInputStyle}
-          {...rest}
+          {...additionalProps}
         />
       )}
     />
-  )
-}
+  );
+};
 
-export default ControlledTextInput
+export default ControlledTextInput;

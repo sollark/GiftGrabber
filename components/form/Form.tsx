@@ -1,45 +1,78 @@
-'use client'
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, ReactElement, ReactNode } from 'react'
-import { FormProvider, useForm } from 'react-hook-form'
-import StyledButton from '../buttons/AccentButton'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FC, ReactElement, ReactNode } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import StyledButton from "../buttons/AccentButton";
 
-type Props = {
-  children: ReactNode
-  submit: (data: any) => void
-  schema: any
-  defaultValues?: any
-  submitButton?: ReactElement
-  [key: string]: any // allow any other prop that is not explicitly defined
+/**
+ * Props for the Form component
+ */
+interface FormProps {
+  children: ReactNode;
+  submit: (data: any) => void;
+  schema: any;
+  defaultValues?: any;
+  submitButton?: ReactElement;
+  [key: string]: any; // Allow additional props to be passed through
 }
 
-const Form: FC<Props> = (props: Props) => {
-  const { children, schema, defaultValues, submit, ...rest } = props
+/**
+ * Form configuration constants
+ */
+const FORM_CONFIG = {
+  CRITERIA_MODE: "all" as const,
+  VALIDATION_MODE: "onBlur" as const,
+  REVALIDATION_MODE: "onBlur" as const,
+  SUBMIT_BUTTON_TEXT: "Create",
+} as const;
 
+/**
+ * Enhanced form component with React Hook Form integration.
+ * Provides automatic validation, error handling, and form state management.
+ */
+const Form: FC<FormProps> = ({
+  children,
+  schema,
+  defaultValues,
+  submit,
+  submitButton,
+  ...additionalProps
+}) => {
   const methods = useForm({
     resolver: zodResolver(schema),
     defaultValues,
-    criteriaMode: 'all',
-    mode: 'onBlur',
-    reValidateMode: 'onBlur',
-  })
-  const { handleSubmit } = methods
+    criteriaMode: FORM_CONFIG.CRITERIA_MODE,
+    mode: FORM_CONFIG.VALIDATION_MODE,
+    reValidateMode: FORM_CONFIG.REVALIDATION_MODE,
+  });
 
-  const onSubmit = (data: any) => {
-    submit(data)
-  }
+  const { handleSubmit } = methods;
+
+  const handleFormSubmit = (data: any) => {
+    submit(data);
+  };
+
+  const renderSubmitButton = () => {
+    if (submitButton) {
+      return submitButton;
+    }
+
+    return (
+      <StyledButton type="submit">
+        {FORM_CONFIG.SUBMIT_BUTTON_TEXT}
+      </StyledButton>
+    );
+  };
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} {...rest}>
+      <form onSubmit={handleSubmit(handleFormSubmit)} {...additionalProps}>
         {children}
-        <div>
-          <StyledButton type='submit'>Create</StyledButton>
-        </div>
+        <div>{renderSubmitButton()}</div>
       </form>
     </FormProvider>
-  )
-}
+  );
+};
 
-export default Form
+export default Form;

@@ -1,21 +1,40 @@
-import { ErrorMessage } from '@hookform/error-message'
-import { MuiFileInput } from 'mui-file-input'
-import { FC } from 'react'
-import { Controller, useFormContext } from 'react-hook-form'
+import { ErrorMessage } from "@hookform/error-message";
+import { MuiFileInput } from "mui-file-input";
+import { FC } from "react";
+import { Controller, useFormContext } from "react-hook-form";
 
-type InputProps = {
-  name: string
-  label: string
-  [key: string]: any // allow any other prop that is not explicitly defined
+/**
+ * Props for the ControlledFileInput component
+ */
+interface ControlledFileInputProps {
+  name: string;
+  label: string;
+  [key: string]: any; // Allow additional props to be passed through
 }
 
-const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
-  const { label, name, ...rest } = props
+/**
+ * Configuration for file input restrictions
+ */
+const FILE_INPUT_CONFIG = {
+  ACCEPTED_FORMATS: ".xls,.xlsx",
+  CSS_CLASS: "input",
+} as const;
 
+/**
+ * Controlled file input component integrated with React Hook Form.
+ * Specifically configured for Excel file uploads with validation.
+ */
+const ControlledFileInput: FC<ControlledFileInputProps> = ({
+  name,
+  label,
+  ...additionalProps
+}) => {
   const {
     formState: { errors },
     control,
-  } = useFormContext()
+  } = useFormContext();
+
+  const hasError = !!errors[name];
 
   return (
     <Controller
@@ -24,21 +43,21 @@ const ControlledFileInput: FC<InputProps> = (props: InputProps) => {
       render={({ field }) => (
         <MuiFileInput
           {...field}
-          className='input'
+          className={FILE_INPUT_CONFIG.CSS_CLASS}
           label={label}
           placeholder={label}
           InputProps={{
             inputProps: {
-              accept: '.xls,.xlsx',
+              accept: FILE_INPUT_CONFIG.ACCEPTED_FORMATS,
             },
           }}
-          error={!!errors[name]}
+          error={hasError}
           helperText={<ErrorMessage name={name} />}
-          {...rest}
+          {...additionalProps}
         />
       )}
     />
-  )
-}
+  );
+};
 
-export default ControlledFileInput
+export default ControlledFileInput;
