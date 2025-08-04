@@ -462,7 +462,7 @@ export function adaptHookToMaybe<T extends any[], R>(
  * @param useState - React useState hook
  * @returns Enhanced state hook with functional patterns
  */
-export const enhanceState = <T>(
+export const useEnhancedState = <T>(
   initialValue: T
 ): [T, (updater: (prev: T) => T) => void, () => void] => {
   const [state, setState] = useState<T>(initialValue);
@@ -484,7 +484,7 @@ export const enhanceState = <T>(
   return [state, enhancedSetState, resetState];
 };
 
-export default {
+const EnhancedHooksExports = {
   useResultState,
   useMaybeState,
   useImmutableState,
@@ -499,5 +499,7 @@ export default {
   useSafeEffect,
   useAsyncEffect,
   adaptHookToMaybe,
-  enhanceState,
+  useEnhancedState,
 };
+
+export default EnhancedHooksExports;

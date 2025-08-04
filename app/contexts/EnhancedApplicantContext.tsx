@@ -606,7 +606,7 @@ export const useApplicantComputed = () => {
   };
 };
 
-export default {
+const EnhancedApplicantContextExports = {
   ApplicantProvider,
   useApplicantContext,
   useApplicantContextResult,
@@ -617,3 +617,5 @@ export default {
   usePersonSelection,
   useApplicantComputed,
 };
+
+export default EnhancedApplicantContextExports;

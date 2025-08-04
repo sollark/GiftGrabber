@@ -795,7 +795,7 @@ export const useOrderTracking = () => {
   };
 };
 
-export default {
+const EnhancedOrderContextExports = {
   OrderProvider,
   useOrderContext,
   useOrderContextResult,
@@ -805,3 +805,5 @@ export default {
   useApproverSelection,
   useOrderTracking,
 };
+
+export default EnhancedOrderContextExports;

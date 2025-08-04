@@ -44,9 +44,8 @@ const MultistepNavigator: FC<MultistepNavigatorProps> = ({ children }) => {
 
   return (
     <MultistepProvider steps={steps}>
-      <StepRenderer children={children} />
+      <StepRenderer>{children}</StepRenderer>
     </MultistepProvider>
   );
 };
-
 export default MultistepNavigator;

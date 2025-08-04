@@ -291,38 +291,22 @@ const mockOrderContext = React.createContext<any>(undefined);
 const mockUserContext = React.createContext<any>(undefined);
 
 /**
- * Example: Safe context access pattern (functional approach)
+ * Example: Creating order summary logic with context integration
  */
 export function createOrderSummaryLogic() {
-  // Safe context access with Maybe types
-  const getOrderContext = () => useSafeContext(mockOrderContext);
-  const getUserContext = () => useSafeContext(mockUserContext);
+  // These would be used within React components as hooks
+  const useOrderContext = () => useSafeContext(mockOrderContext);
+  const useUserContext = () => useSafeContext(mockUserContext);
 
-  // Combine multiple contexts safely
-  const getCombinedData = () =>
-    useCombinedContexts(getOrderContext, getUserContext);
+  // Combine multiple contexts safely (within component)
+  const useCombinedData = () =>
+    useCombinedContexts(useOrderContext, useUserContext);
 
-  const processContextData = () => {
-    const combinedData = getCombinedData();
-
-    if (combinedData._tag === "None") {
-      return { error: "Required context not available" };
-    }
-
-    const [orderData, userData] = combinedData.value;
-    return {
-      summary: {
-        title: `Order Summary for ${userData.name}`,
-        orderDetails: orderData,
-        userName: userData.name,
-      },
-    };
-  };
-
+  // Return the hooks for use in components
   return {
-    processContextData,
-    getOrderContext,
-    getUserContext,
+    useOrderContext,
+    useUserContext,
+    useCombinedData,
   };
 }
 
@@ -456,19 +440,21 @@ export function createMigrationExample() {
   // Mock legacy context access
   const getLegacyData = () => ({ name: "Legacy User", id: 123 });
 
-  // New functional approach (safe)
-  const safeData = useSafeContext(mockOrderContext);
+  // New functional approach (would be used in component)
+  const useSafeData = () => useSafeContext(mockOrderContext);
 
-  // Hybrid approach during migration
-  const data =
-    process.env.USE_FUNCTIONAL_PATTERNS === "true"
+  // Hybrid approach during migration (for use in component)
+  const useMigrationData = () => {
+    const safeData = useSafeData();
+    return process.env.USE_FUNCTIONAL_PATTERNS === "true"
       ? safeData
       : some(getLegacyData());
+  };
 
   return {
-    hasData: data._tag === "Some",
-    data: data._tag === "Some" ? data.value : null,
-    displayComponent: data._tag === "Some" ? "OrderDisplay" : "LoadingSpinner",
+    getLegacyData,
+    useSafeData,
+    useMigrationData,
   };
 }
 

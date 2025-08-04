@@ -603,7 +603,7 @@ export function createCollectionReducer<T extends { id: string }>() {
   return { initialState, reducer };
 }
 
-export default {
+const FunctionalContextExports = {
   createFunctionalContext,
   loggingMiddleware,
   validationMiddleware,
@@ -615,3 +615,5 @@ export default {
   createAsyncReducer,
   createCollectionReducer,
 };
+
+export default FunctionalContextExports;

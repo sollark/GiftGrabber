@@ -334,9 +334,9 @@ export function adaptSafeToLegacy<T>(
 }
 
 /**
- * Migration helper to gradually adopt safe context patterns
- * @param context - React context
- * @param contextName - Context name
+ * Migration helper for transitioning between legacy and safe context patterns
+ * @param context - React context to consume
+ * @param contextName - Name for error messages
  * @param useLegacy - Whether to use legacy throwing behavior
  * @returns Context value (throws if legacy mode and undefined)
  */
@@ -345,11 +345,17 @@ export function useMigrationContext<T>(
   contextName: string,
   useLegacy: boolean = false
 ): T | Maybe<T> {
+  const legacyValue = useLegacyContext(
+    context,
+    `${contextName} context is not available`
+  );
+  const safeValue = useSafeContext(context, contextName);
+
   if (useLegacy) {
-    return useLegacyContext(context, `${contextName} context is not available`);
+    return legacyValue;
   }
 
-  return useSafeContext(context, contextName);
+  return safeValue;
 }
 
 export default useSafeContext;

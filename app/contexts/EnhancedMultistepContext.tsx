@@ -975,7 +975,7 @@ export const useStepValidation = () => {
   };
 };
 
-export default {
+const EnhancedMultistepContextExports = {
   MultistepProvider,
   useMultistepContext,
   useMultistepContextResult,
@@ -985,3 +985,5 @@ export default {
   useStepData,
   useStepValidation,
 };
+
+export default EnhancedMultistepContextExports;

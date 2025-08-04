@@ -84,16 +84,19 @@ export function useMultistep(
   // STATE MANAGEMENT
   // ============================================================================
 
-  const initialState: MultistepState = {
-    currentStepIndex: Math.max(
-      0,
-      Math.min(initialStep, stepsConfig.length - 1)
-    ),
-    visitedSteps: [initialStep],
-    stepData: {},
-    isCompleted: false,
-    errors: {},
-  };
+  const initialState: MultistepState = useMemo(
+    () => ({
+      currentStepIndex: Math.max(
+        0,
+        Math.min(initialStep, stepsConfig.length - 1)
+      ),
+      visitedSteps: [initialStep],
+      stepData: {},
+      isCompleted: false,
+      errors: {},
+    }),
+    [initialStep, stepsConfig.length]
+  );
 
   const [state, setState] = useImmutableState<MultistepState>(initialState);
 
