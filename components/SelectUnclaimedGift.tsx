@@ -1,5 +1,8 @@
-import { ApplicantContext } from "@/app/contexts/ApplicantContext";
-import { useSafeContext } from "@/app/hooks/useSafeContext";
+import {
+  useApplicantSelection,
+  useGiftManagement,
+  usePersonSelection,
+} from "@/app/contexts/EnhancedApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import { FC, useCallback } from "react";
@@ -16,15 +19,16 @@ const COMPONENT_CONFIG = {
  * Main component for selecting unclaimed gifts through person selection
  */
 const SelectUnclaimedGift: FC = () => {
-  const { giftList, setApplicantGifts, applicantList, setSelectedPerson } =
-    useSafeContext(ApplicantContext);
+  const { applicantList } = useApplicantSelection();
+  const { giftList, addGift } = useGiftManagement();
+  const { selectPerson } = usePersonSelection();
 
   // Memoized handler for person selection changes
   const handlePersonChange = useCallback(
     (selectedPerson: Person) => {
-      setSelectedPerson(selectedPerson);
+      selectPerson(selectedPerson);
     },
-    [setSelectedPerson]
+    [selectPerson]
   );
 
   // Memoized handler for gift selection process
@@ -34,19 +38,19 @@ const SelectUnclaimedGift: FC = () => {
 
       const availableGift = findAvailableGiftForPerson(
         selectedPerson,
-        giftList
+        giftList._tag === "Some" ? giftList.value : []
       );
       if (availableGift) {
-        addGiftToApplicantList(availableGift, setApplicantGifts);
+        addGift(availableGift);
       }
     },
-    [giftList, setApplicantGifts]
+    [giftList, addGift]
   );
 
   return (
     <COMPONENT_CONFIG.CONTAINER_ELEMENT>
       <PersonAutocomplete
-        peopleList={applicantList}
+        peopleList={applicantList._tag === "Some" ? applicantList.value : []}
         onSelectPerson={handleGiftSelection}
         onChangePerson={handlePersonChange}
       />
@@ -67,18 +71,6 @@ const findAvailableGiftForPerson = (
   return giftList.find(
     (gift) => gift.owner._id === selectedPerson._id && !gift.receiver
   );
-};
-
-/**
- * Adds a gift to the applicant gifts list
- * @param availableGift - The gift to add to the list
- * @param setApplicantGifts - Function to update the applicant gifts state
- */
-const addGiftToApplicantList = (
-  availableGift: Gift,
-  setApplicantGifts: React.Dispatch<React.SetStateAction<Gift[]>>
-): void => {
-  setApplicantGifts((previousGifts) => [...previousGifts, availableGift]);
 };
 
 export default SelectUnclaimedGift;

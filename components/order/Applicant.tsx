@@ -1,27 +1,27 @@
 "use client";
 
-import { ApplicantContext } from "@/app/contexts/ApplicantContext";
-import { MultistepContext } from "@/app/contexts/MultistepContext";
-import { useSafeContext } from "@/app/hooks/useSafeContext";
+import {
+  useApplicantSelection,
+  useGiftManagement,
+  usePersonSelection,
+} from "@/app/contexts/EnhancedApplicantContext";
+import { useStepNavigation } from "@/app/contexts/EnhancedMultistepContext";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import { useCallback } from "react";
 import PersonAutocomplete from "../form/PersonAutocomplete";
 
 const Applicant = () => {
-  const {
-    applicantList,
-    setApplicant,
-    setSelectedPerson,
-    giftList,
-    setApplicantGifts,
-  } = useSafeContext(ApplicantContext);
-  const { goToNextStep } = useSafeContext(MultistepContext);
+  const { applicantList, selectApplicant } = useApplicantSelection();
+  const { giftList, addGift } = useGiftManagement();
+  const { selectPerson } = usePersonSelection();
+  const { goToNextStep } = useStepNavigation();
 
   const findApplicantGift = useCallback(
     (person: Person): Gift | undefined => {
-      return giftList.find(
-        (gift) => gift.owner._id === person._id && !gift.receiver
+      const gifts = giftList._tag === "Some" ? giftList.value : [];
+      return gifts.find(
+        (gift: Gift) => gift.owner._id === person._id && !gift.receiver
       );
     },
     [giftList]
@@ -29,15 +29,15 @@ const Applicant = () => {
 
   const updateApplicantGifts = useCallback(
     (gift: Gift) => {
-      setApplicantGifts((previousGifts) => [...previousGifts, gift]);
+      addGift(gift);
     },
-    [setApplicantGifts]
+    [addGift]
   );
 
   const processApplicantSelection = useCallback(
     (selectedPerson: Person) => {
-      setApplicant(selectedPerson);
-      setSelectedPerson(selectedPerson);
+      selectApplicant(selectedPerson);
+      selectPerson(selectedPerson);
 
       const applicantGift = findApplicantGift(selectedPerson);
       if (applicantGift) {
@@ -47,8 +47,8 @@ const Applicant = () => {
       goToNextStep();
     },
     [
-      setApplicant,
-      setSelectedPerson,
+      selectApplicant,
+      selectPerson,
       findApplicantGift,
       updateApplicantGifts,
       goToNextStep,
@@ -69,7 +69,7 @@ const Applicant = () => {
 
   return (
     <PersonAutocomplete
-      peopleList={applicantList}
+      peopleList={applicantList._tag === "Some" ? applicantList.value : []}
       onSelectPerson={handleApplicantSelection}
       onChangePerson={handlePersonChange}
     />

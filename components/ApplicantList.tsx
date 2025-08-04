@@ -1,7 +1,10 @@
 "use client";
 
-import { ApplicantContext } from "@/app/contexts/ApplicantContext";
-import { useSafeContext } from "@/app/hooks/useSafeContext";
+import {
+  useApplicantSelection,
+  useGiftManagement,
+  usePersonSelection,
+} from "@/app/contexts/EnhancedApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -24,12 +27,16 @@ type OptionType = {
 };
 
 const ApplicantList: FC = () => {
-  const { applicantList, setSelectedPerson, giftList, setApplicantGifts } =
-    useSafeContext(ApplicantContext);
+  const { applicantList } = useApplicantSelection();
+  const { giftList, addGift } = useGiftManagement();
+  const { selectPerson } = usePersonSelection();
 
   // Memoize the option list to prevent unnecessary recalculations
   const applicantsOptionList = useMemo(
-    () => mapPersonListToOptionList(applicantList),
+    () =>
+      mapPersonListToOptionList(
+        applicantList._tag === "Some" ? applicantList.value : []
+      ),
     [applicantList]
   );
 
@@ -38,10 +45,14 @@ const ApplicantList: FC = () => {
     (event: SyntheticEvent, value: OptionType | null) => {
       if (!value) return;
 
-      setSelectedPerson(value.person);
-      processGiftAssignment(value.person, giftList, setApplicantGifts);
+      selectPerson(value.person);
+      processGiftAssignment(
+        value.person,
+        giftList._tag === "Some" ? giftList.value : [],
+        addGift
+      );
     },
-    [setSelectedPerson, giftList, setApplicantGifts]
+    [selectPerson, giftList, addGift]
   );
 
   // Optimize option equality check
@@ -104,16 +115,16 @@ const findAvailableGiftForPerson = (
  * Processes gift assignment for the selected person
  * @param person - The selected person
  * @param giftList - Array of available gifts
- * @param setApplicantGifts - Function to update applicant gifts
+ * @param addGift - Function to add a gift
  */
 const processGiftAssignment = (
   person: Person,
   giftList: Gift[],
-  setApplicantGifts: React.Dispatch<React.SetStateAction<Gift[]>>
+  addGift: (gift: Gift) => void
 ): void => {
   const availableGift = findAvailableGiftForPerson(person, giftList);
   if (availableGift) {
-    setApplicantGifts((previousGifts) => [...previousGifts, availableGift]);
+    addGift(availableGift);
   }
 };
 

@@ -1,6 +1,9 @@
 import { makeOrder } from "@/app/actions/order.action";
-import { ApplicantContext } from "@/app/contexts/ApplicantContext";
-import { useSafeContext } from "@/app/hooks/useSafeContext";
+import {
+  useApplicantSelection,
+  useGiftManagement,
+  useApplicantSelector,
+} from "@/app/contexts/EnhancedApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
@@ -27,13 +30,10 @@ const MESSAGES = {
 
 const GiftList = () => {
   const router = useRouter();
-  const {
-    eventId,
-    approverList,
-    applicant,
-    applicantGifts,
-    setApplicantGifts,
-  } = useSafeContext(ApplicantContext);
+  const { selectedApplicant } = useApplicantSelection();
+  const { applicantGifts, removeGift } = useGiftManagement();
+  const eventId = useApplicantSelector((state: any) => state.eventId);
+  const approverList = useApplicantSelector((state: any) => state.approverList);
 
   const orderQRCodeRef = useRef<HTMLDivElement>(null!);
 
@@ -44,23 +44,29 @@ const GiftList = () => {
     [eventId, orderId]
   );
 
+  const applicant = useMemo(() => {
+    return selectedApplicant._tag === "Some" &&
+      selectedApplicant.value._tag === "Some"
+      ? selectedApplicant.value.value
+      : null;
+  }, [selectedApplicant]);
+
   const applicantDisplayName = useMemo(
     () => applicant?.firstName || "Unknown",
     [applicant?.firstName]
   );
 
-  const hasGifts = useMemo(
-    () => applicantGifts.length > 0,
-    [applicantGifts.length]
-  );
+  const gifts = useMemo(() => {
+    return applicantGifts._tag === "Some" ? applicantGifts.value : [];
+  }, [applicantGifts]);
+
+  const hasGifts = useMemo(() => gifts.length > 0, [gifts.length]);
 
   const handleRemoveGift = useCallback(
     (giftToRemove: Gift) => {
-      setApplicantGifts((previousGifts) =>
-        previousGifts.filter((gift) => gift._id !== giftToRemove._id)
-      );
+      removeGift(giftToRemove._id.toString());
     },
-    [setApplicantGifts]
+    [removeGift]
   );
 
   const generateQRCodeData = useCallback(async (): Promise<string | null> => {
@@ -81,9 +87,9 @@ const GiftList = () => {
 
       try {
         const response = await makeOrder(
-          approverList,
+          approverList._tag === "Some" ? approverList.value : [],
           applicant,
-          applicantGifts,
+          gifts,
           orderId,
           qrCodeData
         );
@@ -93,7 +99,7 @@ const GiftList = () => {
         return false;
       }
     },
-    [approverList, applicant, applicantGifts, orderId]
+    [approverList, applicant, gifts, orderId]
   );
 
   const processOrder = useCallback(async () => {
@@ -126,8 +132,8 @@ const GiftList = () => {
     if (!hasGifts) {
       return <p>{MESSAGES.NO_GIFTS}</p>;
     }
-    return <ul>{applicantGifts.map(renderGiftItem)}</ul>;
-  }, [hasGifts, applicantGifts, renderGiftItem]);
+    return <ul>{gifts.map(renderGiftItem)}</ul>;
+  }, [hasGifts, gifts, renderGiftItem]);
 
   return (
     <Box sx={GIFT_LIST_STYLES.container}>

@@ -1,22 +1,31 @@
 import { confirmOrder } from "@/app/actions/order.action";
-import { OrderContext } from "@/app/contexts/OrderContext";
-import { useSafeContext } from "@/app/hooks/useSafeContext";
+import {
+  useOrderStatus,
+  useApproverSelection,
+} from "@/app/contexts/EnhancedOrderContext";
 import { FC } from "react";
 import StyledButton from "./AccentButton";
 import { OrderStatus } from "../types/OrderStatus";
 
 const ConfirmOrderButton: FC = () => {
-  const { order, getApprover } = useSafeContext(OrderContext);
+  const orderStatus = useOrderStatus();
+  const approverSelection = useApproverSelection();
 
-  const isOrderCompleted = order.status === OrderStatus.COMPLETE;
+  const order =
+    orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
+  const approver =
+    approverSelection.selectedApprover._tag === "Some"
+      ? approverSelection.selectedApprover.value
+      : null;
+
+  const isOrderCompleted = order?.status === "completed";
 
   const handleConfirmOrder = async () => {
-    const approver = getApprover();
     if (!approver || !order) return;
 
-    const confirmedOrder = await confirmOrder(order.orderId, approver._id);
+    const result = await orderStatus.confirmOrder(approver);
 
-    if (confirmedOrder) {
+    if (result._tag === "Success") {
       window.location.reload();
     }
   };
@@ -27,5 +36,4 @@ const ConfirmOrderButton: FC = () => {
 
   return <StyledButton onClick={handleConfirmOrder}>Confirm</StyledButton>;
 };
-
 export default ConfirmOrderButton;
