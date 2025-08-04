@@ -1,35 +1,123 @@
-import * as XLSX from 'xlsx'
-import parse from 'html-react-parser'
+import * as XLSX from "xlsx";
+import parse, { HTMLReactParserOptions } from "html-react-parser";
+import { ReactNode } from "react";
 
-export async function excelToTable(file: File) {
-  /* generate and display HTML */
-  const workbook = XLSX.read(await file.arrayBuffer())
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-  const html = XLSX.utils.sheet_to_html(worksheet)
+/**
+ * Configuration constants for the Excel to Table conversion
+ */
+const EXCEL_CONFIG = {
+  MIME_TYPE: "text/html",
+  DEFAULT_SHEET_INDEX: 0,
+  FALLBACK_HTML: "<div></div>",
+} as const;
 
-  // Parse the HTML string into a DOM object
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(html, 'text/html')
+/**
+ * Error messages for Excel processing
+ */
+const ERROR_MESSAGES = {
+  NO_TABLE_FOUND: "No table found in the worksheet",
+  PROCESSING_ERROR: "Error processing Excel file",
+} as const;
 
-  // Extract the table element
-  const table = doc.querySelector('table')
-
-  if (!table) {
-    console.error('No table found in the worksheet')
-    return
-  }
-
-  // Convert the table element to a HTML string
-  const tableHtml = table ? table.outerHTML : '<div></div>'
-  const reactTable = parse(tableHtml)
-
-  return reactTable
+/**
+ * Interface for the return type of excelToTable function
+ */
+interface ExcelTableResult {
+  success: boolean;
+  table?: ReactNode;
+  error?: string;
 }
 
-// Usage
-// {
-// const [table, setTable] = useState<ReactNode>()
-// const reactTable = excelToTable(eventFile)
-// setTable(reactTable)
-// return (<div>{table}</div>)
-// }
+/**
+ * Converts an Excel file to a React table component
+ * @param file - The Excel file to convert
+ * @returns Promise<ReactNode> - The React table component or undefined on error
+ */
+export async function excelToTable(file: File): Promise<ReactNode> {
+  try {
+    const workbook = await processExcelFile(file);
+    const html = generateTableHTML(workbook);
+    const tableElement = extractTableFromHTML(html);
+
+    if (!tableElement) {
+      console.error(ERROR_MESSAGES.NO_TABLE_FOUND);
+      return undefined;
+    }
+
+    return convertToReactTable(tableElement);
+  } catch (error) {
+    console.error(ERROR_MESSAGES.PROCESSING_ERROR, error);
+    return undefined;
+  }
+}
+
+/**
+ * Processes the Excel file and returns a workbook object
+ * @param file - The Excel file to process
+ * @returns XLSX.WorkBook - The processed workbook
+ */
+const processExcelFile = async (file: File): Promise<XLSX.WorkBook> => {
+  const arrayBuffer = await file.arrayBuffer();
+  return XLSX.read(arrayBuffer);
+};
+
+/**
+ * Generates HTML table from the workbook
+ * @param workbook - The Excel workbook
+ * @returns string - HTML representation of the table
+ */
+const generateTableHTML = (workbook: XLSX.WorkBook): string => {
+  const worksheet = getFirstWorksheet(workbook);
+  return XLSX.utils.sheet_to_html(worksheet);
+};
+
+/**
+ * Gets the first worksheet from the workbook
+ * @param workbook - The Excel workbook
+ * @returns XLSX.WorkSheet - The first worksheet
+ */
+const getFirstWorksheet = (workbook: XLSX.WorkBook): XLSX.WorkSheet => {
+  const sheetName = workbook.SheetNames[EXCEL_CONFIG.DEFAULT_SHEET_INDEX];
+  return workbook.Sheets[sheetName];
+};
+
+/**
+ * Extracts table element from HTML string
+ * @param html - HTML string containing the table
+ * @returns HTMLTableElement | null - The extracted table element
+ */
+const extractTableFromHTML = (html: string): HTMLTableElement | null => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, EXCEL_CONFIG.MIME_TYPE);
+  return doc.querySelector("table");
+};
+
+/**
+ * Converts HTML table element to React component
+ * @param tableElement - The HTML table element
+ * @returns ReactNode - The React table component
+ */
+const convertToReactTable = (tableElement: HTMLTableElement): ReactNode => {
+  const tableHtml = tableElement.outerHTML || EXCEL_CONFIG.FALLBACK_HTML;
+  return parse(tableHtml);
+};
+
+/**
+ * Example usage of the excelToTable function:
+ *
+ * ```typescript
+ * import { useState, ReactNode } from 'react';
+ * import { excelToTable } from '@/utils/excelToTable';
+ *
+ * const MyComponent = () => {
+ *   const [table, setTable] = useState<ReactNode>();
+ *
+ *   const handleFileUpload = async (eventFile: File) => {
+ *     const reactTable = await excelToTable(eventFile);
+ *     setTable(reactTable);
+ *   };
+ *
+ *   return <div>{table}</div>;
+ * };
+ * ```
+ */
