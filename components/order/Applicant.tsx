@@ -4,6 +4,8 @@ import { ApplicantContext } from "@/app/contexts/ApplicantContext";
 import { MultistepContext } from "@/app/contexts/MultistepContext";
 import { useSafeContext } from "@/app/hooks/useSafeContext";
 import { Person } from "@/database/models/person.model";
+import { Gift } from "@/database/models/gift.model";
+import { useCallback } from "react";
 import PersonAutocomplete from "../form/PersonAutocomplete";
 
 const Applicant = () => {
@@ -16,26 +18,54 @@ const Applicant = () => {
   } = useSafeContext(ApplicantContext);
   const { goToNextStep } = useSafeContext(MultistepContext);
 
-  const handleApplicantSelection = (selectedPerson: Person) => {
-    if (!selectedPerson) return;
+  const findApplicantGift = useCallback(
+    (person: Person): Gift | undefined => {
+      return giftList.find(
+        (gift) => gift.owner._id === person._id && !gift.receiver
+      );
+    },
+    [giftList]
+  );
 
-    setApplicant(selectedPerson);
-    setSelectedPerson(selectedPerson);
+  const updateApplicantGifts = useCallback(
+    (gift: Gift) => {
+      setApplicantGifts((previousGifts) => [...previousGifts, gift]);
+    },
+    [setApplicantGifts]
+  );
 
-    const applicantGift = giftList.find(
-      (gift) => gift.owner._id === selectedPerson._id && !gift.receiver
-    );
+  const processApplicantSelection = useCallback(
+    (selectedPerson: Person) => {
+      setApplicant(selectedPerson);
+      setSelectedPerson(selectedPerson);
 
-    if (applicantGift) {
-      setApplicantGifts((previousGifts) => [...previousGifts, applicantGift]);
-    }
+      const applicantGift = findApplicantGift(selectedPerson);
+      if (applicantGift) {
+        updateApplicantGifts(applicantGift);
+      }
 
-    goToNextStep();
-  };
+      goToNextStep();
+    },
+    [
+      setApplicant,
+      setSelectedPerson,
+      findApplicantGift,
+      updateApplicantGifts,
+      goToNextStep,
+    ]
+  );
 
-  const handlePersonChange = () => {
-    // No-op for this component
-  };
+  const handleApplicantSelection = useCallback(
+    (selectedPerson: Person) => {
+      if (!selectedPerson) return;
+      processApplicantSelection(selectedPerson);
+    },
+    [processApplicantSelection]
+  );
+
+  const handlePersonChange = useCallback(() => {
+    // Intentionally empty - required by PersonAutocomplete interface
+  }, []);
 
   return (
     <PersonAutocomplete
