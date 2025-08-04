@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { ApplicantContext } from '@/app/contexts/ApplicantContext'
-import { MultistepContext } from '@/app/contexts/MultistepContext'
-import { useSafeContext } from '@/app/hooks/useSafeContext'
-import { Person } from '@/database/models/person.model'
-import PersonAutocomplete from '../form/PersonAutocomplete'
+import { ApplicantContext } from "@/app/contexts/ApplicantContext";
+import { MultistepContext } from "@/app/contexts/MultistepContext";
+import { useSafeContext } from "@/app/hooks/useSafeContext";
+import { Person } from "@/database/models/person.model";
+import PersonAutocomplete from "../form/PersonAutocomplete";
 
 const Applicant = () => {
   const {
@@ -13,33 +13,37 @@ const Applicant = () => {
     setSelectedPerson,
     giftList,
     setApplicantGifts,
-  } = useSafeContext(ApplicantContext)
-  const { goToNextStep } = useSafeContext(MultistepContext)
+  } = useSafeContext(ApplicantContext);
+  const { goToNextStep } = useSafeContext(MultistepContext);
 
-  function onSelectApplicant(selectedPerson: Person) {
-    if (!selectedPerson) return
+  const handleApplicantSelection = (selectedPerson: Person) => {
+    if (!selectedPerson) return;
 
-    setApplicant(selectedPerson)
+    setApplicant(selectedPerson);
+    setSelectedPerson(selectedPerson);
 
-    setSelectedPerson(selectedPerson)
+    const applicantGift = giftList.find(
+      (gift) => gift.owner._id === selectedPerson._id && !gift.receiver
+    );
 
-    const selectedGift = giftList.find(
-      (gift) => gift.owner._id === selectedPerson._id
-    )
+    if (applicantGift) {
+      setApplicantGifts((previousGifts) => [...previousGifts, applicantGift]);
+    }
 
-    if (selectedGift && !selectedGift.receiver)
-      setApplicantGifts((prev) => [...prev, selectedGift])
+    goToNextStep();
+  };
 
-    goToNextStep()
-  }
+  const handlePersonChange = () => {
+    // No-op for this component
+  };
 
   return (
     <PersonAutocomplete
       peopleList={applicantList}
-      onSelectPerson={onSelectApplicant}
-      onChangePerson={(person) => {}}
+      onSelectPerson={handleApplicantSelection}
+      onChangePerson={handlePersonChange}
     />
-  )
-}
+  );
+};
 
-export default Applicant
+export default Applicant;

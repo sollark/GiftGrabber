@@ -1,40 +1,48 @@
-'use client'
+"use client";
 
-import { MultistepContext } from '@/app/contexts/MultistepContext'
-import { OrderContext } from '@/app/contexts/OrderContext'
-import { useSafeContext } from '@/app/hooks/useSafeContext'
-import { OrderStatus } from '@/components/types/OrderStatus'
-import { Person } from '@/database/models/person.model'
-import { FC, useLayoutEffect } from 'react'
-import ConditionalRender from './ConditionalRender'
-import PersonAutocomplete from './form/PersonAutocomplete'
+import { MultistepContext } from "@/app/contexts/MultistepContext";
+import { OrderContext } from "@/app/contexts/OrderContext";
+import { useSafeContext } from "@/app/hooks/useSafeContext";
+import { OrderStatus } from "@/components/types/OrderStatus";
+import { Person } from "@/database/models/person.model";
+import { FC, useLayoutEffect } from "react";
+import ConditionalRender from "./ConditionalRender";
+import PersonAutocomplete from "./form/PersonAutocomplete";
 
 const Approver: FC = () => {
-  const { order, approverList, setApprover } = useSafeContext(OrderContext)
-  const { goToNextStep, goTo } = useSafeContext(MultistepContext)
+  const { order, approverList, setApprover } = useSafeContext(OrderContext);
+  const { goToNextStep, goTo } = useSafeContext(MultistepContext);
 
   useLayoutEffect(() => {
-    if (order.status === OrderStatus.COMPLETE) goTo(1)
-  }, [])
+    if (order.status === OrderStatus.COMPLETE) {
+      goTo(1);
+    }
+  }, [order.status, goTo]);
 
-  function onSelectApprover(selectedPerson: Person) {
-    if (!selectedPerson) return
+  const handleApproverSelection = (selectedPerson: Person) => {
+    if (!selectedPerson) return;
 
-    setApprover(selectedPerson)
-    goToNextStep()
-  }
+    setApprover(selectedPerson);
+    goToNextStep();
+  };
+
+  const handlePersonChange = () => {
+    // No-op for this component
+  };
+
+  const isOrderIncomplete = order.status !== OrderStatus.COMPLETE;
 
   return (
     <div>
-      <ConditionalRender condition={order.status !== OrderStatus.COMPLETE}>
+      <ConditionalRender condition={isOrderIncomplete}>
         <PersonAutocomplete
           peopleList={approverList}
-          onSelectPerson={onSelectApprover}
-          onChangePerson={(person) => {}}
+          onSelectPerson={handleApproverSelection}
+          onChangePerson={handlePersonChange}
         />
       </ConditionalRender>
     </div>
-  )
-}
+  );
+};
 
-export default Approver
+export default Approver;

@@ -1,62 +1,67 @@
-'use client'
+"use client";
 
-import { ApplicantContext } from '@/app/contexts/ApplicantContext'
-import { useSafeContext } from '@/app/hooks/useSafeContext'
-import { Gift } from '@/database/models/gift.model'
-import { Person } from '@/database/models/person.model'
-import Autocomplete from '@mui/material/Autocomplete'
-import TextField from '@mui/material/TextField'
-import { FC, SyntheticEvent } from 'react'
+import { ApplicantContext } from "@/app/contexts/ApplicantContext";
+import { useSafeContext } from "@/app/hooks/useSafeContext";
+import { Gift } from "@/database/models/gift.model";
+import { Person } from "@/database/models/person.model";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+import { FC, SyntheticEvent } from "react";
 
 type OptionType = {
-  id: number
-  label: string
-  person: Person // {_id: Types.ObjectId, firstName: string, lastName: string}
-}
+  id: string;
+  label: string;
+  person: Person;
+};
 
 const ApplicantList: FC = () => {
   const { applicantList, setSelectedPerson, giftList, setApplicantGifts } =
-    useSafeContext(ApplicantContext)
-  const applicantsOptionList = mapPersonListToOptionList(applicantList)
+    useSafeContext(ApplicantContext);
+  const applicantsOptionList = mapPersonListToOptionList(applicantList);
 
-  function handleSelect(event: SyntheticEvent, value: OptionType | null) {
-    if (value) {
-      setSelectedPerson(value.person)
+  const handlePersonSelect = (
+    event: SyntheticEvent,
+    value: OptionType | null
+  ) => {
+    if (!value) return;
 
-      // if selected person has a gift, add it to the applicant's gift list
-      const gift = availableGift(value.person, giftList)
-      if (gift) setApplicantGifts((prev) => [...prev, gift])
+    setSelectedPerson(value.person);
+
+    const availableGift = findAvailableGiftForPerson(value.person, giftList);
+    if (availableGift) {
+      setApplicantGifts((previousGifts) => [...previousGifts, availableGift]);
     }
-  }
+  };
 
   return (
     <Autocomplete
       disablePortal
       options={applicantsOptionList}
-      onChange={(event: any, value: any) => handleSelect(event, value)}
+      onChange={handlePersonSelect}
       sx={{ width: 300 }}
-      renderInput={(params) => <TextField {...params} label='People' />}
+      renderInput={(params) => <TextField {...params} label="People" />}
       isOptionEqualToValue={(option, value) => option.id === value.id}
     />
-  )
-}
+  );
+};
 
-export default ApplicantList
-
-function mapPersonListToOptionList(people: Person[]) {
+const mapPersonListToOptionList = (people: Person[]): OptionType[] => {
   return people.map((person) => ({
     id: person._id.toString(),
     label: `${person.firstName} ${person.lastName}`,
-    person: person,
-  }))
-}
+    person,
+  }));
+};
 
-function availableGift(person: Person, giftList: Gift[]) {
-  for (let gift of giftList) {
-    if (gift.owner._id === person._id && gift.receiver !== null) {
-      return gift
-    }
-  }
+const findAvailableGiftForPerson = (
+  person: Person,
+  giftList: Gift[]
+): Gift | null => {
+  return (
+    giftList.find(
+      (gift) => gift.owner._id === person._id && gift.receiver !== null
+    ) || null
+  );
+};
 
-  return null
-}
+export default ApplicantList;
