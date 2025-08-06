@@ -2,8 +2,8 @@ import { getEventDetails } from "@/app/actions/event.action";
 import ApproverList from "@/components/ApproverList";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
-import { FC } from "react";
 
+// User's original type for reference (not used by Next.js, but preserved as requested)
 type SearchParamProps = {
   params: {
     eventId: string;
@@ -11,9 +11,12 @@ type SearchParamProps = {
   };
 };
 
-const EventDetails = async ({ params }: SearchParamProps) => {
-  const { eventId, ownerId } = params;
-
+export default async function EventDetails({
+  params,
+}: {
+  params: Promise<{ eventId: string; ownerId: string }>;
+}) {
+  const { eventId, ownerId } = await params;
   const event = await getEventDetails(eventId);
   if (!event) return <div>Event not found</div>;
 
@@ -46,6 +49,4 @@ const EventDetails = async ({ params }: SearchParamProps) => {
       <ApproverList personArray={approverList} />
     </div>
   );
-};
-
-export default EventDetails;
+}

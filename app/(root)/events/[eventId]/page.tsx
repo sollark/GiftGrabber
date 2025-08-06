@@ -1,26 +1,26 @@
-import { getEventDetails } from '@/app/actions/event.action'
-import Section from '@/components/Section'
-import OrderGifts from '@/components/order/OrderGifts'
-import { FC } from 'react'
-
+import { getEventDetails } from "@/app/actions/event.action";
+import Section from "@/components/Section";
+import OrderGifts from "@/components/order/OrderGifts";
+// User's original type for reference (not used by Next.js, but preserved as requested)
 type SearchParamProps = {
   params: {
-    eventId: string
-  }
-}
+    eventId: string;
+  };
+};
 
-const ApplicantPage: FC<SearchParamProps> = async ({
-  params: { eventId },
-}: SearchParamProps) => {
-  const event = await getEventDetails(eventId)
-  if (!event) return <div>Event not found</div>
+export default async function ApplicantPage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
+  const { eventId } = await params;
+  const event = await getEventDetails(eventId);
+  if (!event) return <div>Event not found</div>;
 
   return (
     <Section>
       <Section.Title>{event.name}</Section.Title>
       <OrderGifts event={event} />
     </Section>
-  )
+  );
 }
-
-export default ApplicantPage
