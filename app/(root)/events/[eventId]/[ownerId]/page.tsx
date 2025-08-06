@@ -1,26 +1,23 @@
-import { getEventDetails } from '@/app/actions/event.action'
-import ApproverList from '@/components/ApproverList'
-import { Gift } from '@/database/models/gift.model'
-import { Person } from '@/database/models/person.model'
-import { Types } from 'mongoose'
-import { FC } from 'react'
+import { getEventDetails } from "@/app/actions/event.action";
+import ApproverList from "@/components/ApproverList";
+import { Gift } from "@/database/models/gift.model";
+import { Person } from "@/database/models/person.model";
+import { FC } from "react";
 
 type SearchParamProps = {
   params: {
-    eventId: string
-    ownerId: string
-  }
-}
+    eventId: string;
+    ownerId: string;
+  };
+};
 
-const EventDetails: FC<SearchParamProps> = async ({
-  params: { eventId, ownerId },
-}: SearchParamProps) => {
-  const event = await getEventDetails(eventId)
-  if (!event) return <div>Event not found</div>
+const EventDetails = async ({ params }: SearchParamProps) => {
+  const { eventId, ownerId } = params;
 
-  console.log('event in EventDetails', event)
+  const event = await getEventDetails(eventId);
+  if (!event) return <div>Event not found</div>;
 
-  const { applicantList, giftList, approverList } = event
+  const { applicantList, giftList, approverList } = event;
 
   return (
     <div>
@@ -39,8 +36,8 @@ const EventDetails: FC<SearchParamProps> = async ({
               <td>
                 {giftList.find((gift: Gift) => gift.owner._id === applicant._id)
                   ?.receiver
-                  ? 'Taken'
-                  : 'Available'}
+                  ? "Taken"
+                  : "Available"}
               </td>
             </tr>
           ))}
@@ -48,7 +45,7 @@ const EventDetails: FC<SearchParamProps> = async ({
       </table>
       <ApproverList personArray={approverList} />
     </div>
-  )
-}
+  );
+};
 
-export default EventDetails
+export default EventDetails;
