@@ -14,7 +14,15 @@ import {
   validationMiddleware,
   persistenceMiddleware,
 } from "@/lib/fp-contexts";
-import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
+import {
+  Result,
+  Maybe,
+  isMaybe,
+  some,
+  none,
+  success,
+  failure,
+} from "@/lib/fp-utils";
 
 // ============================================================================
 // TYPES AND INTERFACES

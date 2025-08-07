@@ -91,19 +91,56 @@ export const getOrThrow = <T, E extends Error>(result: Result<T, E>): T => {
 // MAYBE TYPE SYSTEM - Handle null/undefined safely
 // ============================================================================
 
+/**
+ * Maybe type: represents an optional value (Some or None).
+ *
+ * Example:
+ *   const a: Maybe<number> = some(5); // Some(5)
+ *   const b: Maybe<number> = none;    // None
+ */
 export type Maybe<T> = Some<T> | None;
 
+/**
+ * Some: wraps a present value in a Maybe.
+ *
+ * Example:
+ *   const a = some(42); // { _tag: 'Some', value: 42 }
+ */
 export interface Some<T> {
   readonly _tag: "Some";
   readonly value: T;
 }
 
+/**
+ * None: represents the absence of a value in a Maybe.
+ *
+ * Example:
+ *   const b = none; // { _tag: 'None' }
+ */
 export interface None {
   readonly _tag: "None";
 }
 
 /**
- * Creates a Some value
+ * Checks if a value is a Maybe (Some or None) as defined by fp-utils.
+ *
+ * @param value - The value to check.
+ * @returns {boolean} True if value is a Maybe (Some or None), false otherwise.
+ *
+ * Usage:
+ *   if (isMaybe(someVar)) {
+ *     // someVar is a Maybe (Some or None)
+ *   }
+ */
+export const isMaybe = <T = any>(value: any): value is Maybe<T> => {
+  return value && (value._tag === "Some" || value._tag === "None");
+};
+
+/**
+ * Wraps a value in a Some (present) Maybe.
+ *
+ * Example:
+ *   const a = some("hello"); // { _tag: 'Some', value: 'hello' }
  */
 export const some = <T>(value: T): Some<T> => ({
   _tag: "Some",
@@ -111,30 +148,51 @@ export const some = <T>(value: T): Some<T> => ({
 });
 
 /**
- * Creates a None value
+ * The singleton None value (absent value for Maybe).
+ *
+ * Example:
+ *   const b = none; // { _tag: 'None' }
  */
 export const none: None = { _tag: "None" };
 
 /**
- * Creates Maybe from nullable value
+ * Converts a nullable value to a Maybe.
+ *
+ * Example:
+ *   fromNullable(5)      // Some(5)
+ *   fromNullable(null)   // None
+ *   fromNullable(undefined) // None
  */
 export const fromNullable = <T>(value: T | null | undefined): Maybe<T> =>
   value != null ? some(value) : none;
 
 /**
- * Type guard for Some values
+ * Checks if a Maybe is Some (has a value).
+ *
+ * Example:
+ *   isSome(some(1)) // true
+ *   isSome(none)    // false
  */
 export const isSome = <T>(maybe: Maybe<T>): maybe is Some<T> =>
   maybe._tag === "Some";
 
 /**
- * Type guard for None values
+ * Checks if a Maybe is None (no value).
+ *
+ * Example:
+ *   isNone(some(1)) // false
+ *   isNone(none)    // true
  */
 export const isNone = <T>(maybe: Maybe<T>): maybe is None =>
   maybe._tag === "None";
 
 /**
- * Maps over Maybe's value
+ * Maps a function over a Maybe's value, returning a new Maybe.
+ * If the Maybe is None, returns None.
+ *
+ * Example:
+ *   mapMaybe(x => x * 2)(some(3)) // Some(6)
+ *   mapMaybe(x => x * 2)(none)    // None
  */
 export const mapMaybe =
   <T, U>(fn: (value: T) => U) =>
@@ -142,7 +200,18 @@ export const mapMaybe =
     isSome(maybe) ? some(fn(maybe.value)) : none;
 
 /**
- * Flat maps over Maybe's value
+ * Flat maps a function returning Maybe over a Maybe's value.
+ * Useful for chaining operations that may also return Maybe.
+ * If the Maybe is None, returns None.
+ *
+ * Example:
+ *   flatMapMaybe(x => x > 0 ? some(x * 2) : none)(some(2)) // Some(4)
+ *   flatMapMaybe(x => x > 0 ? some(x * 2) : none)(some(-1)) // None
+ *   flatMapMaybe(x => some(x * 2))(none) // None
+ *
+ * // Flattening nested Maybes:
+ *   const mm: Maybe<Maybe<number>> = some(some(5));
+ *   flatMapMaybe(x => x)(mm) // Some(5)
  */
 export const flatMapMaybe =
   <T, U>(fn: (value: T) => Maybe<U>) =>
@@ -582,6 +651,7 @@ export default {
   some,
   none,
   fromNullable,
+  isMaybe,
   isSome,
   isNone,
   mapMaybe,
