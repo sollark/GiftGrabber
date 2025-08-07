@@ -1,8 +1,10 @@
 import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
-import { getMaybeOrElse } from "@/lib/fp-utils";
+import { flatMapMaybe, getMaybeOrElse } from "@/lib/fp-utils";
+import type { Maybe } from "@/lib/fp-utils";
 import GiftComponent from "../GiftComponent";
 import type { ApplicantState } from "@/app/contexts/ApplicantContext";
 import { Gift } from "@/database/models/gift.model";
+import { Person } from "@/database/models/person.model";
 
 /**
  * GiftInfo component
@@ -13,16 +15,19 @@ import { Gift } from "@/database/models/gift.model";
 const giftListMaybe = useApplicantSelector((state) => state.data.giftList);
 
 const GiftInfo = () => {
-  // Selects the currently selected person from the ApplicantContext. New my
-  const selectedPersonMaybe = useApplicantSelector(
+  // TODO fix this wrapping mess
+  const selectedPersonMaybeMaybe = useApplicantSelector(
     (state) => state.data.selectedPerson
+  );
+  const selectedPersonMaybe: Maybe<Person> = flatMapMaybe(
+    (x: Maybe<Person>) => x
+  )(selectedPersonMaybeMaybe);
+  const selectedPerson = getMaybeOrElse<Person | null>(null)(
+    selectedPersonMaybe
   );
 
   // Selects the list of all gifts from the ApplicantContext. New
   const giftListMaybe = useApplicantSelector((state) => state.data.giftList);
-
-  // Unwraps the Maybe<Person> to a Person object or null.
-  const selectedPerson = getMaybeOrElse([null])(selectedPersonMaybe);
 
   // Unwraps the Maybe<Gift[]> to an array of gifts or an empty array.
   const giftList = getMaybeOrElse<Gift[]>([])(giftListMaybe);

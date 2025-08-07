@@ -294,8 +294,19 @@ export const BaseApplicantProvider = (contextResult as any).Provider;
 export const useApplicantContext = (contextResult as any).useContext;
 export const useApplicantContextResult = (contextResult as any)
   .useContextResult;
-// export const useApplicantSelector = (contextResult as any).useSelector;
 
+/**
+ * useApplicantSelector
+ *
+ * A typed selector hook for accessing specific slices of the ApplicantContext state.
+ *
+ * Usage:
+ *   - Pass a selector function that receives the context state and returns the value you want.
+ *   - The return value is always wrapped in a Maybe (Some/None) for safe functional access.
+ *   - Example: const selectedPersonMaybe = useApplicantSelector(state => state.data.selectedPerson)
+ *
+ * This enables robust, type-safe, and composable state selection from the ApplicantContext.
+ */
 export const useApplicantSelector = contextResult.useSelector as <
   TSelected = unknown
 >(
