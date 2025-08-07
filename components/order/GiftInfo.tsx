@@ -1,4 +1,5 @@
 import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
+import { useGiftSelector } from "@/app/contexts/GiftContext";
 import { flatMapMaybe, getMaybeOrElse } from "@/lib/fp-utils";
 import type { Maybe } from "@/lib/fp-utils";
 import GiftComponent from "../GiftComponent";
@@ -8,13 +9,12 @@ import { Person } from "@/database/models/person.model";
 /**
  * GiftInfo component
  * Displays the first unclaimed gift for the currently selected person, if any.
- * Utilizes functional context selectors and Maybe unwrapping for robust state access.
+ * Uses ApplicantContext for person, GiftContext for gifts.
  */
-
-const giftListMaybe = useApplicantSelector((state) => state.data.giftList);
 
 const GiftInfo = () => {
   // TODO fix this wrapping mess
+  // Use ApplicantContext for selected person (correct: state.data.selectedPerson)
   const selectedPersonMaybeMaybe = useApplicantSelector(
     (state) => state.data.selectedPerson
   );
@@ -25,10 +25,8 @@ const GiftInfo = () => {
     selectedPersonMaybe
   );
 
-  // Selects the list of all gifts from the ApplicantContext. New
-  const giftListMaybe = useApplicantSelector((state) => state.data.giftList);
-
-  // Unwraps the Maybe<Gift[]> to an array of gifts or an empty array.
+  // Use GiftContext for gift list (correct: state.data.giftList)
+  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
   const giftList = getMaybeOrElse<Gift[]>([])(giftListMaybe);
 
   if (!selectedPerson) return null;

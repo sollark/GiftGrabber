@@ -27,23 +27,21 @@ import {
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
-type ApplicantDataState = FunctionalState<ApplicantState["data"]>;
+
+type ApplicantDataState = FunctionalState<
+  Omit<
+    ApplicantState["data"],
+    "giftList" | "applicantGifts" | "searchQuery" | "filters"
+  >
+>;
 
 export interface ApplicantState
   extends FunctionalState<{
     eventId: string;
     approverList: Person[];
     applicantList: Person[];
-    giftList: Gift[];
     selectedApplicant: Maybe<Person>;
     selectedPerson: Maybe<Person>;
-    applicantGifts: Gift[];
-    searchQuery: string;
-    filters: {
-      showAvailable: boolean;
-      priceRange: { min: number; max: number };
-      categories: string[];
-    };
   }> {}
 
 export interface ApplicantAction extends FunctionalAction {
@@ -52,13 +50,7 @@ export interface ApplicantAction extends FunctionalAction {
     | "SELECT_APPLICANT"
     | "CLEAR_APPLICANT"
     | "SELECT_PERSON"
-    | "CLEAR_PERSON"
-    | "ADD_GIFT"
-    | "REMOVE_GIFT"
-    | "CLEAR_GIFTS"
-    | "SET_SEARCH_QUERY"
-    | "UPDATE_FILTERS"
-    | "RESET_FILTERS";
+    | "CLEAR_PERSON";
   payload?: any;
 }
 
@@ -69,23 +61,14 @@ export interface ApplicantAction extends FunctionalAction {
 const createInitialState = (
   eventId: string,
   approverList: Person[] = [],
-  applicantList: Person[] = [],
-  giftList: Gift[] = []
+  applicantList: Person[] = []
 ): ApplicantState => ({
   data: {
     eventId,
     approverList,
     applicantList,
-    giftList,
     selectedApplicant: none,
     selectedPerson: none,
-    applicantGifts: [],
-    searchQuery: "",
-    filters: {
-      showAvailable: true,
-      priceRange: { min: 0, max: 1000 },
-      categories: [],
-    },
   },
   loading: false,
   error: none,
@@ -107,7 +90,6 @@ const applicantReducer = (
           approverList: action.payload.approverList || state.data.approverList,
           applicantList:
             action.payload.applicantList || state.data.applicantList,
-          giftList: action.payload.giftList || state.data.giftList,
         },
       });
 
@@ -129,7 +111,6 @@ const applicantReducer = (
         data: {
           ...state.data,
           selectedApplicant: none,
-          applicantGifts: [], // Clear gifts when applicant is cleared
         },
       });
 
@@ -151,91 +132,6 @@ const applicantReducer = (
         data: {
           ...state.data,
           selectedPerson: none,
-        },
-      });
-
-    case "ADD_GIFT":
-      if (!action.payload || typeof action.payload !== "object") {
-        return failure(new Error("Invalid gift data"));
-      }
-
-      const gift = action.payload as Gift;
-      const alreadyAdded = state.data.applicantGifts.some(
-        (g) => g._id === gift._id
-      );
-
-      if (alreadyAdded) {
-        return failure(new Error("Gift already added"));
-      }
-
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          applicantGifts: [...state.data.applicantGifts, gift],
-        },
-      });
-
-    case "REMOVE_GIFT":
-      if (!action.payload || typeof action.payload !== "string") {
-        return failure(new Error("Invalid gift ID"));
-      }
-
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          applicantGifts: state.data.applicantGifts.filter(
-            (gift) => gift._id !== action.payload
-          ),
-        },
-      });
-
-    case "CLEAR_GIFTS":
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          applicantGifts: [],
-        },
-      });
-
-    case "SET_SEARCH_QUERY":
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          searchQuery: action.payload || "",
-        },
-      });
-
-    case "UPDATE_FILTERS":
-      if (!action.payload || typeof action.payload !== "object") {
-        return failure(new Error("Invalid filter data"));
-      }
-
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          filters: {
-            ...state.data.filters,
-            ...action.payload,
-          },
-        },
-      });
-
-    case "RESET_FILTERS":
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          filters: {
-            showAvailable: true,
-            priceRange: { min: 0, max: 1000 },
-            categories: [],
-          },
-          searchQuery: "",
         },
       });
 
@@ -261,19 +157,6 @@ const applicantValidation = validationMiddleware<
         return failure("Applicant not found in applicant list");
       }
       return success(true);
-
-    case "ADD_GIFT":
-      if (!action.payload) {
-        return failure("Gift data is required");
-      }
-      if (!state.data.giftList.some((g) => g._id === action.payload._id)) {
-        return failure("Gift not found in gift list");
-      }
-      if (state.data.applicantGifts.length >= 5) {
-        return failure("Maximum 5 gifts allowed per applicant");
-      }
-      return success(true);
-
     default:
       return success(true);
   }
@@ -285,7 +168,7 @@ const applicantValidation = validationMiddleware<
 
 const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
   name: "Applicant",
-  initialState: createInitialState("", [], [], []),
+  initialState: createInitialState("", [], []),
   reducer: applicantReducer,
   middleware: [
     loggingMiddleware,
@@ -331,7 +214,6 @@ interface ApplicantProviderProps {
   eventId: string;
   approverList: Person[];
   applicantList: Person[];
-  giftList: Gift[];
   children: React.ReactNode;
 }
 
@@ -339,12 +221,11 @@ export const ApplicantProvider: React.FC<ApplicantProviderProps> = ({
   eventId,
   approverList,
   applicantList,
-  giftList,
   children,
 }) => {
   const initialData = React.useMemo(
-    () => createInitialState(eventId, approverList, applicantList, giftList),
-    [eventId, approverList, applicantList, giftList]
+    () => createInitialState(eventId, approverList, applicantList),
+    [eventId, approverList, applicantList]
   );
 
   return (
@@ -404,141 +285,6 @@ export const useApplicantSelection = () => {
 };
 
 /**
- * Hook for gift management operations
- */
-export const useGiftManagement = () => {
-  const actions = useApplicantActions();
-  const applicantGifts = useApplicantSelector(
-    (state: any) => state.applicantGifts
-  );
-  const giftList = useApplicantSelector((state: any) => state.giftList);
-  const searchQuery = useApplicantSelector((state: any) => state.searchQuery);
-  const filters = useApplicantSelector((state: any) => state.filters);
-
-  const addGift = React.useCallback(
-    (gift: Gift) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "ADD_GIFT",
-          payload: gift,
-        });
-      }
-      return failure(new Error("Applicant context not available"));
-    },
-    [actions]
-  );
-
-  const removeGift = React.useCallback(
-    (giftId: string) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "REMOVE_GIFT",
-          payload: giftId,
-        });
-      }
-      return failure(new Error("Applicant context not available"));
-    },
-    [actions]
-  );
-
-  const clearGifts = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
-        type: "CLEAR_GIFTS",
-      });
-    }
-    return failure(new Error("Applicant context not available"));
-  }, [actions]);
-
-  const setSearchQuery = React.useCallback(
-    (query: string) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "SET_SEARCH_QUERY",
-          payload: query,
-        });
-      }
-      return failure(new Error("Applicant context not available"));
-    },
-    [actions]
-  );
-
-  const updateFilters = React.useCallback(
-    (newFilters: Partial<ApplicantState["data"]["filters"]>) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "UPDATE_FILTERS",
-          payload: newFilters,
-        });
-      }
-      return failure(new Error("Applicant context not available"));
-    },
-    [actions]
-  );
-
-  // Computed filtered gifts
-  const filteredGifts = React.useMemo(() => {
-    if (
-      giftList._tag !== "Some" ||
-      filters._tag !== "Some" ||
-      searchQuery._tag !== "Some"
-    ) {
-      return [];
-    }
-
-    const gifts = giftList.value;
-    const currentFilters = filters.value;
-    const query = searchQuery.value.toLowerCase();
-
-    return gifts.filter((gift: any) => {
-      // Search query filter
-      if (query && !gift.name.toLowerCase().includes(query)) {
-        return false;
-      }
-
-      // Available filter
-      if (currentFilters.showAvailable && gift.claimed) {
-        return false;
-      }
-
-      // Price range filter
-      if (
-        gift.price < currentFilters.priceRange.min ||
-        gift.price > currentFilters.priceRange.max
-      ) {
-        return false;
-      }
-
-      // Category filter
-      if (
-        currentFilters.categories.length > 0 &&
-        !currentFilters.categories.includes(gift.category)
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [giftList, filters, searchQuery]);
-
-  return {
-    applicantGifts,
-    giftList,
-    filteredGifts,
-    searchQuery,
-    filters,
-    addGift,
-    removeGift,
-    clearGifts,
-    setSearchQuery,
-    updateFilters,
-    giftCount: applicantGifts._tag === "Some" ? applicantGifts.value.length : 0,
-    canAddMore:
-      applicantGifts._tag === "Some" ? applicantGifts.value.length < 5 : true,
-  };
-};
-
-/**
  * Hook for person selection operations
  */
 export const usePersonSelection = () => {
@@ -584,55 +330,6 @@ export const usePersonSelection = () => {
 // COMPUTED VALUES AND SELECTORS
 // ============================================================================
 
-/**
- * Hook for computed applicant data
- */
-export const useApplicantComputed = () => {
-  const selectedApplicant = useApplicantSelector(
-    (state: any) => state.selectedApplicant
-  );
-  const applicantGifts = useApplicantSelector(
-    (state: any) => state.applicantGifts
-  );
-
-  const totalGiftValue = React.useMemo(() => {
-    if (applicantGifts._tag !== "Some") return 0;
-    return applicantGifts.value.reduce(
-      (sum: any, gift: any) => sum + gift.price,
-      0
-    );
-  }, [applicantGifts]);
-
-  const giftSummary = React.useMemo(() => {
-    if (applicantGifts._tag !== "Some") return null;
-
-    const gifts = applicantGifts.value;
-    return {
-      count: gifts.length,
-      totalValue: totalGiftValue,
-      categories: [...new Set(gifts.map((g: any) => g.category))],
-      averagePrice: gifts.length > 0 ? totalGiftValue / gifts.length : 0,
-    };
-  }, [applicantGifts, totalGiftValue]);
-
-  const canSubmitOrder = React.useMemo(() => {
-    return (
-      selectedApplicant._tag === "Some" &&
-      selectedApplicant.value._tag === "Some" &&
-      applicantGifts._tag === "Some" &&
-      applicantGifts.value.length > 0
-    );
-  }, [selectedApplicant, applicantGifts]);
-
-  return {
-    selectedApplicant,
-    applicantGifts,
-    totalGiftValue,
-    giftSummary,
-    canSubmitOrder,
-  };
-};
-
 const ApplicantContextExports = {
   ApplicantProvider,
   useApplicantContext,
@@ -640,9 +337,7 @@ const ApplicantContextExports = {
   useApplicantSelector,
   useApplicantActions,
   useApplicantSelection,
-  useGiftManagement,
   usePersonSelection,
-  useApplicantComputed,
 };
 
 export default ApplicantContextExports;
