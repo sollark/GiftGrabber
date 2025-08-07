@@ -2,7 +2,7 @@ import {
   useApplicantSelection,
   useGiftManagement,
   usePersonSelection,
-} from "@/app/contexts/EnhancedApplicantContext";
+} from "@/app/contexts/ApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import { FC, useCallback, useMemo } from "react";

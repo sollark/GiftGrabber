@@ -3,7 +3,7 @@ import {
   useApplicantSelection,
   useGiftManagement,
   useApplicantSelector,
-} from "@/app/contexts/EnhancedApplicantContext";
+} from "@/app/contexts/ApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";

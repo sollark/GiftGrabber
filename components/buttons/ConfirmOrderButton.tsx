@@ -2,7 +2,7 @@ import { confirmOrder } from "@/app/actions/order.action";
 import {
   useOrderStatus,
   useApproverSelection,
-} from "@/app/contexts/EnhancedOrderContext";
+} from "@/app/contexts/OrderContext";
 import { FC } from "react";
 import StyledButton from "./AccentButton";
 import { OrderStatus } from "../types/OrderStatus";

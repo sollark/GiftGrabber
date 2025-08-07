@@ -1,7 +1,7 @@
 import {
   useOrderStatus,
   useApproverSelection,
-} from "@/app/contexts/EnhancedOrderContext";
+} from "@/app/contexts/OrderContext";
 import React, { useMemo } from "react";
 import GiftList from "./GiftList";
 

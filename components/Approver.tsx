@@ -1,10 +1,10 @@
 "use client";
 
-import { useStepNavigation } from "@/app/contexts/EnhancedMultistepContext";
+import { useStepNavigation } from "@/app/contexts/MultistepContext";
 import {
   useOrderStatus,
   useApproverSelection,
-} from "@/app/contexts/EnhancedOrderContext";
+} from "@/app/contexts/OrderContext";
 import { OrderStatus } from "@/components/types/OrderStatus";
 import { Person } from "@/database/models/person.model";
 import { FC, useLayoutEffect } from "react";

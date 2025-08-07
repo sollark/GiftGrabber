@@ -4,8 +4,8 @@ import {
   useApplicantSelection,
   useGiftManagement,
   usePersonSelection,
-} from "@/app/contexts/EnhancedApplicantContext";
-import { useStepNavigation } from "@/app/contexts/EnhancedMultistepContext";
+} from "@/app/contexts/ApplicantContext";
+import { useStepNavigation } from "@/app/contexts/MultistepContext";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import { useCallback } from "react";

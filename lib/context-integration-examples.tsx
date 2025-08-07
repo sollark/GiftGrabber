@@ -20,14 +20,14 @@ import {
   useApplicantSelection,
   useGiftManagement,
   usePersonSelection,
-} from "@/app/contexts/EnhancedApplicantContext";
+} from "@/app/contexts/ApplicantContext";
 
 import {
   OrderProvider,
   useOrderStatus,
   useApproverSelection,
   useOrderTracking,
-} from "@/app/contexts/EnhancedOrderContext";
+} from "@/app/contexts/OrderContext";
 
 import {
   MultistepProvider,
@@ -35,7 +35,7 @@ import {
   useStepData,
   useStepValidation,
   StepDefinition,
-} from "@/app/contexts/EnhancedMultistepContext";
+} from "@/app/contexts/MultistepContext";
 
 // Model imports
 import { Order } from "@/database/models/order.model";
