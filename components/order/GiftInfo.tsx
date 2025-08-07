@@ -2,7 +2,6 @@ import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
 import { flatMapMaybe, getMaybeOrElse } from "@/lib/fp-utils";
 import type { Maybe } from "@/lib/fp-utils";
 import GiftComponent from "../GiftComponent";
-import type { ApplicantState } from "@/app/contexts/ApplicantContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 
