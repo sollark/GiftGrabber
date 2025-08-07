@@ -18,9 +18,10 @@ import {
 import {
   ApplicantProvider,
   useApplicantSelection,
-  useGiftManagement,
   usePersonSelection,
 } from "@/app/contexts/ApplicantContext";
+import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
+import { getMaybeOrElse } from "@/lib/fp-utils";
 
 import {
   OrderProvider,
@@ -72,16 +73,21 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
   gifts,
   multistepSteps,
 }) => {
+  // Import GiftProvider from GiftContext
+  const { GiftProvider } = require("@/app/contexts/GiftContext");
   return (
     <ApplicantProvider
       eventId={order._id?.toString() || ""}
       applicantList={applicants}
-      giftList={gifts}
       approverList={approverList}
     >
-      <OrderProvider order={order} approverList={approverList}>
-        <MultistepProvider steps={multistepSteps}>{children}</MultistepProvider>
-      </OrderProvider>
+      <GiftProvider gifts={gifts}>
+        <OrderProvider order={order} approverList={approverList}>
+          <MultistepProvider steps={multistepSteps}>
+            {children}
+          </MultistepProvider>
+        </OrderProvider>
+      </GiftProvider>
     </ApplicantProvider>
   );
 };
@@ -96,7 +102,14 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
 export const useOrderCreationWorkflow = () => {
   // Context hooks
   const { selectedApplicant, selectApplicant } = useApplicantSelection();
-  const { applicantGifts, addGift } = useGiftManagement();
+  const applicantGifts = getMaybeOrElse<Gift[]>([])(
+    useGiftSelector((state) => state.data.applicantGifts)
+  );
+  const actions = useGiftActions();
+  const addGift =
+    actions._tag === "Some"
+      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
+      : () => {};
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
   const { currentStep, goToNextStep, goToPreviousStep, canGoNext } =
     useStepNavigation();
@@ -211,7 +224,7 @@ export const useOrderCreationWorkflow = () => {
         return failure(new Error("No applicant selected"));
       }
 
-      if (applicantGifts._tag !== "Some" || applicantGifts.value.length === 0) {
+      if (applicantGifts.length === 0) {
         return failure(new Error("No gifts selected"));
       }
 
@@ -225,7 +238,7 @@ export const useOrderCreationWorkflow = () => {
           submittedAt: Date.now(),
           orderDetails: {
             applicant: selectedApplicant.value.value,
-            gifts: applicantGifts.value,
+            gifts: applicantGifts,
           },
         });
 

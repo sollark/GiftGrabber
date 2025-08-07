@@ -2,9 +2,9 @@
 
 import {
   useApplicantSelection,
-  useGiftManagement,
   usePersonSelection,
 } from "@/app/contexts/ApplicantContext";
+import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -28,8 +28,17 @@ type OptionType = {
 
 const ApplicantList: FC = () => {
   const { applicantList } = useApplicantSelection();
-  const { giftList, addGift } = useGiftManagement();
+  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
+  const giftList =
+    giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
+      ? giftListMaybe.value
+      : [];
   const { selectPerson } = usePersonSelection();
+  const actions = useGiftActions();
+  const addGift =
+    actions._tag === "Some"
+      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
+      : () => {};
 
   // Memoize the option list to prevent unnecessary recalculations
   const applicantsOptionList = useMemo(
@@ -46,10 +55,8 @@ const ApplicantList: FC = () => {
       if (!value) return;
 
       selectPerson(value.person);
-      processGiftAssignment(
-        value.person,
-        giftList._tag === "Some" ? giftList.value : [],
-        addGift
+      processGiftAssignment(value.person, giftList, (gift) =>
+        addGift({ ...gift, type: "ADD_GIFT", payload: gift })
       );
     },
     [selectPerson, giftList, addGift]

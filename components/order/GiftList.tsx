@@ -1,9 +1,9 @@
 import { makeOrder } from "@/app/actions/order.action";
 import {
   useApplicantSelection,
-  useGiftManagement,
   useApplicantSelector,
 } from "@/app/contexts/ApplicantContext";
+import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,20 @@ const MESSAGES = {
 const GiftList = () => {
   const router = useRouter();
   const { selectedApplicant } = useApplicantSelection();
-  const { applicantGifts, removeGift } = useGiftManagement();
+  const applicantGiftsMaybe = useGiftSelector(
+    (state) => state.data.applicantGifts
+  );
+  const applicantGifts =
+    applicantGiftsMaybe._tag === "Some" &&
+    Array.isArray(applicantGiftsMaybe.value)
+      ? applicantGiftsMaybe.value
+      : [];
+  const actions = useGiftActions();
+  const removeGift =
+    actions._tag === "Some"
+      ? (id: string) =>
+          actions.value.dispatchSafe({ type: "REMOVE_GIFT", payload: id })
+      : () => {};
   const eventId = useApplicantSelector((state: any) => state.eventId);
   const approverList = useApplicantSelector((state: any) => state.approverList);
 
@@ -57,7 +70,7 @@ const GiftList = () => {
   );
 
   const gifts = useMemo(() => {
-    return applicantGifts._tag === "Some" ? applicantGifts.value : [];
+    return applicantGifts;
   }, [applicantGifts]);
 
   const hasGifts = useMemo(() => gifts.length > 0, [gifts.length]);

@@ -18,6 +18,7 @@
 "use client";
 
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
+import { GiftProvider } from "@/app/contexts/GiftContext";
 import { Event } from "@/database/models/event.model";
 import MultistepNavigator from "../MultistepNavigator";
 import SelectUnclaimedGift from "../SelectUnclaimedGift";
@@ -37,16 +38,17 @@ const OrderGifts = (props: OrderGiftsProps) => {
       eventId={event.eventId}
       approverList={event.approverList}
       applicantList={event.applicantList}
-      giftList={event.giftList}
     >
-      <MultistepNavigator>
-        <Applicant />
-        <>
-          <SelectUnclaimedGift />
-          <GiftInfo />
-          <GiftList />
-        </>
-      </MultistepNavigator>
+      <GiftProvider giftList={event.giftList}>
+        <MultistepNavigator>
+          <Applicant />
+          <>
+            <SelectUnclaimedGift />
+            <GiftInfo />
+            <GiftList />
+          </>
+        </MultistepNavigator>
+      </GiftProvider>
     </ApplicantProvider>
   );
 };

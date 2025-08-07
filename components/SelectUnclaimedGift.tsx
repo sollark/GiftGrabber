@@ -1,8 +1,8 @@
 import {
   useApplicantSelection,
-  useGiftManagement,
   usePersonSelection,
 } from "@/app/contexts/ApplicantContext";
+import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import { FC, useCallback, useMemo } from "react";
@@ -29,8 +29,17 @@ const findUnclaimedGift = (
  */
 const SelectUnclaimedGift: FC = () => {
   const { applicantList } = useApplicantSelection();
-  const { giftList, addGift } = useGiftManagement();
+  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
+  const giftList =
+    giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
+      ? giftListMaybe.value
+      : [];
   const { selectPerson } = usePersonSelection();
+  const actions = useGiftActions();
+  const addGift =
+    actions._tag === "Some"
+      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
+      : () => {};
 
   // Extract values from Maybe types for easier consumption
   const availableApplicants = useMemo(
@@ -38,10 +47,7 @@ const SelectUnclaimedGift: FC = () => {
     [applicantList]
   );
 
-  const availableGifts = useMemo(
-    () => (giftList._tag === "Some" ? giftList.value : []),
-    [giftList]
-  );
+  const availableGifts = useMemo(() => giftList, [giftList]);
 
   // Handler for person selection changes (tracking only)
   const handlePersonChange = useCallback(

@@ -2,9 +2,9 @@
 
 import {
   useApplicantSelection,
-  useGiftManagement,
   usePersonSelection,
 } from "@/app/contexts/ApplicantContext";
+import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { useStepNavigation } from "@/app/contexts/MultistepContext";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
@@ -13,14 +13,22 @@ import PersonAutocomplete from "../form/PersonAutocomplete";
 
 const Applicant = () => {
   const { applicantList, selectApplicant } = useApplicantSelection();
-  const { giftList, addGift } = useGiftManagement();
+  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
+  const giftList =
+    giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
+      ? giftListMaybe.value
+      : [];
+  const actions = useGiftActions();
+  const addGift =
+    actions._tag === "Some"
+      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
+      : () => {};
   const { selectPerson } = usePersonSelection();
   const { goToNextStep } = useStepNavigation();
 
   const findApplicantGift = useCallback(
     (person: Person): Gift | undefined => {
-      const gifts = giftList._tag === "Some" ? giftList.value : [];
-      return gifts.find(
+      return giftList.find(
         (gift: Gift) => gift.owner._id === person._id && !gift.receiver
       );
     },
