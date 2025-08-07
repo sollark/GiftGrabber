@@ -19,6 +19,7 @@ import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
+type ApplicantDataState = FunctionalState<ApplicantState["data"]>;
 
 export interface ApplicantState
   extends FunctionalState<{
@@ -293,7 +294,14 @@ export const BaseApplicantProvider = (contextResult as any).Provider;
 export const useApplicantContext = (contextResult as any).useContext;
 export const useApplicantContextResult = (contextResult as any)
   .useContextResult;
-export const useApplicantSelector = (contextResult as any).useSelector;
+// export const useApplicantSelector = (contextResult as any).useSelector;
+
+export const useApplicantSelector = contextResult.useSelector as <
+  TSelected = unknown
+>(
+  selector: (state: ApplicantDataState) => TSelected
+) => Maybe<TSelected>;
+
 export const useApplicantActions = (contextResult as any).useActions;
 
 // ============================================================================
@@ -606,7 +614,7 @@ export const useApplicantComputed = () => {
   };
 };
 
-const EnhancedApplicantContextExports = {
+const ApplicantContextExports = {
   ApplicantProvider,
   useApplicantContext,
   useApplicantContextResult,
@@ -618,4 +626,4 @@ const EnhancedApplicantContextExports = {
   useApplicantComputed,
 };
 
-export default EnhancedApplicantContextExports;
+export default ApplicantContextExports;
