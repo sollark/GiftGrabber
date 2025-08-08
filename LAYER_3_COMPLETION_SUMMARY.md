@@ -12,7 +12,7 @@ I have successfully completed **Layer 3: Context Providers with Functional Opera
 
    - Complete functional state management with immutable updates
    - Action-based state transitions using Result/Maybe types
-   - Specialized hooks: `useApplicantSelection`, `useGiftManagement`, `usePersonSelection`
+   - Specialized hooks: `useApplicantSelection`, `useGiftManagement`,
    - Validation middleware and optimistic updates
    - Full backward compatibility with existing usage
 

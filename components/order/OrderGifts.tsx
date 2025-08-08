@@ -17,7 +17,7 @@
  */
 
 "use client";
-import { FC, memo } from "react";
+import { FC } from "react";
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
 import { GiftProvider } from "@/app/contexts/GiftContext";
 import { ApproverProvider } from "@/app/contexts/ApproverContext";

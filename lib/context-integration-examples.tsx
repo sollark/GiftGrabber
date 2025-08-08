@@ -4,21 +4,12 @@
  */
 
 import React from "react";
-import {
-  Result,
-  Maybe,
-  some,
-  none,
-  success,
-  failure,
-  pipe,
-} from "@/lib/fp-utils";
+import { failure } from "@/lib/fp-utils";
 
 // Enhanced context imports
 import {
   ApplicantProvider,
   useApplicantSelection,
-  usePersonSelection,
 } from "@/app/contexts/ApplicantContext";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { getMaybeOrElse } from "@/lib/fp-utils";
@@ -29,6 +20,7 @@ import {
   useApproverSelection,
   useOrderTracking,
 } from "@/app/contexts/OrderContext";
+import { useApproverSelector } from "@/app/contexts/ApproverContext";
 
 import {
   MultistepProvider,
@@ -79,7 +71,6 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
     <ApplicantProvider
       eventId={order._id?.toString() || ""}
       applicantList={applicants}
-      approverList={approverList}
     >
       <GiftProvider gifts={gifts}>
         <OrderProvider order={order} approverList={approverList}>
