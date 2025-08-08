@@ -1,15 +1,13 @@
 "use client";
 
 import { useStepNavigation } from "@/app/contexts/MultistepContext";
-import {
-  useOrderStatus,
-  useApproverSelection,
-} from "@/app/contexts/OrderContext";
+import { useOrderStatus } from "@/app/contexts/OrderContext";
 import { OrderStatus } from "@/components/types/OrderStatus";
 import { Person } from "@/database/models/person.model";
 import { FC, useLayoutEffect } from "react";
 import ConditionalRender from "./ConditionalRender";
 import PersonAutocomplete from "./form/PersonAutocomplete";
+import { useApproverSelection } from "@/app/contexts/ApproverContext";
 
 const Approver: FC = () => {
   const { order } = useOrderStatus();

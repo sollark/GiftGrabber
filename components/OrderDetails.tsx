@@ -1,8 +1,6 @@
 import { FC, useMemo, memo } from "react";
-import {
-  useOrderStatus,
-  useApproverSelection,
-} from "@/app/contexts/OrderContext";
+import { useOrderStatus } from "@/app/contexts/OrderContext";
+import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import GiftList from "./GiftList";
 
 /**
@@ -28,8 +26,9 @@ const OrderDetails: FC = memo(() => {
   const order =
     orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
   const approver =
-    approverSelection.selectedApprover._tag === "Some"
-      ? approverSelection.selectedApprover.value
+    approverSelection.selectedApprover._tag === "Some" &&
+    approverSelection.selectedApprover.value._tag === "Some"
+      ? approverSelection.selectedApprover.value.value
       : null;
 
   // Memoized approver name calculation

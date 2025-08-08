@@ -1,10 +1,10 @@
 /**
- * Enhanced ApplicantContext with functional programming patterns
- * Provides immutable state management and action-based updates
+ * ApplicantContext: Functional context for managing applicant state and actions.
+ * Follows functional programming principles: immutability, pure functions, composable hooks.
+ * Provides: ApplicantProvider, useApplicantContext, useApplicantSelector, useApplicantActions, useApplicantSelection.
  */
 
 import React from "react";
-import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import {
   createFunctionalContext,
@@ -14,15 +14,7 @@ import {
   validationMiddleware,
   persistenceMiddleware,
 } from "@/lib/fp-contexts";
-import {
-  Result,
-  Maybe,
-  isMaybe,
-  some,
-  none,
-  success,
-  failure,
-} from "@/lib/fp-utils";
+import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -38,7 +30,6 @@ type ApplicantDataState = FunctionalState<
 export interface ApplicantState
   extends FunctionalState<{
     eventId: string;
-    approverList: Person[];
     applicantList: Person[];
     selectedApplicant: Maybe<Person>;
     selectedPerson: Maybe<Person>;
@@ -51,7 +42,7 @@ export interface ApplicantAction extends FunctionalAction {
     | "CLEAR_APPLICANT"
     | "SELECT_PERSON"
     | "CLEAR_PERSON";
-  payload?: any;
+  payload?: unknown;
 }
 
 // ============================================================================
@@ -60,12 +51,10 @@ export interface ApplicantAction extends FunctionalAction {
 
 const createInitialState = (
   eventId: string,
-  approverList: Person[] = [],
   applicantList: Person[] = []
 ): ApplicantState => ({
   data: {
     eventId,
-    approverList,
     applicantList,
     selectedApplicant: none,
     selectedPerson: none,
@@ -86,10 +75,20 @@ const applicantReducer = (
         ...state,
         data: {
           ...state.data,
-          eventId: action.payload.eventId || state.data.eventId,
-          approverList: action.payload.approverList || state.data.approverList,
+          eventId:
+            typeof action.payload === "object" &&
+            action.payload !== null &&
+            "eventId" in action.payload
+              ? (action.payload as { eventId?: string }).eventId ??
+                state.data.eventId
+              : state.data.eventId,
           applicantList:
-            action.payload.applicantList || state.data.applicantList,
+            typeof action.payload === "object" &&
+            action.payload !== null &&
+            "applicantList" in action.payload
+              ? (action.payload as { applicantList?: Person[] })
+                  .applicantList ?? state.data.applicantList
+              : state.data.applicantList,
         },
       });
 
@@ -153,7 +152,11 @@ const applicantValidation = validationMiddleware<
       if (!action.payload) {
         return failure("Applicant data is required");
       }
-      if (!state.data.applicantList.some((p) => p._id === action.payload._id)) {
+      if (
+        !state.data.applicantList.some(
+          (p) => p._id === (action.payload as Person)._id
+        )
+      ) {
         return failure("Applicant not found in applicant list");
       }
       return success(true);
@@ -168,7 +171,7 @@ const applicantValidation = validationMiddleware<
 
 const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
   name: "Applicant",
-  initialState: createInitialState("", [], []),
+  initialState: createInitialState("", []),
   reducer: applicantReducer,
   middleware: [
     loggingMiddleware,
@@ -180,11 +183,10 @@ const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
   debugMode: process.env.NODE_ENV === "development",
 });
 
-export const ApplicantContext = (contextResult as any).Context;
-export const BaseApplicantProvider = (contextResult as any).Provider;
-export const useApplicantContext = (contextResult as any).useContext;
-export const useApplicantContextResult = (contextResult as any)
-  .useContextResult;
+export const ApplicantContext = contextResult.Context;
+export const BaseApplicantProvider = contextResult.Provider;
+export const useApplicantContext = contextResult.useContext;
+export const useApplicantContextResult = contextResult.useContextResult;
 
 /**
  * useApplicantSelector
@@ -201,10 +203,10 @@ export const useApplicantContextResult = (contextResult as any)
 export const useApplicantSelector = contextResult.useSelector as <
   TSelected = unknown
 >(
-  selector: (state: ApplicantDataState) => TSelected
+  selector: (state: ApplicantState) => TSelected
 ) => Maybe<TSelected>;
 
-export const useApplicantActions = (contextResult as any).useActions;
+export const useApplicantActions = contextResult.useActions;
 
 // ============================================================================
 // ENHANCED PROVIDER WITH PROPS
@@ -212,20 +214,18 @@ export const useApplicantActions = (contextResult as any).useActions;
 
 interface ApplicantProviderProps {
   eventId: string;
-  approverList: Person[];
   applicantList: Person[];
   children: React.ReactNode;
 }
 
 export const ApplicantProvider: React.FC<ApplicantProviderProps> = ({
   eventId,
-  approverList,
   applicantList,
   children,
 }) => {
   const initialData = React.useMemo(
-    () => createInitialState(eventId, approverList, applicantList),
-    [eventId, approverList, applicantList]
+    () => createInitialState(eventId, applicantList),
+    [eventId, applicantList]
   );
 
   return (
@@ -245,10 +245,10 @@ export const ApplicantProvider: React.FC<ApplicantProviderProps> = ({
 export const useApplicantSelection = () => {
   const actions = useApplicantActions();
   const selectedApplicant = useApplicantSelector(
-    (state: any) => state.selectedApplicant
+    (state) => state.data.selectedApplicant
   );
   const applicantList = useApplicantSelector(
-    (state: any) => state.applicantList
+    (state) => state.data.applicantList
   );
 
   const selectApplicant = React.useCallback(
@@ -290,9 +290,8 @@ export const useApplicantSelection = () => {
 export const usePersonSelection = () => {
   const actions = useApplicantActions();
   const selectedPerson = useApplicantSelector(
-    (state: any) => state.selectedPerson
+    (state) => state.data.selectedPerson
   );
-  const approverList = useApplicantSelector((state: any) => state.approverList);
 
   const selectPerson = React.useCallback(
     (person: Person) => {
@@ -318,7 +317,6 @@ export const usePersonSelection = () => {
 
   return {
     selectedPerson,
-    approverList,
     selectPerson,
     clearPerson,
     hasSelection:

@@ -10,12 +10,15 @@ import {
 } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useCallback, useMemo } from "react";
+import { useRef, useState, useCallback, useMemo, FC } from "react";
 import QRcode from "./QRcode";
 import ControlledFileInput from "./form/ControlledFileInput";
 import ControlledTextInput from "./form/ControlledTextInput";
 import ErrorMessage from "./form/ErrorMessage";
 import Form from "./form/Form";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { useApproverSelection } from "@/app/contexts/ApproverContext";
+import { Person } from "@/database/models/person.model";
 
 /**
  * Configuration constants for the CreateEventForm component
@@ -57,7 +60,7 @@ const EMAIL_CONFIG = {
   },
 } as const;
 
-const CreateEventForm = () => {
+const CreateEventForm: FC = () => {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -195,6 +198,22 @@ const CreateEventForm = () => {
       ownerId,
     ]
   );
+
+  const { applicantList: contextApplicantList } = useApplicantSelection();
+  const { approverList: contextApproverList } = useApproverSelection();
+
+  // Prefer context values if available, else fallback to props
+  const applicants =
+    contextApplicantList._tag === "Some" &&
+    Array.isArray(contextApplicantList.value)
+      ? contextApplicantList.value
+      : [];
+
+  const approvers =
+    contextApproverList._tag === "Some" &&
+    Array.isArray(contextApproverList.value)
+      ? contextApproverList.value
+      : [];
 
   return (
     <>

@@ -9,6 +9,8 @@ import Approver from "./Approver";
 import ConfirmOrderButton from "./buttons/ConfirmOrderButton";
 import MultistepNavigator from "./MultistepNavigator";
 import OrderDetails from "./OrderDetails";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { useApproverSelection } from "@/app/contexts/ApproverContext";
 
 /**
  * Configuration constants for the ConfirmOrder component
@@ -81,6 +83,19 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   // Handle early returns for loading and error states
   const errorComponent = getErrorComponent(loadingState);
   if (errorComponent) return errorComponent;
+
+  const { selectedApplicant } = useApplicantSelection();
+  const { selectedApprover } = useApproverSelection();
+
+  const applicant =
+    selectedApplicant._tag === "Some" && selectedApplicant.value._tag === "Some"
+      ? selectedApplicant.value.value
+      : null;
+
+  const approver =
+    selectedApprover._tag === "Some" && selectedApprover.value._tag === "Some"
+      ? selectedApprover.value.value
+      : null;
 
   return (
     <OrderProvider order={order!} approverList={approvers!}>
