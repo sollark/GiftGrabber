@@ -1,23 +1,30 @@
 import { Person } from "@/database/models/person.model";
 import { customAlphabet } from "nanoid";
 import { convertExcelToJson } from "./excelToJson";
+import { tryAsync } from "../lib/fp-utils";
 
-// FP version in the fp-utils module
-// export const handleError = (error: unknown) => {
-//   console.error('An error occurred:', error)
-//   throw new Error(typeof error === 'string' ? error : JSON.stringify(error))
-// }
-
-export async function convertFileToBase64(
+/**
+ * Converts a File to a base64 string using functional error handling.
+ * Returns a Promise<Result<string, Error>>.
+ */
+export const convertFileToBase64 = tryAsync<[File], string>(async function (
   file: File
-): Promise<string | ArrayBuffer | null> {
-  return new Promise((resolve, reject) => {
+): Promise<string> {
+  return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("FileReader result is not a string"));
+      }
+    };
+    reader.onerror = () => {
+      reject(reader.error ?? new Error("Unknown FileReader error"));
+    };
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
   });
-}
+});
 
 export function generateEventId(): string {
   const nanoid = customAlphabet("1234567890event", 10);
@@ -60,6 +67,9 @@ export const getQRcodeBuffer = async (qrRef: any) => {
   }
 };
 
+/**
+ * Debounced function using local implementation.
+ */
 export const debounce = (
   func: (...args: any[]) => void,
   wait: number
