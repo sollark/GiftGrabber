@@ -4,6 +4,7 @@ import {
   useApplicantSelection,
   useApplicantSelector,
 } from "@/app/contexts/ApplicantContext";
+import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
@@ -34,6 +35,7 @@ const MESSAGES = {
 const GiftList: FC = memo(() => {
   const router = useRouter();
   const { selectedApplicant } = useApplicantSelection();
+  const { approverList } = useApproverSelection();
   const applicantGiftsMaybe = useGiftSelector(
     (state) => state.data.applicantGifts
   );
@@ -48,8 +50,8 @@ const GiftList: FC = memo(() => {
       ? (id: string) =>
           actions.value.dispatchSafe({ type: "REMOVE_GIFT", payload: id })
       : () => {};
-  const eventId = useApplicantSelector((state: any) => state.eventId);
-  const approverList = useApplicantSelector((state: any) => state.approverList);
+  const eventIdMaybe = useApplicantSelector((state) => state.data.eventId);
+  const eventId = eventIdMaybe._tag === "Some" ? eventIdMaybe.value : "";
   const orderQRCodeRef = useRef<HTMLDivElement>(null!);
   const orderId = useMemo(() => generateOrderId(), []);
   const orderUrl = useMemo(
@@ -72,7 +74,7 @@ const GiftList: FC = memo(() => {
   const hasGifts = useMemo(() => gifts.length > 0, [gifts.length]);
 
   const handleRemoveGift = useCallback(
-    (giftToRemove: Gift) => removeGift(giftToRemove._id.toString()),
+    (gift: Gift) => removeGift(gift._id.toString()),
     [removeGift]
   );
 
