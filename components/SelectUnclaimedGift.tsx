@@ -1,3 +1,4 @@
+import { FC, useCallback, useMemo, memo } from "react";
 import {
   useApplicantSelection,
   usePersonSelection,
@@ -5,7 +6,6 @@ import {
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
-import { FC, useCallback, useMemo } from "react";
 import PersonAutocomplete from "./form/PersonAutocomplete";
 
 /**
@@ -17,17 +17,15 @@ import PersonAutocomplete from "./form/PersonAutocomplete";
 const findUnclaimedGift = (
   selectedPerson: Person,
   gifts: Gift[]
-): Gift | undefined => {
-  return gifts.find(
-    (gift) => gift.owner._id === selectedPerson._id && !gift.receiver
-  );
-};
+): Gift | undefined =>
+  gifts.find((gift) => gift.owner._id === selectedPerson._id && !gift.receiver);
 
 /**
- * Component for selecting unclaimed gifts through person selection.
+ * Functional SelectUnclaimedGift component.
  * Allows users to search for people and automatically assigns their unclaimed gifts.
+ * Uses memo and strict typing for composability and performance.
  */
-const SelectUnclaimedGift: FC = () => {
+const SelectUnclaimedGift: FC = memo(() => {
   const { applicantList } = useApplicantSelection();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
   const giftList =
@@ -46,7 +44,6 @@ const SelectUnclaimedGift: FC = () => {
     () => (applicantList._tag === "Some" ? applicantList.value : []),
     [applicantList]
   );
-
   const availableGifts = useMemo(() => giftList, [giftList]);
 
   // Handler for person selection changes (tracking only)
@@ -80,6 +77,6 @@ const SelectUnclaimedGift: FC = () => {
       />
     </div>
   );
-};
+});
 
 export default SelectUnclaimedGift;

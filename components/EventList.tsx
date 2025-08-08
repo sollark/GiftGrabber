@@ -1,7 +1,11 @@
-import { FC } from 'react'
+import { FC } from "react";
 
+/**
+ * Functional EventList component.
+ * Placeholder for event list rendering.
+ */
 const EventList: FC = () => {
-  return <div>EventList</div>
-}
+  return <div>EventList</div>;
+};
 
-export default EventList
+export default EventList;

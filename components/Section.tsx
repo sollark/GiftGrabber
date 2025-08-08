@@ -1,4 +1,4 @@
-import { ReactNode, FC } from "react";
+import { ReactNode, FC, memo } from "react";
 
 /**
  * Configuration constants for the Section component
@@ -33,20 +33,16 @@ interface SectionComponent extends FC<SectionProps> {
  * @param props - Component props containing children
  * @returns JSX.Element - Rendered section with children
  */
-const Section: SectionComponent = ({ children }: SectionProps) => {
-  return <section className={SECTION_CONFIG.CSS_CLASS}>{children}</section>;
-};
 
-/**
- * Section.Title subcomponent for rendering section titles
- * @param props - Component props containing children
- * @returns JSX.Element - Rendered h1 element with children
- */
-const SectionTitle: FC<SectionTitleProps> = ({ children }) => {
-  return <h1>{children}</h1>;
-};
+const SectionBase: FC<SectionProps> = memo(({ children }) => (
+  <section className={SECTION_CONFIG.CSS_CLASS}>{children}</section>
+));
 
-// Attach the Title subcomponent to the main Section component
+const SectionTitle: FC<SectionTitleProps> = memo(({ children }) => (
+  <h1>{children}</h1>
+));
+
+const Section = SectionBase as SectionComponent;
 Section.Title = SectionTitle;
 
 export default Section;

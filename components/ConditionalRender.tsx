@@ -7,6 +7,10 @@ type ConditionalRenderProps = {
   children: ReactNode
 }
 
+/**
+ * Functional conditional render component.
+ * Renders children only if the condition is true.
+ */
 const ConditionalRender: FC<ConditionalRenderProps> = ({
   condition,
   children,

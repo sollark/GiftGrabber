@@ -1,6 +1,6 @@
 import { ErrorMessage } from "@hookform/error-message";
 import { MuiFileInput } from "mui-file-input";
-import { FC } from "react";
+import { FC, memo } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 
 /**
@@ -21,43 +21,42 @@ const FILE_INPUT_CONFIG = {
 } as const;
 
 /**
- * Controlled file input component integrated with React Hook Form.
- * Specifically configured for Excel file uploads with validation.
+ * Functional ControlledFileInput component.
+ * Integrated with React Hook Form, configured for Excel file uploads with validation.
+ * Uses memo and strict typing for composability and performance.
  */
-const ControlledFileInput: FC<ControlledFileInputProps> = ({
-  name,
-  label,
-  ...additionalProps
-}) => {
-  const {
-    formState: { errors },
-    control,
-  } = useFormContext();
+const ControlledFileInput: FC<ControlledFileInputProps> = memo(
+  ({ name, label, ...additionalProps }) => {
+    const {
+      formState: { errors },
+      control,
+    } = useFormContext();
 
-  const hasError = !!errors[name];
+    const hasError = !!errors[name];
 
-  return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <MuiFileInput
-          {...field}
-          className={FILE_INPUT_CONFIG.CSS_CLASS}
-          label={label}
-          placeholder={label}
-          InputProps={{
-            inputProps: {
-              accept: FILE_INPUT_CONFIG.ACCEPTED_FORMATS,
-            },
-          }}
-          error={hasError}
-          helperText={<ErrorMessage name={name} />}
-          {...additionalProps}
-        />
-      )}
-    />
-  );
-};
+    return (
+      <Controller
+        control={control}
+        name={name}
+        render={({ field }) => (
+          <MuiFileInput
+            {...field}
+            className={FILE_INPUT_CONFIG.CSS_CLASS}
+            label={label}
+            placeholder={label}
+            InputProps={{
+              inputProps: {
+                accept: FILE_INPUT_CONFIG.ACCEPTED_FORMATS,
+              },
+            }}
+            error={hasError}
+            helperText={<ErrorMessage name={name} />}
+            {...additionalProps}
+          />
+        )}
+      />
+    );
+  }
+);
 
 export default ControlledFileInput;

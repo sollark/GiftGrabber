@@ -6,6 +6,10 @@ type GiftProps = {
   gift: Gift
 }
 
+/**
+ * Functional GiftComponent.
+ * Displays gift owner and status.
+ */
 const GiftComponent: FC<GiftProps> = ({ gift }) => {
   if (!gift) return <></>
 

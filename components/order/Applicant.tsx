@@ -1,5 +1,5 @@
 "use client";
-
+import { FC, memo, useCallback } from "react";
 import {
   useApplicantSelection,
   usePersonSelection,
@@ -8,10 +8,14 @@ import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { useStepNavigation } from "@/app/contexts/MultistepContext";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
-import { useCallback } from "react";
 import PersonAutocomplete from "../form/PersonAutocomplete";
 
-const Applicant = () => {
+/**
+ * Functional Applicant component.
+ * Handles applicant selection and gift assignment with strict typing and composable error handling.
+ * Uses memo for performance.
+ */
+const Applicant: FC = memo(() => {
   const { applicantList, selectApplicant } = useApplicantSelection();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
   const giftList =
@@ -27,18 +31,15 @@ const Applicant = () => {
   const { goToNextStep } = useStepNavigation();
 
   const findApplicantGift = useCallback(
-    (person: Person): Gift | undefined => {
-      return giftList.find(
+    (person: Person): Gift | undefined =>
+      giftList.find(
         (gift: Gift) => gift.owner._id === person._id && !gift.receiver
-      );
-    },
+      ),
     [giftList]
   );
 
   const updateApplicantGifts = useCallback(
-    (gift: Gift) => {
-      addGift(gift);
-    },
+    (gift: Gift) => addGift(gift),
     [addGift]
   );
 
@@ -46,12 +47,8 @@ const Applicant = () => {
     (selectedPerson: Person) => {
       selectApplicant(selectedPerson);
       selectPerson(selectedPerson);
-
       const applicantGift = findApplicantGift(selectedPerson);
-      if (applicantGift) {
-        updateApplicantGifts(applicantGift);
-      }
-
+      if (applicantGift) updateApplicantGifts(applicantGift);
       goToNextStep();
     },
     [
@@ -71,9 +68,7 @@ const Applicant = () => {
     [processApplicantSelection]
   );
 
-  const handlePersonChange = useCallback(() => {
-    // Intentionally empty - required by PersonAutocomplete interface
-  }, []);
+  const handlePersonChange = useCallback(() => {}, []);
 
   return (
     <PersonAutocomplete
@@ -82,6 +77,6 @@ const Applicant = () => {
       onChangePerson={handlePersonChange}
     />
   );
-};
+});
 
 export default Applicant;

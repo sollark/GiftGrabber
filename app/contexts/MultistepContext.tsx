@@ -91,18 +91,16 @@ export interface MultistepAction extends FunctionalAction {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-const findStepIndex = (steps: StepDefinition[], stepId: string): number => {
-  return steps.findIndex((step) => step.id === stepId);
-};
+const findStepIndex = (steps: StepDefinition[], stepId: string): number =>
+  steps.findIndex((step) => step.id === stepId);
 
 const getCurrentStep = (
   steps: StepDefinition[],
   currentStepIndex: number
-): Maybe<StepDefinition> => {
-  return currentStepIndex >= 0 && currentStepIndex < steps.length
+): Maybe<StepDefinition> =>
+  currentStepIndex >= 0 && currentStepIndex < steps.length
     ? some(steps[currentStepIndex])
     : none;
-};
 
 const validateStep = (
   step: StepDefinition,

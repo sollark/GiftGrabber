@@ -1,3 +1,4 @@
+import { FC, memo, useRef, useCallback, useMemo } from "react";
 import { makeOrder } from "@/app/actions/order.action";
 import {
   useApplicantSelection,
@@ -7,7 +8,6 @@ import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
-import { useRef, useCallback, useMemo } from "react";
 import GiftComponent from "../GiftComponent";
 import QRcode from "../QRcode";
 import StyledButton from "../buttons/AccentButton";
@@ -15,12 +15,10 @@ import SecondaryButton from "../buttons/SecondaryButton";
 import { Box } from "@mui/material";
 
 const BASE_URL = "https://gift-grabber.onrender.com";
-
 const GIFT_LIST_STYLES = {
   container: { paddingTop: "3rem" },
   giftItem: { marginBottom: "1rem" },
 } as const;
-
 const MESSAGES = {
   NO_GIFTS: "No gifts selected",
   QR_CODE_ERROR: "Failed to generate QR code buffer",
@@ -28,7 +26,12 @@ const MESSAGES = {
   ORDER_ERROR: "Error creating order:",
 } as const;
 
-const GiftList = () => {
+/**
+ * Functional GiftList component.
+ * Handles gift list display, removal, and order creation with strict typing and composable error handling.
+ * Uses memo for performance.
+ */
+const GiftList: FC = memo(() => {
   const router = useRouter();
   const { selectedApplicant } = useApplicantSelection();
   const applicantGiftsMaybe = useGiftSelector(
@@ -47,38 +50,29 @@ const GiftList = () => {
       : () => {};
   const eventId = useApplicantSelector((state: any) => state.eventId);
   const approverList = useApplicantSelector((state: any) => state.approverList);
-
   const orderQRCodeRef = useRef<HTMLDivElement>(null!);
-
-  // Memoize computed values that don't change frequently
   const orderId = useMemo(() => generateOrderId(), []);
   const orderUrl = useMemo(
     () => `${BASE_URL}/events/${eventId}/orders/${orderId}`,
     [eventId, orderId]
   );
-
-  const applicant = useMemo(() => {
-    return selectedApplicant._tag === "Some" &&
+  const applicant = useMemo(
+    () =>
+      selectedApplicant._tag === "Some" &&
       selectedApplicant.value._tag === "Some"
-      ? selectedApplicant.value.value
-      : null;
-  }, [selectedApplicant]);
-
+        ? selectedApplicant.value.value
+        : null,
+    [selectedApplicant]
+  );
   const applicantDisplayName = useMemo(
     () => applicant?.firstName || "Unknown",
     [applicant?.firstName]
   );
-
-  const gifts = useMemo(() => {
-    return applicantGifts;
-  }, [applicantGifts]);
-
+  const gifts = useMemo(() => applicantGifts, [applicantGifts]);
   const hasGifts = useMemo(() => gifts.length > 0, [gifts.length]);
 
   const handleRemoveGift = useCallback(
-    (giftToRemove: Gift) => {
-      removeGift(giftToRemove._id.toString());
-    },
+    (giftToRemove: Gift) => removeGift(giftToRemove._id.toString()),
     [removeGift]
   );
 
@@ -156,6 +150,6 @@ const GiftList = () => {
       <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
     </Box>
   );
-};
+});
 
 export default GiftList;

@@ -1,21 +1,25 @@
-import React, { FC, ReactNode } from 'react'
+import { FC, ReactNode, memo } from "react";
 
 type MainProps = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
-const Main: FC<MainProps> = ({ children }) => {
-  return (
-    <main
-      style={{
-        flexGrow: 1,
-        paddingBlock: '1rem',
-        paddingInline: '2rem',
-        paddingBottom: '10rem',
-      }}>
-      {children}
-    </main>
-  )
-}
+/**
+ * Functional Main component.
+ * Renders the main content area with strict typing and composable structure.
+ * Uses memo for performance.
+ */
+const Main: FC<MainProps> = memo(({ children }) => (
+  <main
+    style={{
+      flexGrow: 1,
+      paddingBlock: "1rem",
+      paddingInline: "2rem",
+      paddingBottom: "10rem",
+    }}
+  >
+    {children}
+  </main>
+));
 
-export default Main
+export default Main;

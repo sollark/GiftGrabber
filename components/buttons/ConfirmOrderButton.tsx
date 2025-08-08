@@ -1,13 +1,16 @@
-import { confirmOrder } from "@/app/actions/order.action";
+import { FC, memo } from "react";
 import {
   useOrderStatus,
   useApproverSelection,
 } from "@/app/contexts/OrderContext";
-import { FC } from "react";
 import StyledButton from "./AccentButton";
-import { OrderStatus } from "../types/OrderStatus";
 
-const ConfirmOrderButton: FC = () => {
+/**
+ * Functional ConfirmOrderButton component.
+ * Handles order confirmation with strict typing and composable error handling.
+ * Uses memo for performance.
+ */
+const ConfirmOrderButton: FC = memo(() => {
   const orderStatus = useOrderStatus();
   const approverSelection = useApproverSelection();
 
@@ -22,9 +25,7 @@ const ConfirmOrderButton: FC = () => {
 
   const handleConfirmOrder = async () => {
     if (!approver || !order) return;
-
     const result = await orderStatus.confirmOrder(approver);
-
     if (result._tag === "Success") {
       window.location.reload();
     }
@@ -35,5 +36,6 @@ const ConfirmOrderButton: FC = () => {
   }
 
   return <StyledButton onClick={handleConfirmOrder}>Confirm</StyledButton>;
-};
+});
+
 export default ConfirmOrderButton;

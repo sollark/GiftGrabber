@@ -1,10 +1,9 @@
 "use client";
-
+import { FC, ReactNode, useMemo, memo } from "react";
 import {
   MultistepProvider,
   useStepNavigation,
 } from "@/app/contexts/MultistepContext";
-import { FC, ReactNode, useMemo } from "react";
 
 /**
  * Props for the MultistepNavigator component
@@ -16,36 +15,38 @@ interface MultistepNavigatorProps {
 
 /**
  * Internal component that renders the current step content
+ * Uses memo for performance and strict typing.
  */
-const StepRenderer: FC<{ children: ReactNode[] }> = ({ children }) => {
+const StepRenderer: FC<{ children: ReactNode[] }> = memo(({ children }) => {
   const { currentStepIndex } = useStepNavigation();
-
-  // Render the current step content
   const currentStepContent = children[currentStepIndex] || null;
-
   return <>{currentStepContent}</>;
-};
+});
 
 /**
- * Component that provides multistep navigation functionality to its children.
+ * Functional MultistepNavigator component.
+ * Provides multistep navigation functionality to its children.
  * Converts ReactNode children into step definitions for the Enhanced context.
+ * Uses memo and strict typing for composability and performance.
  */
-const MultistepNavigator: FC<MultistepNavigatorProps> = ({ children }) => {
-  // Convert ReactNode children to StepDefinition format
-  const steps = useMemo(() => {
-    return children.map((child, index) => ({
-      id: `step-${index}`,
-      title: `Step ${index + 1}`,
-      component: child,
-      isRequired: false,
-      canSkip: false,
-    }));
-  }, [children]);
+const MultistepNavigator: FC<MultistepNavigatorProps> = memo(({ children }) => {
+  const steps = useMemo(
+    () =>
+      children.map((child, index) => ({
+        id: `step-${index}`,
+        title: `Step ${index + 1}`,
+        component: child,
+        isRequired: false,
+        canSkip: false,
+      })),
+    [children]
+  );
 
   return (
     <MultistepProvider steps={steps}>
       <StepRenderer>{children}</StepRenderer>
     </MultistepProvider>
   );
-};
+});
+
 export default MultistepNavigator;

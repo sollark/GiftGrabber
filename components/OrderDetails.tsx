@@ -1,8 +1,8 @@
+import { FC, useMemo, memo } from "react";
 import {
   useOrderStatus,
   useApproverSelection,
 } from "@/app/contexts/OrderContext";
-import React, { useMemo } from "react";
 import GiftList from "./GiftList";
 
 /**
@@ -13,14 +13,14 @@ import GiftList from "./GiftList";
 const formatPersonName = (person: {
   firstName: string;
   lastName: string;
-}): string => {
-  return `${person.firstName} ${person.lastName}`;
-};
+}): string => `${person.firstName} ${person.lastName}`;
 
 /**
- * Component for displaying detailed order information including applicant, approver, and gifts
+ * Functional OrderDetails component.
+ * Displays detailed order information including applicant, approver, and gifts.
+ * Uses memo and strict typing for composability and performance.
  */
-const OrderDetails: React.FC = () => {
+const OrderDetails: FC = memo(() => {
   const orderStatus = useOrderStatus();
   const approverSelection = useApproverSelection();
 
@@ -34,19 +34,13 @@ const OrderDetails: React.FC = () => {
 
   // Memoized approver name calculation
   const approverName = useMemo(() => {
-    if (order?.confirmedBy) {
-      return formatPersonName(order.confirmedBy);
-    }
-    if (approver) {
-      return formatPersonName(approver);
-    }
+    if (order?.confirmedBy) return formatPersonName(order.confirmedBy);
+    if (approver) return formatPersonName(approver);
     return "";
   }, [order?.confirmedBy, approver]);
 
   // Early return if no order exists
-  if (!order) {
-    return null;
-  }
+  if (!order) return null;
 
   const { createdAt, applicant, gifts } = order;
 
@@ -67,6 +61,6 @@ const OrderDetails: React.FC = () => {
       </div>
     </div>
   );
-};
+});
 
 export default OrderDetails;

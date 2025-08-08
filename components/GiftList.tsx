@@ -1,11 +1,15 @@
-import { Gift } from '@/database/models/gift.model'
-import { FC } from 'react'
-import GiftComponent from './GiftComponent'
+import { Gift } from "@/database/models/gift.model";
+import { FC } from "react";
+import GiftComponent from "./GiftComponent";
 
 type GiftListProps = {
-  gifts: Gift[]
-}
+  gifts: Gift[];
+};
 
+/**
+ * Functional GiftList component.
+ * Renders a list of gifts using GiftComponent.
+ */
 const GiftList: FC<GiftListProps> = ({ gifts }) => {
   return (
     <div>
@@ -18,7 +22,7 @@ const GiftList: FC<GiftListProps> = ({ gifts }) => {
         ))}
       </ul>
     </div>
-  )
-}
+  );
+};
 
-export default GiftList
+export default GiftList;

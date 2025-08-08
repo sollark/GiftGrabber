@@ -15,8 +15,9 @@
  *
  * In summary: The user selects a recipient, picks gifts, reviews them, and submits the order—all managed with React context and a multi-step UI.
  */
-"use client";
 
+"use client";
+import { FC, memo } from "react";
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
 import { GiftProvider } from "@/app/contexts/GiftContext";
 import { Event } from "@/database/models/event.model";
@@ -30,27 +31,28 @@ type OrderGiftsProps = {
   event: Event;
 };
 
-const OrderGifts = (props: OrderGiftsProps) => {
-  const { event } = props;
-
-  return (
-    <ApplicantProvider
-      eventId={event.eventId}
-      approverList={event.approverList}
-      applicantList={event.applicantList}
-    >
-      <GiftProvider giftList={event.giftList}>
-        <MultistepNavigator>
-          <Applicant />
-          <>
-            <SelectUnclaimedGift />
-            <GiftInfo />
-            <GiftList />
-          </>
-        </MultistepNavigator>
-      </GiftProvider>
-    </ApplicantProvider>
-  );
-};
+/**
+ * Functional OrderGifts component.
+ * Wraps the ordering flow in context providers and a multi-step UI.
+ * Uses memo and strict typing for composability and performance.
+ */
+const OrderGifts: FC<OrderGiftsProps> = memo(({ event }) => (
+  <ApplicantProvider
+    eventId={event.eventId}
+    approverList={event.approverList}
+    applicantList={event.applicantList}
+  >
+    <GiftProvider giftList={event.giftList}>
+      <MultistepNavigator>
+        <Applicant />
+        <>
+          <SelectUnclaimedGift />
+          <GiftInfo />
+          <GiftList />
+        </>
+      </MultistepNavigator>
+    </GiftProvider>
+  </ApplicantProvider>
+));
 
 export default OrderGifts;

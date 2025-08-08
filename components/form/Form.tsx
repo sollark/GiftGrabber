@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, ReactElement, ReactNode } from "react";
+import { FC, ReactElement, ReactNode, memo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import StyledButton from "../buttons/AccentButton";
 
@@ -28,51 +28,51 @@ const FORM_CONFIG = {
 } as const;
 
 /**
- * Enhanced form component with React Hook Form integration.
- * Provides automatic validation, error handling, and form state management.
+ * Functional Form component.
+ * Enhanced with React Hook Form integration, provides automatic validation, error handling, and form state management.
+ * Uses memo and strict typing for composability and performance.
  */
-const Form: FC<FormProps> = ({
-  children,
-  schema,
-  defaultValues,
-  submit,
-  submitButton,
-  ...additionalProps
-}) => {
-  const methods = useForm({
-    resolver: zodResolver(schema),
+const Form: FC<FormProps> = memo(
+  ({
+    children,
+    schema,
     defaultValues,
-    criteriaMode: FORM_CONFIG.CRITERIA_MODE,
-    mode: FORM_CONFIG.VALIDATION_MODE,
-    reValidateMode: FORM_CONFIG.REVALIDATION_MODE,
-  });
+    submit,
+    submitButton,
+    ...additionalProps
+  }) => {
+    const methods = useForm({
+      resolver: zodResolver(schema),
+      defaultValues,
+      criteriaMode: FORM_CONFIG.CRITERIA_MODE,
+      mode: FORM_CONFIG.VALIDATION_MODE,
+      reValidateMode: FORM_CONFIG.REVALIDATION_MODE,
+    });
 
-  const { handleSubmit } = methods;
+    const { handleSubmit } = methods;
 
-  const handleFormSubmit = (data: any) => {
-    submit(data);
-  };
+    const handleFormSubmit = (data: any) => {
+      submit(data);
+    };
 
-  const renderSubmitButton = () => {
-    if (submitButton) {
-      return submitButton;
-    }
+    const renderSubmitButton = () => {
+      if (submitButton) return submitButton;
+      return (
+        <StyledButton type="submit">
+          {FORM_CONFIG.SUBMIT_BUTTON_TEXT}
+        </StyledButton>
+      );
+    };
 
     return (
-      <StyledButton type="submit">
-        {FORM_CONFIG.SUBMIT_BUTTON_TEXT}
-      </StyledButton>
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(handleFormSubmit)} {...additionalProps}>
+          {children}
+          <div>{renderSubmitButton()}</div>
+        </form>
+      </FormProvider>
     );
-  };
-
-  return (
-    <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(handleFormSubmit)} {...additionalProps}>
-        {children}
-        <div>{renderSubmitButton()}</div>
-      </form>
-    </FormProvider>
-  );
-};
+  }
+);
 
 export default Form;

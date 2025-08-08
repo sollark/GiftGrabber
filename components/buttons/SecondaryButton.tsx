@@ -1,25 +1,29 @@
-import { tokens } from '@/ui/colorTokens'
-import { Button, ButtonProps } from '@mui/material'
-import { FC } from 'react'
+import { tokens } from "@/ui/colorTokens";
+import { Button, ButtonProps } from "@mui/material";
+import { FC, memo } from "react";
 
-const palette = tokens('light')
+const palette = tokens("light");
 
-const SecondaryButton: FC<ButtonProps> = ({ children, ...props }) => {
-  return (
-    <Button
-      sx={{
+/**
+ * Functional SecondaryButton component.
+ * Renders a button with secondary styling, strict typing, and composable props.
+ * Uses memo for performance.
+ */
+const SecondaryButton: FC<ButtonProps> = memo(({ children, ...props }) => (
+  <Button
+    sx={{
+      backgroundColor: palette.secondary[200],
+      color: palette.secondary[700],
+      padding: "1.1rem",
+      "&:hover": {
         backgroundColor: palette.secondary[200],
-        color: palette.secondary[700],
-        padding: '1.1rem',
-        '&:hover': {
-          backgroundColor: palette.secondary[200],
-          color: palette.secondary[800],
-        },
-      }}
-      {...props}>
-      {children}
-    </Button>
-  )
-}
+        color: palette.secondary[800],
+      },
+    }}
+    {...props}
+  >
+    {children}
+  </Button>
+));
 
-export default SecondaryButton
+export default SecondaryButton;

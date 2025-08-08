@@ -1,5 +1,5 @@
 /**
- * Enhanced  ApplicantContext with functional programming patterns
+ * Enhanced ApplicantContext with functional programming patterns
  * Provides immutable state management and action-based updates
  */
 
