@@ -1,15 +1,13 @@
 "use client";
 
-import {
-  useApplicantSelection,
-  usePersonSelection,
-} from "@/app/contexts/ApplicantContext";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
-import { FC, SyntheticEvent, useMemo, useCallback } from "react";
+import { FC, SyntheticEvent, useMemo, useCallback, useState } from "react";
+import { Maybe, some, none } from "@/lib/fp-utils";
 
 /**
  * Configuration constants for the ApplicantList component
@@ -33,12 +31,14 @@ const ApplicantList: FC = () => {
     giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
       ? giftListMaybe.value
       : [];
-  const { selectPerson } = usePersonSelection();
   const actions = useGiftActions();
   const addGift =
     actions._tag === "Some"
       ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
       : () => {};
+
+  // Local state for selected person (was previously in context)
+  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
 
   // Memoize the option list to prevent unnecessary recalculations
   const applicantsOptionList = useMemo(
@@ -54,12 +54,12 @@ const ApplicantList: FC = () => {
     (event: SyntheticEvent, value: OptionType | null) => {
       if (!value) return;
 
-      selectPerson(value.person);
+      setSelectedPerson(some(value.person));
       processGiftAssignment(value.person, giftList, (gift) =>
         addGift({ ...gift, type: "ADD_GIFT", payload: gift })
       );
     },
-    [selectPerson, giftList, addGift]
+    [giftList, addGift]
   );
 
   // Optimize option equality check

@@ -1,9 +1,8 @@
 "use client";
 import { FC, memo, useCallback } from "react";
-import {
-  useApplicantSelection,
-  usePersonSelection,
-} from "@/app/contexts/ApplicantContext";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { useState } from "react";
+import { Maybe, some, none } from "@/lib/fp-utils";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { useStepNavigation } from "@/app/contexts/MultistepContext";
 import { Person } from "@/database/models/person.model";
@@ -27,7 +26,8 @@ const Applicant: FC = memo(() => {
     actions._tag === "Some"
       ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
       : () => {};
-  const { selectPerson } = usePersonSelection();
+  // Local state for selected person
+  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
   const { goToNextStep } = useStepNavigation();
 
   const findApplicantGift = useCallback(
@@ -44,26 +44,20 @@ const Applicant: FC = memo(() => {
   );
 
   const processApplicantSelection = useCallback(
-    (selectedPerson: Person) => {
-      selectApplicant(selectedPerson);
-      selectPerson(selectedPerson);
-      const applicantGift = findApplicantGift(selectedPerson);
+    (person: Person) => {
+      setSelectedPerson(some(person));
+      selectApplicant(person);
+      const applicantGift = findApplicantGift(person);
       if (applicantGift) updateApplicantGifts(applicantGift);
       goToNextStep();
     },
-    [
-      selectApplicant,
-      selectPerson,
-      findApplicantGift,
-      updateApplicantGifts,
-      goToNextStep,
-    ]
+    [selectApplicant, findApplicantGift, updateApplicantGifts, goToNextStep]
   );
 
   const handleApplicantSelection = useCallback(
-    (selectedPerson: Person) => {
-      if (!selectedPerson) return;
-      processApplicantSelection(selectedPerson);
+    (person: Person) => {
+      if (!person) return;
+      processApplicantSelection(person);
     },
     [processApplicantSelection]
   );

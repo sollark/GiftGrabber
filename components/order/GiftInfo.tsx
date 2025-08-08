@@ -1,4 +1,5 @@
-import { FC, memo } from "react";
+import { FC, memo, useState } from "react";
+import { none } from "@/lib/fp-utils";
 import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
 import { useGiftSelector } from "@/app/contexts/GiftContext";
 import { flatMapMaybe, getMaybeOrElse } from "@/lib/fp-utils";
@@ -15,22 +16,14 @@ import { Person } from "@/database/models/person.model";
  */
 const GiftInfo: FC = memo(() => {
   // TODO fix this wrapping mess
-  const selectedPersonMaybeMaybe = useApplicantSelector(
-    (state) => state.data.selectedPerson
-  );
-  const selectedPersonMaybe: Maybe<Person> = flatMapMaybe(
-    (x: Maybe<Person>) => x
-  )(selectedPersonMaybeMaybe);
-  const selectedPerson = getMaybeOrElse<Person | null>(null)(
-    selectedPersonMaybe
-  );
+  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
   const giftList = getMaybeOrElse<Gift[]>([])(giftListMaybe);
 
-  if (!selectedPerson) return null;
+  if (selectedPerson._tag !== "Some") return null;
+  const person = selectedPerson.value;
   const gift = giftList.find(
-    (gift) =>
-      gift.owner && selectedPerson._id === gift.owner._id && !gift.receiver
+    (gift) => gift.owner && person._id === gift.owner._id && !gift.receiver
   );
 
   if (!gift) return null;

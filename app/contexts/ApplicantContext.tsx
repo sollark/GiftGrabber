@@ -32,16 +32,10 @@ export interface ApplicantState
     eventId: string;
     applicantList: Person[];
     selectedApplicant: Maybe<Person>;
-    selectedPerson: Maybe<Person>;
   }> {}
 
 export interface ApplicantAction extends FunctionalAction {
-  type:
-    | "SET_EVENT_DATA"
-    | "SELECT_APPLICANT"
-    | "CLEAR_APPLICANT"
-    | "SELECT_PERSON"
-    | "CLEAR_PERSON";
+  type: "SET_EVENT_DATA" | "SELECT_APPLICANT" | "CLEAR_APPLICANT";
   payload?: unknown;
 }
 
@@ -57,7 +51,6 @@ const createInitialState = (
     eventId,
     applicantList,
     selectedApplicant: none,
-    selectedPerson: none,
   },
   loading: false,
   error: none,
@@ -110,27 +103,6 @@ const applicantReducer = (
         data: {
           ...state.data,
           selectedApplicant: none,
-        },
-      });
-
-    case "SELECT_PERSON":
-      if (!action.payload || typeof action.payload !== "object") {
-        return failure(new Error("Invalid person data"));
-      }
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          selectedPerson: some(action.payload as Person),
-        },
-      });
-
-    case "CLEAR_PERSON":
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          selectedPerson: none,
         },
       });
 
@@ -284,46 +256,6 @@ export const useApplicantSelection = () => {
   };
 };
 
-/**
- * Hook for person selection operations
- */
-export const usePersonSelection = () => {
-  const actions = useApplicantActions();
-  const selectedPerson = useApplicantSelector(
-    (state) => state.data.selectedPerson
-  );
-
-  const selectPerson = React.useCallback(
-    (person: Person) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "SELECT_PERSON",
-          payload: person,
-        });
-      }
-      return failure(new Error("Applicant context not available"));
-    },
-    [actions]
-  );
-
-  const clearPerson = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
-        type: "CLEAR_PERSON",
-      });
-    }
-    return failure(new Error("Applicant context not available"));
-  }, [actions]);
-
-  return {
-    selectedPerson,
-    selectPerson,
-    clearPerson,
-    hasSelection:
-      selectedPerson._tag === "Some" && selectedPerson.value._tag === "Some",
-  };
-};
-
 // ============================================================================
 // COMPUTED VALUES AND SELECTORS
 // ============================================================================
@@ -335,7 +267,6 @@ const ApplicantContextExports = {
   useApplicantSelector,
   useApplicantActions,
   useApplicantSelection,
-  usePersonSelection,
 };
 
 export default ApplicantContextExports;
