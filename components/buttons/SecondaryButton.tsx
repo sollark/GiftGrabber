@@ -9,7 +9,7 @@ const palette = tokens("light");
  * Renders a button with secondary styling, strict typing, and composable props.
  * Uses memo for performance.
  */
-const SecondaryButton: FC<ButtonProps> = memo(({ children, ...props }) => (
+const SecondaryButton: FC<ButtonProps> = ({ children, ...props }) => (
   <Button
     sx={{
       backgroundColor: palette.secondary[200],
@@ -24,6 +24,6 @@ const SecondaryButton: FC<ButtonProps> = memo(({ children, ...props }) => (
   >
     {children}
   </Button>
-));
+);
 
 export default SecondaryButton;

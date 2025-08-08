@@ -9,7 +9,7 @@ const palette = tokens("light");
  * Renders a button with accent styling, strict typing, and composable props.
  * Uses memo for performance.
  */
-const AccentButton: FC<ButtonProps> = memo(({ children, ...props }) => (
+const AccentButton: FC<ButtonProps> = ({ children, ...props }) => (
   <Button
     sx={{
       backgroundColor: palette.accent[500],
@@ -24,6 +24,6 @@ const AccentButton: FC<ButtonProps> = memo(({ children, ...props }) => (
   >
     {children}
   </Button>
-));
+);
 
 export default AccentButton;

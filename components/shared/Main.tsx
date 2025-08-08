@@ -9,7 +9,7 @@ type MainProps = {
  * Renders the main content area with strict typing and composable structure.
  * Uses memo for performance.
  */
-const Main: FC<MainProps> = memo(({ children }) => (
+const Main: FC<MainProps> = ({ children }) => (
   <main
     style={{
       flexGrow: 1,
@@ -20,6 +20,6 @@ const Main: FC<MainProps> = memo(({ children }) => (
   >
     {children}
   </main>
-));
+);
 
 export default Main;

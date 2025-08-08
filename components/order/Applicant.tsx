@@ -1,5 +1,5 @@
 "use client";
-import { FC, memo, useCallback } from "react";
+import React, { FC, memo, useCallback } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
 import { Maybe, some, none } from "@/lib/fp-utils";
@@ -14,18 +14,24 @@ import PersonAutocomplete from "../form/PersonAutocomplete";
  * Handles applicant selection and gift assignment with strict typing and composable error handling.
  * Uses memo for performance.
  */
-const Applicant: FC = memo(() => {
+const Applicant: FC = () => {
   const { applicantList, selectApplicant } = useApplicantSelection();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const giftList =
-    giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
-      ? giftListMaybe.value
-      : [];
+  const giftList = React.useMemo(
+    () =>
+      giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
+        ? giftListMaybe.value
+        : [],
+    [giftListMaybe]
+  );
   const actions = useGiftActions();
-  const addGift =
-    actions._tag === "Some"
-      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
-      : () => {};
+  const addGift = React.useMemo(
+    () =>
+      actions._tag === "Some"
+        ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
+        : () => {},
+    [actions]
+  );
   // Local state for selected person
   const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
   const { goToNextStep } = useStepNavigation();
@@ -71,6 +77,7 @@ const Applicant: FC = memo(() => {
       onChangePerson={handlePersonChange}
     />
   );
-});
+};
+Applicant.displayName = "Applicant";
 
 export default Applicant;

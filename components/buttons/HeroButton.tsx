@@ -8,7 +8,7 @@ import AccentButton from "./AccentButton";
  * Navigates to the event creation page with strict typing and composable props.
  * Uses memo for performance.
  */
-const HeroButton: FC = memo(() => {
+const HeroButton: FC = () => {
   const router = useRouter();
   return (
     <AccentButton
@@ -18,6 +18,6 @@ const HeroButton: FC = memo(() => {
       Create an event
     </AccentButton>
   );
-});
+};
 
 export default HeroButton;

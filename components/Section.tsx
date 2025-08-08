@@ -34,13 +34,13 @@ interface SectionComponent extends FC<SectionProps> {
  * @returns JSX.Element - Rendered section with children
  */
 
-const SectionBase: FC<SectionProps> = memo(({ children }) => (
+const SectionBase: FC<SectionProps> = ({ children }) => (
   <section className={SECTION_CONFIG.CSS_CLASS}>{children}</section>
-));
+);
 
-const SectionTitle: FC<SectionTitleProps> = memo(({ children }) => (
+const SectionTitle: FC<SectionTitleProps> = ({ children }) => (
   <h1>{children}</h1>
-));
+);
 
 const Section = SectionBase as SectionComponent;
 Section.Title = SectionTitle;

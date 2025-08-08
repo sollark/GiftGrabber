@@ -20,6 +20,7 @@
 import { FC, memo } from "react";
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
 import { GiftProvider } from "@/app/contexts/GiftContext";
+import { ApproverProvider } from "@/app/contexts/ApproverContext";
 import { Event } from "@/database/models/event.model";
 import MultistepNavigator from "../MultistepNavigator";
 import SelectUnclaimedGift from "../SelectUnclaimedGift";
@@ -36,23 +37,24 @@ type OrderGiftsProps = {
  * Wraps the ordering flow in context providers and a multi-step UI.
  * Uses memo and strict typing for composability and performance.
  */
-const OrderGifts: FC<OrderGiftsProps> = memo(({ event }) => (
-  <ApplicantProvider
-    eventId={event.eventId}
-    approverList={event.approverList}
-    applicantList={event.applicantList}
-  >
-    <GiftProvider giftList={event.giftList}>
-      <MultistepNavigator>
-        <Applicant />
-        <>
-          <SelectUnclaimedGift />
-          <GiftInfo />
-          <GiftList />
-        </>
-      </MultistepNavigator>
-    </GiftProvider>
-  </ApplicantProvider>
-));
+const OrderGifts: FC<OrderGiftsProps> = ({ event }) => (
+  <ApproverProvider approverList={event.approverList} eventId={event.eventId}>
+    <ApplicantProvider
+      eventId={event.eventId}
+      applicantList={event.applicantList}
+    >
+      <GiftProvider giftList={event.giftList}>
+        <MultistepNavigator>
+          <Applicant />
+          <>
+            <SelectUnclaimedGift />
+            <GiftInfo />
+            <GiftList />
+          </>
+        </MultistepNavigator>
+      </GiftProvider>
+    </ApplicantProvider>
+  </ApproverProvider>
+);
 
 export default OrderGifts;

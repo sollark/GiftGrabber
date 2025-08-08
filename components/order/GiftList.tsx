@@ -32,7 +32,7 @@ const MESSAGES = {
  * Handles gift list display, removal, and order creation with strict typing and composable error handling.
  * Uses memo for performance.
  */
-const GiftList: FC = memo(() => {
+const GiftList: FC = () => {
   const router = useRouter();
   const { selectedApplicant } = useApplicantSelection();
   const { approverList } = useApproverSelection();
@@ -152,6 +152,6 @@ const GiftList: FC = memo(() => {
       <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
     </Box>
   );
-});
+};
 
 export default GiftList;

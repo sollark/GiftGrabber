@@ -17,33 +17,35 @@ interface ControlledTextInputProps {
  * Integrated with React Hook Form, provides automatic validation and error handling.
  * Uses memo and strict typing for composability and performance.
  */
-const ControlledTextInput: FC<ControlledTextInputProps> = memo(
-  ({ name, label, ...additionalProps }) => {
-    const {
-      formState: { errors },
-      control,
-    } = useFormContext();
+const ControlledTextInput: FC<ControlledTextInputProps> = ({
+  name,
+  label,
+  ...additionalProps
+}) => {
+  const {
+    formState: { errors },
+    control,
+  } = useFormContext();
 
-    const hasError = !!errors[name];
+  const hasError = !!errors[name];
 
-    return (
-      <Controller
-        control={control}
-        name={name}
-        render={({ field }) => (
-          <TextField
-            {...field}
-            className="input"
-            label={label}
-            placeholder={label}
-            error={hasError}
-            helperText={<ErrorMessage name={name} />}
-            {...additionalProps}
-          />
-        )}
-      />
-    );
-  }
-);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <TextField
+          {...field}
+          className="input"
+          label={label}
+          placeholder={label}
+          error={hasError}
+          helperText={<ErrorMessage name={name} />}
+          {...additionalProps}
+        />
+      )}
+    />
+  );
+};
 
 export default ControlledTextInput;

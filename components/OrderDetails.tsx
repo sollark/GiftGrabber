@@ -18,7 +18,7 @@ const formatPersonName = (person: {
  * Displays detailed order information including applicant, approver, and gifts.
  * Uses memo and strict typing for composability and performance.
  */
-const OrderDetails: FC = memo(() => {
+const OrderDetails: FC = () => {
   const orderStatus = useOrderStatus();
   const approverSelection = useApproverSelection();
 
@@ -60,6 +60,6 @@ const OrderDetails: FC = memo(() => {
       </div>
     </div>
   );
-});
+};
 
 export default OrderDetails;

@@ -39,6 +39,9 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   eventId,
   orderId,
 }: ConfirmOrderProps) => {
+  const { selectedApplicant } = useApplicantSelection();
+  const { selectedApprover } = useApproverSelection();
+
   // Fetch order data with SWR
   const {
     data: order,
@@ -83,9 +86,6 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   // Handle early returns for loading and error states
   const errorComponent = getErrorComponent(loadingState);
   if (errorComponent) return errorComponent;
-
-  const { selectedApplicant } = useApplicantSelection();
-  const { selectedApprover } = useApproverSelection();
 
   const applicant =
     selectedApplicant._tag === "Some" && selectedApplicant.value._tag === "Some"

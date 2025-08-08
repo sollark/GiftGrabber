@@ -32,47 +32,45 @@ const FORM_CONFIG = {
  * Enhanced with React Hook Form integration, provides automatic validation, error handling, and form state management.
  * Uses memo and strict typing for composability and performance.
  */
-const Form: FC<FormProps> = memo(
-  ({
-    children,
-    schema,
+const Form: FC<FormProps> = ({
+  children,
+  schema,
+  defaultValues,
+  submit,
+  submitButton,
+  ...additionalProps
+}) => {
+  const methods = useForm({
+    resolver: zodResolver(schema),
     defaultValues,
-    submit,
-    submitButton,
-    ...additionalProps
-  }) => {
-    const methods = useForm({
-      resolver: zodResolver(schema),
-      defaultValues,
-      criteriaMode: FORM_CONFIG.CRITERIA_MODE,
-      mode: FORM_CONFIG.VALIDATION_MODE,
-      reValidateMode: FORM_CONFIG.REVALIDATION_MODE,
-    });
+    criteriaMode: FORM_CONFIG.CRITERIA_MODE,
+    mode: FORM_CONFIG.VALIDATION_MODE,
+    reValidateMode: FORM_CONFIG.REVALIDATION_MODE,
+  });
 
-    const { handleSubmit } = methods;
+  const { handleSubmit } = methods;
 
-    const handleFormSubmit = (data: any) => {
-      submit(data);
-    };
+  const handleFormSubmit = (data: any) => {
+    submit(data);
+  };
 
-    const renderSubmitButton = () => {
-      if (submitButton) return submitButton;
-      return (
-        <StyledButton type="submit">
-          {FORM_CONFIG.SUBMIT_BUTTON_TEXT}
-        </StyledButton>
-      );
-    };
-
+  const renderSubmitButton = () => {
+    if (submitButton) return submitButton;
     return (
-      <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(handleFormSubmit)} {...additionalProps}>
-          {children}
-          <div>{renderSubmitButton()}</div>
-        </form>
-      </FormProvider>
+      <StyledButton type="submit">
+        {FORM_CONFIG.SUBMIT_BUTTON_TEXT}
+      </StyledButton>
     );
-  }
-);
+  };
+
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(handleFormSubmit)} {...additionalProps}>
+        {children}
+        <div>{renderSubmitButton()}</div>
+      </form>
+    </FormProvider>
+  );
+};
 
 export default Form;

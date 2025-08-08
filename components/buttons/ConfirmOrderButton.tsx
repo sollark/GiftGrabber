@@ -10,7 +10,7 @@ import StyledButton from "./AccentButton";
  * Handles order confirmation with strict typing and composable error handling.
  * Uses memo for performance.
  */
-const ConfirmOrderButton: FC = memo(() => {
+const ConfirmOrderButton: FC = () => {
   const orderStatus = useOrderStatus();
   const approverSelection = useApproverSelection();
 
@@ -36,6 +36,6 @@ const ConfirmOrderButton: FC = memo(() => {
   }
 
   return <StyledButton onClick={handleConfirmOrder}>Confirm</StyledButton>;
-});
+};
 
 export default ConfirmOrderButton;

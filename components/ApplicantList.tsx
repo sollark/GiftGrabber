@@ -27,15 +27,21 @@ type OptionType = {
 const ApplicantList: FC = () => {
   const { applicantList } = useApplicantSelection();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const giftList =
-    giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
-      ? giftListMaybe.value
-      : [];
+  const giftList = useMemo(
+    () =>
+      giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
+        ? giftListMaybe.value
+        : [],
+    [giftListMaybe]
+  );
   const actions = useGiftActions();
-  const addGift =
-    actions._tag === "Some"
-      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
-      : () => {};
+  const addGift = useMemo(
+    () =>
+      actions._tag === "Some"
+        ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
+        : () => {},
+    [actions]
+  );
 
   // Local state for selected person (was previously in context)
   const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);

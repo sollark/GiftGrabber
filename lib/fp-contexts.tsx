@@ -2,14 +2,12 @@
  * Enhanced Context Providers with Functional Operations
  * Provides immutable state management, action-based updates, and composable contexts
  */
+"use client";
+/**
+ * Functional programming context utilities for React.
+ */
 
-import React, {
-  createContext,
-  useContext as useReactContext,
-  useReducer,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useMemo, useCallback, createContext, useReducer } from "react";
 import {
   Result,
   Maybe,
@@ -23,6 +21,8 @@ import {
 } from "./fp-utils";
 import { useSafeContext } from "../app/hooks/useSafeContext";
 
+// Helper type for Maybe context value
+type MaybeContext<T> = { _tag: "Some"; value: T } | { _tag: "None" };
 // ============================================================================
 // FUNCTIONAL STATE MANAGEMENT TYPES
 // ============================================================================
@@ -218,9 +218,16 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   };
 
   // Hook to use the context
-  const useContext = () => {
-    const context = useSafeContext(StateContext, name);
-    return context;
+  const useContext = (): MaybeContext<{
+    state: S;
+    dispatch: (action: A) => void;
+    getState: () => S;
+  }> => {
+    return useSafeContext(StateContext, name) as MaybeContext<{
+      state: S;
+      dispatch: (action: A) => void;
+      getState: () => S;
+    }>;
   };
 
   // Hook with Result error handling

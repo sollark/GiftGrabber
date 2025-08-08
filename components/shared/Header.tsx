@@ -6,7 +6,7 @@ import Logo from "../Logo";
  * Renders the site header with strict typing and composable structure.
  * Uses memo for performance.
  */
-const Header: FC = memo(() => (
+const Header: FC = () => (
   <header
     style={{
       paddingBlock: "1rem",
@@ -15,6 +15,6 @@ const Header: FC = memo(() => (
   >
     <Logo />
   </header>
-));
+);
 
 export default Header;

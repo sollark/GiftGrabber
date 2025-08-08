@@ -47,7 +47,7 @@ type QRcodeProps = {
  * Renders a QR code with strict typing and composable options.
  * Uses memo for performance.
  */
-const QRcode: FC<QRcodeProps> = memo((props) => {
+const QRcode: FC<QRcodeProps> = (props) => {
   const defaultOptions: QRcodeOptions = {
     ecLevel: "M",
     enableCORS: false,
@@ -71,7 +71,7 @@ const QRcode: FC<QRcodeProps> = memo((props) => {
       <QR value={props.url} {...options} />
     </Box>
   );
-});
+};
 
 export default QRcode;
 

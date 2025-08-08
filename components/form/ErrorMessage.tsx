@@ -9,8 +9,8 @@ type ErrorMessageProps = {
  * Renders an error message with strict typing and composable props.
  * Uses memo for performance.
  */
-const ErrorMessage: FC<ErrorMessageProps> = memo(({ message }) => (
+const ErrorMessage: FC<ErrorMessageProps> = ({ message }) => (
   <div>{message}</div>
-));
+);
 
 export default ErrorMessage;

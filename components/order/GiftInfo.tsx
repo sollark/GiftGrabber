@@ -14,7 +14,7 @@ import { Person } from "@/database/models/person.model";
  * Uses ApplicantContext for person, GiftContext for gifts.
  * Uses memo for performance.
  */
-const GiftInfo: FC = memo(() => {
+const GiftInfo: FC = () => {
   // TODO fix this wrapping mess
   const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
@@ -29,6 +29,6 @@ const GiftInfo: FC = memo(() => {
   if (!gift) return null;
 
   return <GiftComponent gift={gift} />;
-});
+};
 
 export default GiftInfo;

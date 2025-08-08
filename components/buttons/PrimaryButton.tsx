@@ -9,7 +9,7 @@ const palette = tokens("light");
  * Renders a button with primary styling, strict typing, and composable props.
  * Uses memo for performance.
  */
-const PrimaryButton: FC<ButtonProps> = memo(({ children, ...props }) => (
+const PrimaryButton: FC<ButtonProps> = ({ children, ...props }) => (
   <Button
     sx={{
       backgroundColor: palette.primary[200],
@@ -24,6 +24,6 @@ const PrimaryButton: FC<ButtonProps> = memo(({ children, ...props }) => (
   >
     {children}
   </Button>
-));
+);
 
 export default PrimaryButton;

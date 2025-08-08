@@ -17,11 +17,11 @@ interface MultistepNavigatorProps {
  * Internal component that renders the current step content
  * Uses memo for performance and strict typing.
  */
-const StepRenderer: FC<{ children: ReactNode[] }> = memo(({ children }) => {
+const StepRenderer: FC<{ children: ReactNode[] }> = ({ children }) => {
   const { currentStepIndex } = useStepNavigation();
   const currentStepContent = children[currentStepIndex] || null;
   return <>{currentStepContent}</>;
-});
+};
 
 /**
  * Functional MultistepNavigator component.
@@ -29,7 +29,7 @@ const StepRenderer: FC<{ children: ReactNode[] }> = memo(({ children }) => {
  * Converts ReactNode children into step definitions for the Enhanced context.
  * Uses memo and strict typing for composability and performance.
  */
-const MultistepNavigator: FC<MultistepNavigatorProps> = memo(({ children }) => {
+const MultistepNavigator: FC<MultistepNavigatorProps> = ({ children }) => {
   const steps = useMemo(
     () =>
       children.map((child, index) => ({
@@ -47,6 +47,6 @@ const MultistepNavigator: FC<MultistepNavigatorProps> = memo(({ children }) => {
       <StepRenderer>{children}</StepRenderer>
     </MultistepProvider>
   );
-});
+};
 
 export default MultistepNavigator;
