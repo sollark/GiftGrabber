@@ -36,6 +36,18 @@ export const failure = <E>(error: E): Failure<E> => ({
 });
 
 /**
+ * Upgraded functional error handler
+ * Returns a Result type for composable error handling
+ */
+export function handleError<E = Error>(error: E): Result<never, E> {
+  if (typeof window !== "undefined") {
+    // Log error in browser
+    console.error("Functional Error:", error);
+  }
+  return failure(error);
+}
+
+/**
  * Type guard for Success results
  */
 export const isSuccess = <T, E>(result: Result<T, E>): result is Success<T> =>

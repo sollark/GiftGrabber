@@ -9,7 +9,7 @@ import {
   withDatabaseBoolean,
   withDatabaseNullable,
 } from "@/lib/withDatabase";
-import { handleError } from "@/utils/utils";
+import { handleError } from "@/lib/fp-utils";
 import { Types } from "mongoose";
 
 /**

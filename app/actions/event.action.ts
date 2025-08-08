@@ -9,7 +9,7 @@ import {
   withDatabaseNullable,
   withDatabaseArray,
 } from "@/lib/withDatabase";
-import { handleError } from "@/utils/utils";
+import { handleError } from "@/lib/fp-utils";
 
 /**
  * Configuration constants for event operations
