@@ -2,67 +2,36 @@
 
 import { sendQRCodesToOwner } from "@/app/actions/email.action";
 import { createEvent } from "@/app/actions/event.action";
-import {
-  excelToPersonList,
-  generateEventId,
-  generateOwnerId,
-  getQRcodeBuffer,
-} from "@/utils/utils";
+import { generateEventId, generateOwnerId } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useCallback, useMemo, FC } from "react";
-import QRcode from "./QRcode";
-import ControlledFileInput from "./form/ControlledFileInput";
-import ControlledTextInput from "./form/ControlledTextInput";
 import ErrorMessage from "./form/ErrorMessage";
 import Form from "./form/Form";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import { Person } from "@/database/models/person.model";
+import FormInputSection from "./createEvent/FormInputSection";
+import FormFileSection from "./createEvent/FormFileSection";
+import QRCodeSection from "./createEvent/QRCodeSection";
+import {
+  processFormData,
+  generateQRCodes,
+  createEmailAttachments,
+  PersonWithoutId,
+} from "@/app/service/createEventFormService";
+import {
+  FORM_CONFIG,
+  BASE_URL,
+  ERROR_MESSAGES,
+  EMAIL_CONFIG,
+} from "@/config/createEventFormConfig";
 
 /**
- * Configuration constants for the CreateEventForm component
+ * Main CreateEventForm component
  */
-const FORM_CONFIG = {
-  DEFAULT_VALUES: {
-    eventName: "",
-    eventEmail: "",
-    applicantsFile: undefined,
-    approversFile: undefined,
-  },
-  INPUT_STYLES: { style: { fontSize: 24 } },
-} as const;
-
-/**
- * Base URL configuration for the event system
- */
-const BASE_URL = "https://gift-grabber.onrender.com/events";
-
-/**
- * Error messages for form processing
- */
-const ERROR_MESSAGES = {
-  APPLICANT_LIST_ERROR: "Error getting an applicant list",
-  APPROVER_LIST_ERROR: "Error getting an approvers list",
-  QR_CODE_ERROR: "Error getting QR code",
-  EVENT_CREATION_ERROR: "Error creating event",
-} as const;
-
-/**
- * Email configuration constants
- */
-const EMAIL_CONFIG = {
-  HTML_CONTENT: `<html><h1>QR codes</h1></html>`,
-  ATTACHMENTS: {
-    EVENT_QR_FILENAME: "event QR code.png",
-    OWNER_QR_FILENAME: "owner QR code.png",
-    ENCODING: "base64" as const,
-  },
-} as const;
-
 const CreateEventForm: FC = () => {
   const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Generate unique IDs for this component instance
   const eventId = useMemo(() => generateEventId(), []);
@@ -85,131 +54,74 @@ const CreateEventForm: FC = () => {
     null
   ) as React.RefObject<HTMLDivElement>;
 
-  // Memoized form data processing function
-  const processFormData = useCallback(async (data: any) => {
-    const {
-      eventName: name,
-      eventEmail: email,
-      applicantsFile,
-      approversFile,
-    } = data;
+  // Main form submission handler
+  const handleSubmit = useCallback(
+    async (data: {
+      eventName: string;
+      eventEmail: string;
+      applicantsFile: File;
+      approversFile: File;
+    }) => {
+      console.log("Submitting...");
 
-    const applicantList = await excelToPersonList(applicantsFile);
-    if (!applicantList) {
-      setErrorMessage(ERROR_MESSAGES.APPLICANT_LIST_ERROR);
-      return null;
-    }
+      const processedData = await processFormData(
+        data,
+        setErrorMessage,
+        ERROR_MESSAGES
+      );
+      if (!processedData) return;
 
-    const approverList = await excelToPersonList(approversFile);
-    if (!approverList) {
-      setErrorMessage(ERROR_MESSAGES.APPROVER_LIST_ERROR);
-      return null;
-    }
-
-    return { name, email, applicantList, approverList };
-  }, []);
-
-  // Memoized QR code generation function
-  const generateQRCodes = useCallback(async () => {
-    const eventQRCodeBuffer = await getQRcodeBuffer(eventQRCodeRef);
-    const ownerIdQRCodeBuffer = await getQRcodeBuffer(ownerQRCodeRef);
-
-    if (!eventQRCodeBuffer || !ownerIdQRCodeBuffer) {
-      setErrorMessage(ERROR_MESSAGES.QR_CODE_ERROR);
-      return null;
-    }
-
-    return {
-      eventQRCodeBase64: eventQRCodeBuffer.toString("base64"),
-      ownerIdQRCodeBase64: ownerIdQRCodeBuffer.toString("base64"),
-    };
-  }, []);
-
-  // Memoized email attachments creation function
-  const createEmailAttachments = useCallback(
-    (eventQRCodeBase64: string, ownerIdQRCodeBase64: string) => [
-      {
-        filename: EMAIL_CONFIG.ATTACHMENTS.EVENT_QR_FILENAME,
-        content: eventQRCodeBase64,
-        encoding: EMAIL_CONFIG.ATTACHMENTS.ENCODING,
-      },
-      {
-        filename: EMAIL_CONFIG.ATTACHMENTS.OWNER_QR_FILENAME,
-        content: ownerIdQRCodeBase64,
-        encoding: EMAIL_CONFIG.ATTACHMENTS.ENCODING,
-      },
-    ],
-    []
-  );
-
-  // Handle event creation and email sending
-  const submitEventData = useCallback(
-    async (processedData: any, qrCodes: any) => {
-      const { name, email, applicantList, approverList } = processedData;
-      const { eventQRCodeBase64, ownerIdQRCodeBase64 } = qrCodes;
+      const qrCodes = await generateQRCodes(
+        eventQRCodeRef,
+        ownerQRCodeRef,
+        setErrorMessage,
+        ERROR_MESSAGES
+      );
+      if (!qrCodes) return;
 
       await sendQRCodesToOwner({
-        to: email,
+        to: processedData.email,
         html: EMAIL_CONFIG.HTML_CONTENT,
         attachments: createEmailAttachments(
-          eventQRCodeBase64,
-          ownerIdQRCodeBase64
+          qrCodes.eventQRCodeBase64,
+          qrCodes.ownerIdQRCodeBase64,
+          EMAIL_CONFIG.ATTACHMENTS
         ),
       });
 
-      return await createEvent({
-        name,
-        email,
+      const success = await createEvent({
+        name: processedData.name,
+        email: processedData.email,
         eventId,
         ownerId,
-        eventQRCodeBase64,
-        ownerIdQRCodeBase64,
-        applicantList,
-        approverList,
+        eventQRCodeBase64: qrCodes.eventQRCodeBase64,
+        ownerIdQRCodeBase64: qrCodes.ownerIdQRCodeBase64,
+        applicantList: processedData.applicantList,
+        approverList: processedData.approverList,
       });
-    },
-    [createEmailAttachments, eventId, ownerId]
-  );
 
-  // Main form submission handler
-  const handleSubmit = useCallback(
-    async (data: any) => {
-      console.log("Submitting...");
-
-      const processedData = await processFormData(data);
-      if (!processedData) return;
-
-      const qrCodes = await generateQRCodes();
-      if (!qrCodes) return;
-
-      const success = await submitEventData(processedData, qrCodes);
       if (success) {
         router.push(`/events/${eventId}/${ownerId}`);
       } else {
-        console.log(ERROR_MESSAGES.EVENT_CREATION_ERROR);
+        setErrorMessage(ERROR_MESSAGES.EVENT_CREATION_ERROR);
       }
     },
-    [
-      processFormData,
-      generateQRCodes,
-      submitEventData,
-      router,
-      eventId,
-      ownerId,
-    ]
+    [eventId, ownerId, router]
   );
 
   const { applicantList: contextApplicantList } = useApplicantSelection();
   const { approverList: contextApproverList } = useApproverSelection();
 
-  // Prefer context values if available, else fallback to props
-  const applicants =
+  // Prefer context values if available, else fallback to empty array
+  const applicants: PersonWithoutId[] =
+    contextApplicantList &&
     contextApplicantList._tag === "Some" &&
     Array.isArray(contextApplicantList.value)
       ? contextApplicantList.value
       : [];
 
-  const approvers =
+  const approvers: PersonWithoutId[] =
+    contextApproverList &&
     contextApproverList._tag === "Some" &&
     Array.isArray(contextApproverList.value)
       ? contextApproverList.value
@@ -235,71 +147,5 @@ const CreateEventForm: FC = () => {
     </>
   );
 };
-
-/**
- * Component for rendering text input fields
- */
-const FormInputSection = () => (
-  <div>
-    <ControlledTextInput
-      name="eventName"
-      label="Event name"
-      type="text"
-      variant="outlined"
-      inputProps={FORM_CONFIG.INPUT_STYLES}
-    />
-    <ControlledTextInput
-      name="eventEmail"
-      label="Event email"
-      type="email"
-      variant="outlined"
-      inputProps={FORM_CONFIG.INPUT_STYLES}
-    />
-  </div>
-);
-
-/**
- * Component for rendering file input fields
- */
-const FormFileSection = () => (
-  <div>
-    <ControlledFileInput
-      name="applicantsFile"
-      label="List of applicants"
-      type="file"
-      variant="outlined"
-      inputProps={FORM_CONFIG.INPUT_STYLES}
-    />
-    <ControlledFileInput
-      name="approversFile"
-      label="List of approvers"
-      type="file"
-      variant="outlined"
-      inputProps={FORM_CONFIG.INPUT_STYLES}
-    />
-  </div>
-);
-
-/**
- * Component for rendering QR code elements
- */
-interface QRCodeSectionProps {
-  eventQRCodeRef: React.RefObject<HTMLDivElement>;
-  ownerQRCodeRef: React.RefObject<HTMLDivElement>;
-  eventUrl: string;
-  ownerUrl: string;
-}
-
-const QRCodeSection = ({
-  eventQRCodeRef,
-  ownerQRCodeRef,
-  eventUrl,
-  ownerUrl,
-}: QRCodeSectionProps) => (
-  <>
-    <QRcode url={eventUrl} qrRef={eventQRCodeRef} />
-    <QRcode url={ownerUrl} qrRef={ownerQRCodeRef} />
-  </>
-);
 
 export default CreateEventForm;
