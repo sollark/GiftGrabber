@@ -3,14 +3,22 @@
 import { OrderStatus } from "@/components/types/OrderStatus";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
-import { Person } from "@/database/models/person.model";
+import PersonModel, { Person } from "@/database/models/person.model";
 import {
   withDatabase,
   withDatabaseBoolean,
   withDatabaseNullable,
 } from "@/lib/withDatabase";
-import { handleError } from "@/lib/fp-utils";
 import { Types } from "mongoose";
+import {
+  createOrderData,
+  validateOrderCreation,
+  validateOrderExists,
+  validateOrderForConfirmation,
+  serializeOrder,
+  OrderCreationData,
+} from "@/service/orderService";
+import { saveObject } from "@/lib/castToDocument";
 
 /**
  * Configuration constants for order operations
@@ -58,25 +66,123 @@ const ERROR_MESSAGES = {
 } as const;
 
 /**
- * Interface for order creation parameters
+ * Creates a new order in the database
  */
-interface OrderCreationData {
-  createdAt: Date;
-  approverList: Types.ObjectId[];
-  applicant: Types.ObjectId;
-  gifts: Types.ObjectId[];
-  orderId: string;
-  confirmationRQCode: string;
-}
+const createNewOrder = async (orderData: OrderCreationData): Promise<Order> => {
+  return await OrderModel.create(orderData);
+};
 
 /**
- * Creates a new order in the database
- * @param approverList - List of people who can approve the order
- * @param applicant - Person requesting the gifts
- * @param gifts - List of gifts being requested
- * @param orderId - Unique identifier for the order
- * @param confirmationRQCode - QR code for order confirmation
- * @returns Promise<boolean | undefined> - True if order created successfully
+ * Logs order creation success
+ */
+const logOrderCreation = (order: Order): void => {
+  console.log(LOG_MESSAGES.NEW_ORDER_CREATED(order));
+};
+
+/**
+ * Logs order-related errors
+ */
+const logOrderError = (message: string): void => {
+  console.log(message);
+};
+
+/**
+ * Logs order retrieval start
+ */
+const logOrderRetrieval = (): void => {
+  console.log(LOG_MESSAGES.GET_ORDER_START);
+};
+
+/**
+ * Logs order confirmation start
+ */
+const logOrderConfirmation = (
+  orderId: string,
+  confirmedBy: Types.ObjectId
+): void => {
+  console.log(LOG_MESSAGES.CONFIRM_ORDER_START(orderId, confirmedBy));
+};
+
+/**
+ * Finds an order with populated fields
+ */
+const findOrderWithPopulation = async (
+  orderId: string
+): Promise<Order | null> => {
+  return await populateOrder(OrderModel.findOne({ orderId }));
+};
+
+/**
+ * Populates order fields with related data
+ */
+const populateOrder = async (query: any): Promise<Order | null> => {
+  return query
+    .populate(ORDER_CONFIG.POPULATE_FIELDS.APPLICANT)
+    .populate(ORDER_CONFIG.POPULATE_FIELDS.GIFTS)
+    .populate(ORDER_CONFIG.POPULATE_FIELDS.CONFIRMED_BY);
+};
+
+/**
+ * Finds an unconfirmed order
+ */
+const findUnconfirmedOrder = async (orderId: string): Promise<Order | null> => {
+  return await populateOrder(
+    OrderModel.findOne({
+      orderId,
+      confirmedBy: null,
+    })
+  );
+};
+
+/**
+ * Processes order confirmation by updating order fields
+ */
+const processOrderConfirmation = async (
+  order: Order,
+  confirmedBy: Types.ObjectId
+): Promise<Order> => {
+  // Fetch the Person document from the database
+  const person = await PersonModel.findById(confirmedBy);
+  if (!person) {
+    throw new Error("Person not found for confirmation");
+  }
+  // Work with object, not document
+  const updatedOrder: Order = {
+    ...order,
+    confirmedBy: person._id,
+    confirmedAt: new Date(),
+    status: OrderStatus.COMPLETE,
+  };
+  // Save as document using functional utility
+  const savedOrder = await saveObject(updatedOrder, OrderModel);
+  return savedOrder;
+};
+
+/**
+ * Updates gifts associated with the confirmed order
+ */
+const updateAssociatedGifts = async (order: Order): Promise<void> => {
+  const { applicant } = order;
+  const giftUpdates = order.gifts.map(async (gift: Gift) => {
+    const giftToUpdate = await GiftModel.findById(gift._id);
+    if (giftToUpdate) {
+      // Work with object, not document
+      const updatedGift: Gift = {
+        ...giftToUpdate.toObject(),
+        receiver: applicant._id,
+        order: order._id,
+      };
+      await saveObject(updatedGift, GiftModel);
+      return updatedGift;
+    }
+    return null;
+  });
+
+  await Promise.all(giftUpdates);
+};
+
+/**
+ * Creates a new order in the database (orchestration + error handling)
  */
 const makeOrderInternal = async (
   approverList: Person[],
@@ -96,238 +202,73 @@ const makeOrderInternal = async (
     const newOrder = await createNewOrder(orderData);
 
     logOrderCreation(newOrder);
-    return validateOrderCreation(newOrder);
+    const result = validateOrderCreation(newOrder);
+    if (result._tag === "Failure") {
+      logOrderError(result.error);
+      return undefined;
+    }
+    return result.value;
   } catch (error) {
     logOrderError(LOG_MESSAGES.MAKE_ORDER_ERROR);
-    handleError(error);
+    return undefined;
   }
 };
 
 export const makeOrder = withDatabaseBoolean(makeOrderInternal);
 
 /**
- * Retrieves an order by its ID with populated fields
- * @param orderId - Unique identifier for the order
- * @returns Promise<Order | null> - The order with populated fields or null if not found
+ * Retrieves an order by its ID with populated fields (orchestration + error handling)
  */
-const getOrderInternal = async (orderId: string): Promise<Order | null> => {
+const getOrderInternal = async (
+  orderId: string
+): Promise<Record<string, unknown> | null> => {
   try {
     logOrderRetrieval();
 
     const order = await findOrderWithPopulation(orderId);
-    validateOrderExists(order);
+    const result = validateOrderExists(order);
+    if (result._tag === "Failure") {
+      logOrderError(result.error);
+      return null;
+    }
 
-    return serializeOrder(order!);
+    return serializeOrder(result.value);
   } catch (error) {
     logOrderError(LOG_MESSAGES.GET_ORDER_ERROR);
-    handleError(error);
+    return null;
   }
-  return null;
 };
 
 export const getOrder = withDatabaseNullable(getOrderInternal);
 
 /**
- * Confirms an order and updates associated gifts
- * @param orderId - Unique identifier for the order
- * @param confirmedBy - ID of the person confirming the order
- * @returns Promise<Order | false> - Confirmed order or false if failed
+ * Confirms an order and updates associated gifts (orchestration + error handling)
  */
 const confirmOrderInternal = async (
   orderId: string,
   confirmedBy: Types.ObjectId
-): Promise<any | false> => {
+): Promise<Record<string, unknown> | false> => {
   try {
     logOrderConfirmation(orderId, confirmedBy);
 
     const order = await findUnconfirmedOrder(orderId);
-    validateOrderForConfirmation(order);
+    const result = validateOrderForConfirmation(order);
+    if (result._tag === "Failure") {
+      logOrderError(result.error);
+      return false;
+    }
 
-    const confirmedOrder = await processOrderConfirmation(order!, confirmedBy);
+    const confirmedOrder = await processOrderConfirmation(
+      result.value,
+      confirmedBy
+    );
     await updateAssociatedGifts(confirmedOrder);
 
     return serializeOrder(confirmedOrder);
   } catch (error) {
     logOrderError(LOG_MESSAGES.CONFIRM_ORDER_ERROR);
-    handleError(error);
+    return false;
   }
-  return false;
 };
 
 export const confirmOrder = withDatabase(confirmOrderInternal);
-
-/**
- * Creates order data object from parameters
- * @param approverList - List of approvers
- * @param applicant - Applicant person
- * @param gifts - List of gifts
- * @param orderId - Order ID
- * @param confirmationRQCode - Confirmation QR code
- * @returns OrderCreationData - Formatted order data
- */
-const createOrderData = (
-  approverList: Person[],
-  applicant: Person,
-  gifts: Gift[],
-  orderId: string,
-  confirmationRQCode: string
-): OrderCreationData => ({
-  createdAt: new Date(),
-  approverList: approverList.map((approver) => approver._id),
-  applicant: applicant._id,
-  gifts: gifts.map((gift) => gift._id),
-  orderId,
-  confirmationRQCode,
-});
-
-/**
- * Creates a new order in the database
- * @param orderData - Order creation data
- * @returns Promise<Order> - Created order
- */
-const createNewOrder = async (orderData: OrderCreationData): Promise<Order> => {
-  return await OrderModel.create(orderData);
-};
-
-/**
- * Logs order creation success
- * @param order - Created order
- */
-const logOrderCreation = (order: Order): void => {
-  console.log(LOG_MESSAGES.NEW_ORDER_CREATED(order));
-};
-
-/**
- * Validates if order creation was successful
- * @param order - Created order
- * @returns boolean - True if order exists
- */
-const validateOrderCreation = (order: Order): boolean => {
-  return order ? true : false;
-};
-
-/**
- * Logs order-related errors
- * @param message - Error message
- */
-const logOrderError = (message: string): void => {
-  console.log(message);
-};
-
-/**
- * Logs order retrieval start
- */
-const logOrderRetrieval = (): void => {
-  console.log(LOG_MESSAGES.GET_ORDER_START);
-};
-
-/**
- * Finds an order with populated fields
- * @param orderId - Order ID to find
- * @returns Promise<Order | null> - Found order or null
- */
-const findOrderWithPopulation = async (
-  orderId: string
-): Promise<Order | null> => {
-  return await populateOrder(OrderModel.findOne({ orderId }));
-};
-
-/**
- * Validates that an order exists
- * @param order - Order to validate
- * @throws Error if order doesn't exist
- */
-const validateOrderExists = (order: Order | null): void => {
-  if (!order) throw new Error(ERROR_MESSAGES.ORDER_NOT_FOUND);
-};
-
-/**
- * Serializes order object for safe JSON transmission
- * @param order - Order to serialize
- * @returns any - Serialized order
- */
-const serializeOrder = (order: any): any => {
-  return JSON.parse(JSON.stringify(order));
-};
-
-/**
- * Logs order confirmation start
- * @param orderId - Order ID
- * @param confirmedBy - ID of confirming person
- */
-const logOrderConfirmation = (
-  orderId: string,
-  confirmedBy: Types.ObjectId
-): void => {
-  console.log(LOG_MESSAGES.CONFIRM_ORDER_START(orderId, confirmedBy));
-};
-
-/**
- * Finds an unconfirmed order
- * @param orderId - Order ID to find
- * @returns Promise<any | null> - Found order or null
- */
-const findUnconfirmedOrder = async (orderId: string): Promise<any | null> => {
-  return await populateOrder(
-    OrderModel.findOne({
-      orderId,
-      confirmedBy: null,
-    })
-  );
-};
-
-/**
- * Validates order for confirmation
- * @param order - Order to validate
- * @throws Error if order cannot be confirmed
- */
-const validateOrderForConfirmation = (order: any | null): void => {
-  if (!order) throw new Error(ERROR_MESSAGES.ORDER_NOT_FOUND_OR_CONFIRMED);
-};
-
-/**
- * Processes order confirmation by updating order fields
- * @param order - Order to confirm
- * @param confirmedBy - ID of confirming person
- * @returns Promise<any> - Confirmed order
- */
-const processOrderConfirmation = async (
-  order: any,
-  confirmedBy: Types.ObjectId
-): Promise<any> => {
-  order.confirmedBy = confirmedBy;
-  order.confirmedAt = new Date();
-  order.status = OrderStatus.COMPLETE;
-  await order.save();
-  return order;
-};
-
-/**
- * Updates gifts associated with the confirmed order
- * @param order - Confirmed order
- * @returns Promise<void>
- */
-const updateAssociatedGifts = async (order: any): Promise<void> => {
-  const { applicant } = order;
-  const giftUpdates = order.gifts.map(async (gift: Gift) => {
-    const giftToUpdate = await GiftModel.findById(gift._id);
-    giftToUpdate.receiver = applicant._id;
-    giftToUpdate.order = order._id;
-    await giftToUpdate.save();
-    return giftToUpdate;
-  });
-
-  await Promise.all(giftUpdates);
-};
-
-/**
- * Populates order fields with related data
- * @param query - Mongoose query to populate
- * @returns Promise<Order | null> - Order with populated fields
- */
-const populateOrder = async (query: any): Promise<Order | null> => {
-  return query
-    .populate(ORDER_CONFIG.POPULATE_FIELDS.APPLICANT)
-    .populate(ORDER_CONFIG.POPULATE_FIELDS.GIFTS)
-    .populate(ORDER_CONFIG.POPULATE_FIELDS.CONFIRMED_BY);
-};
