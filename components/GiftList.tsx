@@ -9,6 +9,9 @@ type GiftListProps = {
 /**
  * Functional GiftList component.
  * Renders a list of gifts using GiftComponent.
+ *
+ * NOTE: This component passes data only via props.
+ * Do not use or duplicate context here. This ensures clarity and prevents coupling.
  */
 const GiftList: FC<GiftListProps> = ({ gifts }) => {
   return (

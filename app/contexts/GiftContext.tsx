@@ -220,6 +220,13 @@ interface GiftProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * GiftProvider: Supplies gift context to child components.
+ *
+ * NOTE: To prevent coupling, child components should consume gift data
+ * either via context (using useGiftContext/useGiftSelector) or via props,
+ * but not both. Do not duplicate data sources.
+ */
 export const GiftProvider: React.FC<GiftProviderProps> = ({
   giftList,
   children,

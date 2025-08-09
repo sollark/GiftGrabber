@@ -72,7 +72,11 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
       eventId={order._id?.toString() || ""}
       applicantList={applicants}
     >
-      <GiftProvider gifts={gifts}>
+      {/* 
+        NOTE: Pass giftList as prop to GiftProvider.
+        Do not duplicate data via both context and props in children.
+      */}
+      <GiftProvider giftList={gifts}>
         <OrderProvider order={order} approverList={approverList}>
           <MultistepProvider steps={multistepSteps}>
             {children}
