@@ -1,8 +1,9 @@
 "use server";
 
 import EventModel, { Event } from "@/database/models/event.model";
-import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
+import GiftModel from "@/database/models/gift.model";
+import { createEventInternal } from "@/service/eventService";
 import {
   withDatabase,
   withDatabaseBoolean,
@@ -56,73 +57,17 @@ const ERROR_MESSAGES = {
 /**
  * Type definitions for improved type safety
  */
-type PersonWithoutId = Omit<Person, "_id">;
-
-type EventForm = Omit<
-  Event,
-  "_id" | "giftList" | "applicantList" | "approverList"
-> & {
-  applicantList: PersonWithoutId[];
-  approverList: PersonWithoutId[];
-};
-
-interface CreateEventData {
-  name: string;
-  email: string;
-  eventId: string;
-  ownerId: string;
-  eventQRCodeBase64: string;
-  ownerIdQRCodeBase64: string;
-  applicantIds: string[];
-  giftIds: string[];
-  approverIds: string[];
-}
+import {
+  PersonWithoutId,
+  EventForm,
+  CreateEventData,
+} from "@/types/event.types";
 
 /**
  * Creates a new event with associated applicants, approvers, and gifts
  * @param event - The event form data containing all necessary information
  * @returns Promise<boolean> - True if event was created successfully, undefined on error
  */
-const createEventInternal = async (
-  event: EventForm
-): Promise<boolean | undefined> => {
-  const {
-    name,
-    email,
-    eventId,
-    ownerId,
-    eventQRCodeBase64,
-    ownerIdQRCodeBase64,
-    applicantList,
-    approverList,
-  } = event;
-
-  try {
-    const applicantIds = await createPersonList(applicantList);
-    const approverIds = await createPersonList(approverList);
-    const giftIds = await createGiftList(applicantIds);
-
-    const eventData: CreateEventData = {
-      name,
-      email,
-      eventId,
-      ownerId,
-      eventQRCodeBase64,
-      ownerIdQRCodeBase64,
-      applicantIds,
-      giftIds,
-      approverIds,
-    };
-
-    const newEvent = await createEventRecord(eventData);
-    console.log(LOG_MESSAGES.EVENT_CREATED, newEvent);
-
-    return Boolean(newEvent);
-  } catch (error) {
-    console.log(ERROR_MESSAGES.CREATE_EVENT);
-    handleError(error);
-  }
-};
 
 export const createEvent = withDatabaseBoolean(createEventInternal);
 
@@ -224,63 +169,17 @@ const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
 
 export const getAllEvents = withDatabase(getAllEventsInternal);
 
-/**
- * Populates event with applicant data
- * @param query - Mongoose query to execute
- * @returns Promise with populated applicant data
- */
-const populateEventApplicants = async (query: any) => {
-  return query.populate({
-    path: "applicantList",
-    model: "Person",
-    select: EVENT_CONFIG.POPULATE_FIELDS.PERSON_SELECT,
-  });
-};
-
-/**
- * Populates event with approver data
- * @param query - Mongoose query to execute
- * @returns Promise with populated approver data
- */
-const populateEventApprovers = async (query: any) => {
-  return query.populate({
-    path: "approverList",
-    model: "Person",
-    select: EVENT_CONFIG.POPULATE_FIELDS.PERSON_SELECT,
-  });
-};
-
-/**
- * Populates event with complete relationship data
- * @param query - Mongoose query to execute
- * @returns Promise with fully populated event data
- */
-const populateEvent = async (query: any) => {
-  return query
-    .populate({
-      path: "applicantList",
-      select: EVENT_CONFIG.POPULATE_FIELDS.PERSON_SELECT,
-    })
-    .populate({
-      path: "giftList",
-      select: EVENT_CONFIG.POPULATE_FIELDS.GIFT_SELECT,
-      populate: {
-        path: "owner",
-        model: "Person",
-      },
-    })
-    .populate({
-      path: "approverList",
-      select: EVENT_CONFIG.POPULATE_FIELDS.PERSON_SELECT,
-    });
-};
+import {
+  populateEventApplicants,
+  populateEventApprovers,
+  populateEvent,
+} from "@/service/eventPopulationService";
 
 // Helper Functions
 
 /**
- * Creates person records for a list of person data
- * @param personList - Array of person data without IDs
- * @returns Promise<string[]> - Array of created person IDs
+ * Creates person records for a list of person data (applicants or approvers).
+ * Pure function: only creates and returns IDs.
  */
 const createPersonList = async (
   personList: PersonWithoutId[]
@@ -294,9 +193,8 @@ const createPersonList = async (
 };
 
 /**
- * Creates gift records for a list of applicant IDs
- * @param applicantIds - Array of applicant person IDs
- * @returns Promise<string[]> - Array of created gift IDs
+ * Creates gift records for a list of applicant IDs.
+ * Pure function: only creates and returns gift IDs.
  */
 const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
   return Promise.all(
@@ -308,9 +206,8 @@ const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
 };
 
 /**
- * Creates the actual event record in the database
- * @param eventData - The complete event data with IDs
- * @returns Promise<Event> - The created event document
+ * Creates the actual event record in the database.
+ * Pure function: only creates and returns the event document.
  */
 const createEventRecord = async (
   eventData: CreateEventData
@@ -340,11 +237,4 @@ const createEventRecord = async (
   });
 };
 
-/**
- * Parses and serializes event data for client consumption
- * @param data - The event data to parse
- * @returns Parsed event data safe for client use
- */
-const parseEventData = <T>(data: T): T => {
-  return JSON.parse(JSON.stringify(data));
-};
+import { parseEventData } from "@/utils/parseEventData";
