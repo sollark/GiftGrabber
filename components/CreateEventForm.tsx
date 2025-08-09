@@ -1,6 +1,5 @@
 "use client";
 
-import { sendQRCodesToOwner } from "@/app/actions/email.action";
 import { createEvent } from "@/app/actions/event.action";
 import { generateEventId, generateOwnerId } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
@@ -18,13 +17,14 @@ import {
   generateQRCodes,
   createEmailAttachments,
   PersonWithoutId,
-} from "@/app/service/createEventFormService";
+} from "@/service/createEventFormService";
 import {
   FORM_CONFIG,
   BASE_URL,
   ERROR_MESSAGES,
   EMAIL_CONFIG,
 } from "@/config/createEventFormConfig";
+import { sendMail } from "@/service/mailService";
 
 /**
  * Main CreateEventForm component
@@ -34,8 +34,8 @@ const CreateEventForm: FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   // Generate unique IDs for this component instance
-  const eventId = useMemo(() => generateEventId(), []);
-  const ownerId = useMemo(() => generateOwnerId(), []);
+  const eventId = useMemo(generateEventId, []);
+  const ownerId = useMemo(generateOwnerId, []);
 
   // Memoize URLs based on generated IDs
   const urls = useMemo(
@@ -64,22 +64,25 @@ const CreateEventForm: FC = () => {
     }) => {
       console.log("Submitting...");
 
-      const processedData = await processFormData(
-        data,
-        setErrorMessage,
-        ERROR_MESSAGES
-      );
-      if (!processedData) return;
+      const processedResult = await processFormData(data, ERROR_MESSAGES);
+      if (processedResult._tag === "Failure") {
+        setErrorMessage(processedResult.error);
+        return;
+      }
+      const processedData = processedResult.value;
 
-      const qrCodes = await generateQRCodes(
+      const qrResult = await generateQRCodes(
         eventQRCodeRef,
         ownerQRCodeRef,
-        setErrorMessage,
         ERROR_MESSAGES
       );
-      if (!qrCodes) return;
+      if (qrResult._tag === "Failure") {
+        setErrorMessage(qrResult.error);
+        return;
+      }
+      const qrCodes = qrResult.value;
 
-      await sendQRCodesToOwner({
+      const mailResult = await sendMail({
         to: processedData.email,
         html: EMAIL_CONFIG.HTML_CONTENT,
         attachments: createEmailAttachments(
@@ -88,6 +91,10 @@ const CreateEventForm: FC = () => {
           EMAIL_CONFIG.ATTACHMENTS
         ),
       });
+      if (mailResult._tag === "Failure") {
+        setErrorMessage(mailResult.error);
+        return;
+      }
 
       const success = await createEvent({
         name: processedData.name,

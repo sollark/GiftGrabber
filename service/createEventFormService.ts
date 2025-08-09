@@ -1,7 +1,7 @@
 import { excelToPersonList, getQRcodeBuffer } from "@/utils/utils";
 import { Person } from "@/database/models/person.model";
+import { Result, success, failure } from "@/lib/fp-utils";
 
-// Define a type for person objects without '_id'
 export type PersonWithoutId = Omit<Person, "_id">;
 
 export type ProcessFormDataInput = {
@@ -16,17 +16,16 @@ export type ProcessFormDataOutput = {
   email: string;
   applicantList: PersonWithoutId[];
   approverList: PersonWithoutId[];
-} | null;
+};
 
 /**
  * Processes form data and returns structured event information.
- * Pure function, returns null on error.
+ * Returns Result for FP error handling.
  */
 export const processFormData = async (
   data: ProcessFormDataInput,
-  setErrorMessage: (msg: string) => void,
   errorMessages: { APPLICANT_LIST_ERROR: string; APPROVER_LIST_ERROR: string }
-): Promise<ProcessFormDataOutput> => {
+): Promise<Result<ProcessFormDataOutput, string>> => {
   const {
     eventName: name,
     eventEmail: email,
@@ -38,48 +37,44 @@ export const processFormData = async (
     | PersonWithoutId[]
     | null;
   if (!applicantList) {
-    setErrorMessage(errorMessages.APPLICANT_LIST_ERROR);
-    return null;
+    return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
 
   const approverList = (await excelToPersonList(approversFile)) as
     | PersonWithoutId[]
     | null;
   if (!approverList) {
-    setErrorMessage(errorMessages.APPROVER_LIST_ERROR);
-    return null;
+    return failure(errorMessages.APPROVER_LIST_ERROR);
   }
 
-  return { name, email, applicantList, approverList };
+  return success({ name, email, applicantList, approverList });
 };
 
 export type GenerateQRCodesOutput = {
   eventQRCodeBase64: string;
   ownerIdQRCodeBase64: string;
-} | null;
+};
 
 /**
  * Generates QR codes as base64 strings from refs.
- * Pure function, returns null on error.
+ * Returns Result for FP error handling.
  */
 export const generateQRCodes = async (
   eventQRCodeRef: React.RefObject<HTMLDivElement>,
   ownerQRCodeRef: React.RefObject<HTMLDivElement>,
-  setErrorMessage: (msg: string) => void,
   errorMessages: { QR_CODE_ERROR: string }
-): Promise<GenerateQRCodesOutput> => {
+): Promise<Result<GenerateQRCodesOutput, string>> => {
   const eventQRCodeBuffer = await getQRcodeBuffer(eventQRCodeRef);
   const ownerIdQRCodeBuffer = await getQRcodeBuffer(ownerQRCodeRef);
 
   if (!eventQRCodeBuffer || !ownerIdQRCodeBuffer) {
-    setErrorMessage(errorMessages.QR_CODE_ERROR);
-    return null;
+    return failure(errorMessages.QR_CODE_ERROR);
   }
 
-  return {
+  return success({
     eventQRCodeBase64: eventQRCodeBuffer.toString("base64"),
     ownerIdQRCodeBase64: ownerIdQRCodeBuffer.toString("base64"),
-  };
+  });
 };
 
 export type EmailAttachment = {
