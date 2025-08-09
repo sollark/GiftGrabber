@@ -3,20 +3,13 @@ import ApproverList from "@/components/ApproverList";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 
-// User's original type for reference (not used by Next.js, but preserved as requested)
-type SearchParamProps = {
-  params: {
-    eventId: string;
-    ownerId: string;
-  };
-};
-
 export default async function EventDetails({
   params,
 }: {
   params: Promise<{ eventId: string; ownerId: string }>;
 }) {
-  const { eventId, ownerId } = await params;
+  const { eventId, ownerId } = await params; //
+
   const event = await getEventDetails(eventId);
   if (!event) return <div>Event not found</div>;
 
@@ -37,8 +30,10 @@ export default async function EventDetails({
             <tr key={applicant._id.toString()}>
               <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
               <td>
-                {giftList.find((gift: Gift) => gift.owner._id === applicant._id)
-                  ?.receiver
+                {giftList.find(
+                  (gift: Gift) =>
+                    gift.owner._id.toString() === applicant._id.toString() // ✅ both are now strings
+                )?.receiver
                   ? "Taken"
                   : "Available"}
               </td>
