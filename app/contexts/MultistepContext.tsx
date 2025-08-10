@@ -9,8 +9,8 @@ import {
   FunctionalAction,
   FunctionalState,
 } from "@/lib/fp-contexts";
-import { loggingMiddleware } from "@/app/middleware/loggingMiddleware";
-import { validationMiddleware } from "@/app/middleware/validationMiddleware";
+import { loggingMiddleware } from "@/lib/fp-contexts";
+import { validationMiddleware } from "@/lib/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
 
@@ -660,7 +660,7 @@ const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
   initialState: createInitialState([]),
   reducer: multistepReducer,
   middleware: [
-    loggingMiddleware("Multistep"),
+    loggingMiddleware,
     multistepValidation,
     persistenceMiddleware("multistep-context", {
       exclude: [

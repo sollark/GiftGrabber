@@ -11,8 +11,8 @@ import {
   FunctionalAction,
   FunctionalState,
 } from "@/lib/fp-contexts";
-import { loggingMiddleware } from "@/app/middleware/loggingMiddleware";
-import { validationMiddleware } from "@/app/middleware/validationMiddleware";
+import { loggingMiddleware } from "@/lib/fp-contexts";
+import { validationMiddleware } from "@/lib/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
 
@@ -146,7 +146,7 @@ const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
   initialState: createInitialState("", []),
   reducer: applicantReducer,
   middleware: [
-    loggingMiddleware("Applicant"),
+    loggingMiddleware,
     applicantValidation,
     persistenceMiddleware("applicant-context", {
       exclude: ["loading", "error", "lastUpdated", "version"],

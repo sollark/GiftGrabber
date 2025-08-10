@@ -11,6 +11,7 @@ export const validateEventExists = (
 ): Result<Event, string> => {
   return event ? success(event) : failure("Event not found");
 };
+
 /**
  * @file eventService.ts
  * @description Service layer for event creation logic in GiftGrabber.
