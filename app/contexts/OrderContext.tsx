@@ -401,6 +401,7 @@ const orderReducer = (
 
       const { [updateKey]: removed, ...remaining } =
         state.data.optimisticUpdates;
+
       return success({
         ...state,
         data: {
@@ -541,109 +542,110 @@ export const useOrderStatus = () => {
     (state: any) => state.selectedApprover
   );
 
+  // Confirm order
   const confirmOrder = React.useCallback(
     async (approver: Person) => {
-      if (actions._tag === "Some") {
-        // Optimistic update
-        const result = actions.value.dispatchSafe({
-          type: "CONFIRM_ORDER",
-          payload: approver,
-          meta: { timestamp: Date.now(), optimistic: true },
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      const result = actions.value.dispatchSafe({
+        type: "CONFIRM_ORDER",
+        payload: approver,
+        meta: { timestamp: Date.now(), optimistic: true },
+      });
+      if (result._tag === "Success") {
+        actions.value.dispatchSafe({
+          type: "ADD_NOTIFICATION",
+          payload: {
+            type: "success",
+            message: `Order confirmed by ${getPersonName(approver)}`,
+          },
         });
-
-        // Add success notification
-        if (result._tag === "Success") {
-          actions.value.dispatchSafe({
-            type: "ADD_NOTIFICATION",
-            payload: {
-              type: "success",
-              message: `Order confirmed by ${getPersonName(approver)}`,
-            },
-          });
-        }
-
-        return result;
       }
-      return failure(new Error("Order context not available"));
+
+      return result;
     },
     [actions]
   );
 
+  // Reject order
   const rejectOrder = React.useCallback(
     async (approver: Person, reason: string) => {
-      if (actions._tag === "Some") {
-        const result = actions.value.dispatchSafe({
-          type: "REJECT_ORDER",
-          payload: { approver, reason },
-          meta: { timestamp: Date.now(), optimistic: true },
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      const result = actions.value.dispatchSafe({
+        type: "REJECT_ORDER",
+        payload: { approver, reason },
+        meta: { timestamp: Date.now(), optimistic: true },
+      });
+      if (result._tag === "Success") {
+        actions.value.dispatchSafe({
+          type: "ADD_NOTIFICATION",
+          payload: {
+            type: "warning",
+            message: `Order rejected by ${getPersonName(approver)}`,
+          },
         });
-
-        if (result._tag === "Success") {
-          actions.value.dispatchSafe({
-            type: "ADD_NOTIFICATION",
-            payload: {
-              type: "warning",
-              message: `Order rejected by ${getPersonName(approver)}`,
-            },
-          });
-        }
-
-        return result;
       }
-      return failure(new Error("Order context not available"));
+
+      return result;
     },
     [actions]
   );
 
+  // Cancel order
   const cancelOrder = React.useCallback(
     async (reason: string, actor?: Person) => {
-      if (actions._tag === "Some") {
-        const result = actions.value.dispatchSafe({
-          type: "CANCEL_ORDER",
-          payload: { reason, actor },
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      const result = actions.value.dispatchSafe({
+        type: "CANCEL_ORDER",
+        payload: { reason, actor },
+      });
+      if (result._tag === "Success") {
+        actions.value.dispatchSafe({
+          type: "ADD_NOTIFICATION",
+          payload: {
+            type: "info",
+            message: "Order has been cancelled",
+          },
         });
-
-        if (result._tag === "Success") {
-          actions.value.dispatchSafe({
-            type: "ADD_NOTIFICATION",
-            payload: {
-              type: "info",
-              message: "Order has been cancelled",
-            },
-          });
-        }
-
-        return result;
       }
-      return failure(new Error("Order context not available"));
+
+      return result;
     },
     [actions]
   );
 
+  // Complete order
   const completeOrder = React.useCallback(
     async (actor?: Person) => {
-      if (actions._tag === "Some") {
-        const result = actions.value.dispatchSafe({
-          type: "COMPLETE_ORDER",
-          payload: { actor },
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      const result = actions.value.dispatchSafe({
+        type: "COMPLETE_ORDER",
+        payload: { actor },
+      });
+      if (result._tag === "Success") {
+        actions.value.dispatchSafe({
+          type: "ADD_NOTIFICATION",
+          payload: {
+            type: "success",
+            message: "Order completed successfully!",
+          },
         });
-
-        if (result._tag === "Success") {
-          actions.value.dispatchSafe({
-            type: "ADD_NOTIFICATION",
-            payload: {
-              type: "success",
-              message: "Order completed successfully!",
-            },
-          });
-        }
-
-        return result;
       }
-      return failure(new Error("Order context not available"));
+
+      return result;
     },
     [actions]
   );
+
+  // Computed: can confirm/reject/cancel
+  const canConfirm = order._tag === "Some" && order.value.status === "pending";
+  const canReject = canConfirm;
+  const canCancel =
+    order._tag === "Some" &&
+    !["completed", "cancelled"].includes(order.value.status);
 
   return {
     order,
@@ -652,11 +654,9 @@ export const useOrderStatus = () => {
     rejectOrder,
     cancelOrder,
     completeOrder,
-    canConfirm: order._tag === "Some" && order.value.status === "pending",
-    canReject: order._tag === "Some" && order.value.status === "pending",
-    canCancel:
-      order._tag === "Some" &&
-      !["completed", "cancelled"].includes(order.value.status),
+    canConfirm,
+    canReject,
+    canCancel,
   };
 };
 
@@ -689,6 +689,7 @@ export const useApproverSelection = () => {
         type: "CLEAR_APPROVER",
       });
     }
+
     return failure(new Error("Order context not available"));
   }, [actions]);
 
@@ -719,68 +720,70 @@ export const useOrderTracking = () => {
   const orderHistory = useOrderSelector((state: any) => state.orderHistory);
   const notifications = useOrderSelector((state: any) => state.notifications);
 
+  // Add history entry
   const addHistoryEntry = React.useCallback(
     (entry: Omit<OrderHistoryEntry, "id" | "timestamp">) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "ADD_HISTORY_ENTRY",
-          payload: entry,
-        });
-      }
-      return failure(new Error("Order context not available"));
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      return actions.value.dispatchSafe({
+        type: "ADD_HISTORY_ENTRY",
+        payload: entry,
+      });
     },
     [actions]
   );
 
+  // Add notification
   const addNotification = React.useCallback(
     (
       notification: Omit<OrderNotification, "id" | "timestamp" | "dismissed">
     ) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "ADD_NOTIFICATION",
-          payload: notification,
-        });
-      }
-      return failure(new Error("Order context not available"));
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      return actions.value.dispatchSafe({
+        type: "ADD_NOTIFICATION",
+        payload: notification,
+      });
     },
     [actions]
   );
 
+  // Dismiss notification
   const dismissNotification = React.useCallback(
     (notificationId: string) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "DISMISS_NOTIFICATION",
-          payload: notificationId,
-        });
-      }
-      return failure(new Error("Order context not available"));
+      if (actions._tag !== "Some")
+        return failure(new Error("Order context not available"));
+      return actions.value.dispatchSafe({
+        type: "DISMISS_NOTIFICATION",
+        payload: notificationId,
+      });
     },
     [actions]
   );
 
+  // Clear all notifications
   const clearNotifications = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
-        type: "CLEAR_NOTIFICATIONS",
-      });
-    }
-    return failure(new Error("Order context not available"));
+    if (actions._tag !== "Some")
+      return failure(new Error("Order context not available"));
+    return actions.value.dispatchSafe({ type: "CLEAR_NOTIFICATIONS" });
   }, [actions]);
 
-  // Computed values
+  // Computed: active notifications
   const activeNotifications = React.useMemo(() => {
     if (notifications._tag !== "Some") return [];
-    return notifications.value.filter((n: any) => !n.dismissed);
+    return notifications.value.filter((n: OrderNotification) => !n.dismissed);
   }, [notifications]);
 
+  // Computed: recent history (last 10, sorted desc)
   const recentHistory = React.useMemo(() => {
     if (orderHistory._tag !== "Some") return [];
-    return orderHistory.value
-      .sort((a: any, b: any) => b.timestamp - a.timestamp)
+    return [...orderHistory.value]
+      .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 10);
   }, [orderHistory]);
+
+  // Computed: notification count
+  const notificationCount = activeNotifications.length;
 
   return {
     orderHistory,
@@ -791,7 +794,7 @@ export const useOrderTracking = () => {
     addNotification,
     dismissNotification,
     clearNotifications,
-    notificationCount: activeNotifications.length,
+    notificationCount,
   };
 };
 
