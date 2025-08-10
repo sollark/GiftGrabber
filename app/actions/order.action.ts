@@ -19,6 +19,7 @@ import {
   OrderCreationData,
 } from "@/service/orderService";
 import { saveObject } from "@/lib/castToDocument";
+import { failure, handleError, Result, success } from "@/lib/fp-utils";
 
 /**
  * Configuration constants for order operations
@@ -218,24 +219,51 @@ export const makeOrder = withDatabaseBoolean(makeOrderInternal);
 
 /**
  * Retrieves an order by its ID with populated fields (orchestration + error handling)
+ * Old version. Dont delete, it is example how to modify this kind of function
  */
-const getOrderInternal = async (
-  orderId: string
-): Promise<Record<string, unknown> | null> => {
-  try {
-    logOrderRetrieval();
 
+// const getOrderInternal = async (
+//   orderId: string
+// ): Promise<Record<string, unknown> | null> => {
+//   try {
+//     logOrderRetrieval();
+
+//     const order = await findOrderWithPopulation(orderId);
+//     const result = validateOrderExists(order);
+//     if (result._tag === "Failure") {
+//       logOrderError(result.error);
+//       return null;
+//     }
+
+//     return serializeOrder(result.value);
+//   } catch (error) {
+//     logOrderError(LOG_MESSAGES.GET_ORDER_ERROR);
+//     return null;
+//   }
+// };
+
+/**
+ * Fetches an order with populated data and serializes it.
+ * @param orderId - The unique identifier for the order
+ * @returns Result<Record<string, unknown>, Error> - Success with serialized order or Failure with Error
+ */
+export const getOrderInternal = async (
+  orderId: string
+): Promise<Result<Record<string, unknown>, Error>> => {
+  try {
     const order = await findOrderWithPopulation(orderId);
-    const result = validateOrderExists(order);
-    if (result._tag === "Failure") {
-      logOrderError(result.error);
-      return null;
+    const validationResult = validateOrderExists(order);
+
+    if (validationResult._tag === "Failure") {
+      const err = new Error(validationResult.error);
+      logOrderError(err.message);
+      return failure(err);
     }
 
-    return serializeOrder(result.value);
+    return success(serializeOrder(validationResult.value));
   } catch (error) {
     logOrderError(LOG_MESSAGES.GET_ORDER_ERROR);
-    return null;
+    return handleError(error as Error);
   }
 };
 

@@ -1,3 +1,16 @@
+import { failure, success, Result } from "@/lib/fp-utils";
+
+/**
+ * Validates that an event exists.
+ * Returns Result<Event, string>.
+ * @param event - The Event object or null.
+ * @returns Result indicating success or failure.
+ */
+export const validateEventExists = (
+  event: Event | null
+): Result<Event, string> => {
+  return event ? success(event) : failure("Event not found");
+};
 /**
  * @file eventService.ts
  * @description Service layer for event creation logic in GiftGrabber.

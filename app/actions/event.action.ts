@@ -1,23 +1,39 @@
 /**
+ * Logs event-related errors
+ */
+const logEventError = (message: string): void => {
+  console.log(message);
+};
+
+/**
+ * Logs event retrieval start
+ */
+const logEventRetrieval = (): void => {
+  console.log(LOG_MESSAGES.GET_EVENT_DETAILS);
+};
+/**
  * @file event.action.ts
  * @description Server-side actions and data access logic for event operations in GiftGrabber.
  * Handles event creation, querying, and population of related data (applicants, approvers, gifts).
  * Exports functions for use in API routes and server components.
  */
-"use server";
+("use server");
 
 import { parseEventData } from "@/utils/parseEventData";
 import EventModel, { Event } from "@/database/models/event.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import GiftModel from "@/database/models/gift.model";
-import { createEventInternal } from "@/service/eventService";
+import {
+  createEventInternal,
+  validateEventExists,
+} from "@/service/eventService";
 import {
   withDatabase,
   withDatabaseBoolean,
   withDatabaseNullable,
   withDatabaseArray,
 } from "@/lib/withDatabase";
-import { handleError } from "@/lib/fp-utils";
+import { failure, handleError, Result, success } from "@/lib/fp-utils";
 
 /**
  * Configuration constants for event operations
@@ -81,22 +97,38 @@ export const createEvent = withDatabaseBoolean(createEventInternal);
 /**
  * Fetches event applicants with populated applicant data.
  * @param eventId - The unique identifier for the event
- * @returns Promise<Event | undefined> - Event with populated applicants or undefined on error
+ * @returns Result<Event, Error> - Success with Event or Failure with Error
+ *
+ * How to use it:
+ * const result = await getEventApplicantsInternal("abc123");
+ * if (result.isFailure()) {
+ * console.error("Failed to fetch applicants:", result.error);
+ * // decide: show error to user, retry, etc.
+ * } else {
+ * const event = result.value;
+ * console.log("Got event:", event);}
  */
-const getEventApplicantsInternal = async (
+
+export const getEventApplicantsInternal = async (
   eventId: string
-): Promise<Event | undefined> => {
+): Promise<Result<Event, Error>> => {
   try {
     const event = await populateEventApplicants(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPLICANTS)
     );
-    if (!event) {
-      throw new Error(ERROR_MESSAGES.EVENT_NOT_FOUND);
+
+    // Use a validation function for existence
+    const validationResult = validateEventExists(event);
+    if (validationResult._tag === "Failure") {
+      const err = new Error(validationResult.error);
+      logEventError(err.message);
+      return failure(err);
     }
-    return parseEventData(event);
+
+    return success(parseEventData(validationResult.value));
   } catch (error) {
-    console.log(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
-    handleError(error);
+    logEventError(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
+    return handleError(error as Error);
   }
 };
 

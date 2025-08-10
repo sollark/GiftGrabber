@@ -3,6 +3,7 @@
 import { getEventApprovers } from "@/app/actions/event.action";
 import { getOrder } from "@/app/actions/order.action";
 import { OrderProvider } from "@/app/contexts/OrderContext";
+import { Order } from "@/database/models/order.model";
 import { FC, useMemo, ReactElement } from "react";
 import useSWR from "swr";
 import Approver from "./Approver";
@@ -65,40 +66,45 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   );
 
   // Memoize loading and error states for better performance
-  const loadingState = useMemo(
-    () => ({
+  const loadingState = useMemo(() => {
+    return {
       isLoading: orderLoading || approversLoading,
-      hasOrderError: orderError,
-      hasApproversError: approversError,
-      hasOrder: !!order,
-      hasApprovers: !!approvers,
-    }),
-    [
-      orderLoading,
-      approversLoading,
-      orderError,
-      approversError,
-      order,
-      approvers,
-    ]
-  );
+      hasOrderError: !!orderError,
+      hasApproversError: !!approversError,
+      hasOrder: Boolean(order),
+      hasApprovers: Boolean(approvers),
+    };
+  }, [
+    orderLoading,
+    approversLoading,
+    orderError,
+    approversError,
+    order,
+    approvers,
+  ]);
 
-  // Handle early returns for loading and error states
+  // Early return for loading/error states
   const errorComponent = getErrorComponent(loadingState);
   if (errorComponent) return errorComponent;
 
-  const applicant =
-    selectedApplicant._tag === "Some" && selectedApplicant.value._tag === "Some"
-      ? selectedApplicant.value.value
-      : null;
+  // Type guard for Order object
+  const isValidOrder = (obj: any): obj is Order => {
+    return (
+      obj &&
+      typeof obj === "object" &&
+      typeof obj._id === "string" &&
+      typeof obj.createdAt !== "undefined" &&
+      typeof obj.applicant !== "undefined" &&
+      Array.isArray(obj.gifts)
+    );
+  };
 
-  const approver =
-    selectedApprover._tag === "Some" && selectedApprover.value._tag === "Some"
-      ? selectedApprover.value.value
-      : null;
+  // Only render OrderProvider if order and approvers are present and valid
+  if (!isValidOrder(order) || !Array.isArray(approvers)) return null;
 
+  // ...existing code...
   return (
-    <OrderProvider order={order!} approverList={approvers!}>
+    <OrderProvider order={order as Order} approverList={approvers}>
       <MultistepNavigator>
         <Approver />
         <OrderConfirmationSection />
@@ -162,7 +168,6 @@ const getErrorComponent = (loadingState: LoadingState): ReactElement | null => {
   if (!hasOrder) return <div>{UI_MESSAGES.ORDER_NOT_FOUND}</div>;
   if (hasApproversError) return <div>{UI_MESSAGES.APPROVERS_ERROR}</div>;
   if (!hasApprovers) return <div>{UI_MESSAGES.EVENT_NOT_FOUND}</div>;
-
   return null;
 };
 
