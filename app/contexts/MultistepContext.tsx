@@ -670,8 +670,9 @@ export const useStepData = () => {
 
   const setStepData = React.useCallback(
     (stepId: string, data: unknown) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
+      const safeActions = actions._tag === "Some" && actions.value;
+      if (safeActions) {
+        return safeActions.dispatchSafe({
           type: "SET_STEP_DATA",
           payload: { stepId, data },
         });
@@ -683,8 +684,9 @@ export const useStepData = () => {
 
   const updateStepData = React.useCallback(
     (stepId: string, data: unknown) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
+      const safeActions = actions._tag === "Some" && actions.value;
+      if (safeActions) {
+        return safeActions.dispatchSafe({
           type: "UPDATE_STEP_DATA",
           payload: { stepId, data },
         });
@@ -696,8 +698,9 @@ export const useStepData = () => {
 
   const clearStepData = React.useCallback(
     (stepId: string) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
+      const safeActions = actions._tag === "Some" && actions.value;
+      if (safeActions) {
+        return safeActions.dispatchSafe({
           type: "CLEAR_STEP_DATA",
           payload: stepId,
         });
@@ -753,13 +756,14 @@ export const useStepValidation = () => {
   // Validate a single step using pure utility
   const validateStepAction = React.useCallback(
     (stepId: string, data?: unknown) => {
-      if (actions._tag !== "Some")
+      const safeActions = actions._tag === "Some" && actions.value;
+      if (!safeActions)
         return failure(new Error("Multistep context not available"));
       const step = steps.find((s: StepDefinition) => s.id === stepId);
       if (!step)
         return failure(new Error(`Step with id "${stepId}" not found`));
       const validationResult = validateStep(step, data ?? stepData[stepId]);
-      return actions.value.dispatchSafe({
+      return safeActions.dispatchSafe({
         type: "VALIDATE_STEP",
         payload: { stepId, data },
       });
@@ -769,9 +773,10 @@ export const useStepValidation = () => {
 
   // Validate all steps
   const validateAllSteps = React.useCallback(() => {
-    if (actions._tag !== "Some")
+    const safeActions = actions._tag === "Some" && actions.value;
+    if (!safeActions)
       return failure(new Error("Multistep context not available"));
-    return actions.value.dispatchSafe({ type: "VALIDATE_ALL_STEPS" });
+    return safeActions.dispatchSafe({ type: "VALIDATE_ALL_STEPS" });
   }, [actions]);
 
   // Get validation result for current step
@@ -873,25 +878,26 @@ export function useStepNavigation(): Result<
     { type: string },
     string
   > => {
-    if (actions._tag !== "Some")
-      return failure("Multistep context not available");
+    const safeActions = actions._tag === "Some" && actions.value;
+    if (!safeActions) return failure("Multistep context not available");
     const nextIndex = currentStepIndex + 1;
     const navResult = canNavigateToStep(steps, nextIndex, data.completedSteps);
     if (navResult._tag === "Failure") return failure(navResult.error);
-    actions.value.dispatchSafe({ type: "GO_TO_NEXT_STEP" });
+    safeActions.dispatchSafe({ type: "GO_TO_NEXT_STEP" });
     return success({ type: "GO_TO_NEXT_STEP" });
   }, [actions, currentStepIndex, steps, data.completedSteps]);
 
   const goToPreviousStep = React.useCallback(() => {
-    if (actions._tag !== "Some") return { type: "GO_TO_PREVIOUS_STEP" };
-    actions.value.dispatchSafe({ type: "GO_TO_PREVIOUS_STEP" });
+    const safeActions = actions._tag === "Some" && actions.value;
+    if (!safeActions) return { type: "GO_TO_PREVIOUS_STEP" };
+    safeActions.dispatchSafe({ type: "GO_TO_PREVIOUS_STEP" });
     return { type: "GO_TO_PREVIOUS_STEP" };
   }, [actions]);
 
   const jumpToStep = React.useCallback(
     (stepId: string): Result<{ type: string; payload: string }, string> => {
-      if (actions._tag !== "Some")
-        return failure("Multistep context not available");
+      const safeActions = actions._tag === "Some" && actions.value;
+      if (!safeActions) return failure("Multistep context not available");
       const jumpIndex = findStepIndex(steps, stepId);
       const navResult = canNavigateToStep(
         steps,
@@ -899,7 +905,7 @@ export function useStepNavigation(): Result<
         data.completedSteps
       );
       if (navResult._tag === "Failure") return failure(navResult.error);
-      actions.value.dispatchSafe({ type: "JUMP_TO_STEP", payload: stepId });
+      safeActions.dispatchSafe({ type: "JUMP_TO_STEP", payload: stepId });
       return success({ type: "JUMP_TO_STEP", payload: stepId });
     },
     [actions, steps, data.completedSteps]
@@ -907,15 +913,15 @@ export function useStepNavigation(): Result<
 
   const goToStep = React.useCallback(
     (stepIndex: number): Result<{ type: string; payload: number }, string> => {
-      if (actions._tag !== "Some")
-        return failure("Multistep context not available");
+      const safeActions = actions._tag === "Some" && actions.value;
+      if (!safeActions) return failure("Multistep context not available");
       const navResult = canNavigateToStep(
         steps,
         stepIndex,
         data.completedSteps
       );
       if (navResult._tag === "Failure") return failure(navResult.error);
-      actions.value.dispatchSafe({ type: "GO_TO_STEP", payload: stepIndex });
+      safeActions.dispatchSafe({ type: "GO_TO_STEP", payload: stepIndex });
       return success({ type: "GO_TO_STEP", payload: stepIndex });
     },
     [actions, steps, data.completedSteps]
