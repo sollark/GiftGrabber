@@ -741,9 +741,11 @@ export const useStepValidation = () => {
   const currentStepId = useMultistepSelector(
     (state: MultistepState["data"]) => state.currentStepId
   );
-  const steps = useMultistepSelector(
-    (state: MultistepState["data"]) => state.steps
+  // Unwrap Maybe for steps
+  const maybeSteps = useMultistepSelector(
+    (state: MultistepState) => state.data.steps
   );
+  const steps = Array.isArray(maybeSteps) ? maybeSteps : [];
   const stepData = useMultistepSelector(
     (state: MultistepState["data"]) => state.stepData
   );
@@ -812,85 +814,119 @@ export const useStepValidation = () => {
 /**
  * Hook for step navigation
  */
-export function useStepNavigation() {
-  const contextValue = React.useContext(MultistepContext);
-  if (!contextValue || !contextValue.data) {
-    // Defensive: return safe defaults if context is not available
-    return {
-      currentStepIndex: 0,
-      currentStepId: "",
-      currentStep: null,
-      canGoBack: false,
-      canGoNext: false,
-      canComplete: false,
-      progress: 0,
-      goToNextStep: () => failure(new Error("Context not available")),
-      goToPreviousStep: () => failure(new Error("Context not available")),
-      jumpToStep: () => failure(new Error("Context not available")),
-      goToStep: () => failure(new Error("Context not available")),
-      stepCount: 0,
-    };
+export function useStepNavigation(): Result<
+  {
+    currentStepIndex: number;
+    currentStepId: string;
+    currentStep: StepDefinition | null;
+    canGoBack: boolean;
+    canGoNext: boolean;
+    canComplete: boolean;
+    progress: number;
+    goToNextStep: () => Result<{ type: string; payload?: unknown }, string>;
+    goToPreviousStep: () => { type: string };
+    jumpToStep: (
+      stepId: string
+    ) => Result<{ type: string; payload?: unknown }, string>;
+    goToStep: (
+      stepIndex: number
+    ) => Result<{ type: string; payload?: unknown }, string>;
+    stepCount: number;
+  },
+  Error
+> {
+  // Use selector to get state data (unwrap Maybe)
+  // Selector returns Maybe<MultistepState>, need .value.data
+  const maybeData = useMultistepSelector((state: MultistepState) => state);
+  const actions = useMultistepActions();
+  if (
+    !maybeData ||
+    maybeData._tag !== "Some" ||
+    !maybeData.value ||
+    !maybeData.value.data ||
+    !Array.isArray(maybeData.value.data.steps)
+  ) {
+    // Debug output for context issues
+    // eslint-disable-next-line no-console
+    console.error(
+      "useStepNavigation: state data is missing or invalid",
+      maybeData
+    );
+    return failure(new Error("Multistep state data not available"));
   }
-  const { data } = contextValue;
-  // Use plain values for steps and currentStepIndex
+  const data = maybeData.value.data;
+
+  // Debug output for steps and state
+  // eslint-disable-next-line no-console
+  console.log("useStepNavigation: steps", data.steps);
+  // eslint-disable-next-line no-console
+  console.log("useStepNavigation: currentStepIndex", data.currentStepIndex);
   const steps = data.steps;
   const currentStepIndex = data.currentStepIndex;
-  // Defensive checks for array and index
   const currentStep =
     Array.isArray(steps) && typeof currentStepIndex === "number"
       ? steps[currentStepIndex] ?? null
       : null;
-  const goToNextStep = React.useCallback(() => {
+
+  // Navigation actions now dispatch
+  const goToNextStep = React.useCallback((): Result<
+    { type: string },
+    string
+  > => {
+    if (actions._tag !== "Some")
+      return failure("Multistep context not available");
     const nextIndex = currentStepIndex + 1;
     const navResult = canNavigateToStep(steps, nextIndex, data.completedSteps);
-    if (navResult._tag === "Failure") return navResult;
-    return {
-      type: "GO_TO_NEXT_STEP",
-    };
-  }, [currentStepIndex, steps, data.completedSteps]);
+    if (navResult._tag === "Failure") return failure(navResult.error);
+    actions.value.dispatchSafe({ type: "GO_TO_NEXT_STEP" });
+    return success({ type: "GO_TO_NEXT_STEP" });
+  }, [actions, currentStepIndex, steps, data.completedSteps]);
+
   const goToPreviousStep = React.useCallback(() => {
-    return {
-      type: "GO_TO_PREVIOUS_STEP",
-    };
-  }, []);
+    if (actions._tag !== "Some") return { type: "GO_TO_PREVIOUS_STEP" };
+    actions.value.dispatchSafe({ type: "GO_TO_PREVIOUS_STEP" });
+    return { type: "GO_TO_PREVIOUS_STEP" };
+  }, [actions]);
+
   const jumpToStep = React.useCallback(
-    (stepId: string) => {
+    (stepId: string): Result<{ type: string; payload: string }, string> => {
+      if (actions._tag !== "Some")
+        return failure("Multistep context not available");
       const jumpIndex = findStepIndex(steps, stepId);
       const navResult = canNavigateToStep(
         steps,
         jumpIndex,
         data.completedSteps
       );
-      if (navResult._tag === "Failure") return navResult;
-      return {
-        type: "JUMP_TO_STEP",
-        payload: stepId,
-      };
+      if (navResult._tag === "Failure") return failure(navResult.error);
+      actions.value.dispatchSafe({ type: "JUMP_TO_STEP", payload: stepId });
+      return success({ type: "JUMP_TO_STEP", payload: stepId });
     },
-    [steps, data.completedSteps]
+    [actions, steps, data.completedSteps]
   );
+
   const goToStep = React.useCallback(
-    (stepIndex: number) => {
+    (stepIndex: number): Result<{ type: string; payload: number }, string> => {
+      if (actions._tag !== "Some")
+        return failure("Multistep context not available");
       const navResult = canNavigateToStep(
         steps,
         stepIndex,
         data.completedSteps
       );
-      if (navResult._tag === "Failure") return navResult;
-      return {
-        type: "GO_TO_STEP",
-        payload: stepIndex,
-      };
+      if (navResult._tag === "Failure") return failure(navResult.error);
+      actions.value.dispatchSafe({ type: "GO_TO_STEP", payload: stepIndex });
+      return success({ type: "GO_TO_STEP", payload: stepIndex });
     },
-    [steps, data.completedSteps]
+    [actions, steps, data.completedSteps]
   );
-  // Computed: progress percentage
+
   const progress = React.useMemo(() => {
     return steps.length > 0 ? (currentStepIndex + 1) / steps.length : 0;
   }, [steps, currentStepIndex]);
-  // Computed: total step count
   const stepCount = steps.length;
-  return {
+
+  return success({
     currentStepIndex,
     currentStepId: data.currentStepId,
     currentStep,
@@ -903,7 +939,7 @@ export function useStepNavigation() {
     jumpToStep,
     goToStep,
     stepCount,
-  };
+  });
 }
 
 const EnhancedMultistepContextExports = {

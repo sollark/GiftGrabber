@@ -34,7 +34,20 @@ const Applicant: FC = () => {
   );
   // Local state for selected person
   const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
-  const { goToNextStep } = useStepNavigation();
+  const navResult = useStepNavigation();
+  const goToNextStep = React.useMemo(() => {
+    if (navResult._tag === "Success") {
+      return () => {
+        const result = navResult.value.goToNextStep();
+        if (result._tag === "Success") {
+          // Dispatch navigation action here if needed
+        } else {
+          // Handle navigation error (e.g., show notification)
+        }
+      };
+    }
+    return () => {};
+  }, [navResult]);
 
   const findApplicantGift = useCallback(
     (person: Person): Gift | undefined =>

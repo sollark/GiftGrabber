@@ -1,7 +1,21 @@
-// Integration tests for MultistepContext navigation and validation logic
-// Requires: Jest, @testing-library/react, React 19+
+/**
+ * Integration tests for MultistepContext navigation and validation logic
+ *
+ * These tests verify the correct behavior of the multistep form context, including:
+ * - Step navigation (next, previous, jump)
+ * - Validation logic and blocking navigation on errors
+ * - Handling of optional steps and step dependencies
+ * - State updates and context safety
+ *
+ * Test setup uses a custom TestHarness component to expose context hooks for direct assertion.
+ *
+ * Requirements:
+ * - Jest
+ * - @testing-library/react
+ * - React 19+
+ */
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { act } from "react";
 import {
   MultistepProvider,
@@ -52,23 +66,24 @@ describe("MultistepContext integration", () => {
     data: ReturnType<typeof useStepData>;
   }
 
+  /**
+   * TestHarness exposes context hooks to the test callback via onReady.
+   * This allows direct inspection and manipulation of context state and actions.
+   */
   function TestHarness({ onReady }: { onReady: (ctx: ContextHooks) => void }) {
-    const nav = useStepNavigation();
+    const navResult = useStepNavigation();
     const val = useStepValidation();
     const data = useStepData();
     React.useEffect(() => {
-      if (
-        typeof nav.currentStepId === "string" &&
-        typeof nav.currentStepIndex === "number" &&
-        nav.currentStep &&
-        typeof nav.currentStep === "object"
-      ) {
-        onReady({ nav, val, data });
-      }
-    }, [nav, val, data, onReady]);
+      onReady({ nav: navResult, val, data });
+    }, [navResult, val, data, onReady]);
     return null;
   }
 
+  /**
+   * Renders the MultistepProvider and TestHarness, passing context hooks to the test callback.
+   * Used to run assertions after context is initialized.
+   */
   function renderWithContext(assertFn: (ctx: ContextHooks) => void) {
     render(
       <MultistepProvider steps={steps}>
@@ -77,47 +92,148 @@ describe("MultistepContext integration", () => {
     );
   }
 
-  it("navigates between steps correctly", () => {
-    renderWithContext(({ nav }) => {
-      expect(nav.currentStepId).toBe("step1");
-      act(() => nav.goToNextStep());
-      expect(nav.currentStepId).toBe("step2");
-      act(() => nav.goToPreviousStep());
-      expect(nav.currentStepId).toBe("step1");
-      act(() => nav.jumpToStep("step3"));
-      expect(nav.currentStepId).toBe("step3");
+  /**
+   * Verifies that navigation actions (next, previous, jump) update the current step as expected.
+   * Uses waitFor to ensure state updates are reflected before assertions.
+   */
+  it("navigates between steps correctly", async () => {
+    await renderWithContext(async ({ nav }) => {
+      expect(nav._tag).toBe("Success");
+      if (nav._tag === "Success") {
+        expect(nav.value.currentStepId).toBe("step1");
+        act(() => {
+          const result = nav.value.goToNextStep();
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        await waitFor(() => {
+          expect(nav.value.currentStepId).toBe("step2");
+        });
+        act(() => {
+          nav.value.goToPreviousStep();
+        });
+        await waitFor(() => {
+          expect(nav.value.currentStepId).toBe("step1");
+        });
+        act(() => {
+          const result = nav.value.jumpToStep("step3");
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        await waitFor(() => {
+          expect(nav.value.currentStepId).toBe("step3");
+        });
+      }
     });
   });
 
-  it("validates steps and blocks navigation on error", () => {
-    renderWithContext(({ nav, val, data }) => {
-      act(() => val.validateStep("step1"));
-      expect(val.getStepValidation("step1").isValid).toBe(false);
-      act(() => nav.goToNextStep());
-      expect(nav.currentStepId).toBe("step1");
-      act(() => {
-        data.setStepData("step1", "valid");
-        val.validateStep("step1");
-      });
-      expect(val.getStepValidation("step1").isValid).toBe(true);
-      act(() => nav.goToNextStep());
-      expect(nav.currentStepId).toBe("step2");
+  /**
+   * Ensures that validation errors block navigation, and that fixing errors allows navigation.
+   * Triggers validation, checks for errors, updates data, and verifies navigation proceeds.
+   */
+  it("validates steps and blocks navigation on error", async () => {
+    await renderWithContext(async ({ nav, val, data }) => {
+      expect(nav._tag).toBe("Success");
+      if (nav._tag === "Success") {
+        act(() => val.validateStep("step1"));
+        await waitFor(() => {
+          const validationResult1 = val.getStepValidation("step1");
+          expect(validationResult1).not.toBeNull();
+          if (validationResult1) {
+            expect(validationResult1.isValid).toBe(false);
+          }
+        });
+        act(() => {
+          const result = nav.value.goToNextStep();
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        expect(nav.value.currentStepId).toBe("step1");
+        act(() => {
+          data.setStepData("step1", "valid");
+          val.validateStep("step1");
+        });
+        await waitFor(() => {
+          const validationResult2 = val.getStepValidation("step1");
+          expect(validationResult2).not.toBeNull();
+          if (validationResult2) {
+            expect(validationResult2.isValid).toBe(true);
+          }
+        });
+        act(() => {
+          const result = nav.value.goToNextStep();
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        await waitFor(() => {
+          expect(nav.value.currentStepId).toBe("step2");
+        });
+      }
     });
   });
 
-  it("skips optional steps and completes required ones", () => {
-    renderWithContext(({ nav }) => {
-      act(() => nav.goToNextStep());
-      expect(nav.currentStepId).toBe("step2");
-      act(() => nav.jumpToStep("step3"));
-      expect(nav.currentStepId).toBe("step3");
+  /**
+   * Tests skipping optional steps and completing required ones, verifying navigation and state.
+   */
+  it("skips optional steps and completes required ones", async () => {
+    await renderWithContext(async ({ nav }) => {
+      expect(nav._tag).toBe("Success");
+      if (nav._tag === "Success") {
+        act(() => {
+          const result = nav.value.goToNextStep();
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        await waitFor(() => {
+          expect(nav.value.currentStepId).toBe("step2");
+        });
+        act(() => {
+          const result = nav.value.jumpToStep("step3");
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        await waitFor(() => {
+          expect(nav.value.currentStepId).toBe("step3");
+        });
+      }
     });
   });
 
+  /**
+   * Checks that navigation to steps with unmet dependencies is blocked and does not update state.
+   */
   it("prevents navigation to steps with unmet dependencies", () => {
     renderWithContext(({ nav }) => {
-      act(() => nav.jumpToStep("step3"));
-      expect(nav.currentStepId).toBe("step1");
+      expect(nav._tag).toBe("Success");
+      if (nav._tag === "Success") {
+        act(() => {
+          const result = nav.value.jumpToStep("step3");
+          if (result._tag === "Success") {
+            // Navigation succeeded
+          } else {
+            // Navigation failed
+          }
+        });
+        expect(nav.value.currentStepId).toBe("step1");
+      }
     });
   });
 });

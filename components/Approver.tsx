@@ -4,7 +4,7 @@ import { useStepNavigation } from "@/app/contexts/MultistepContext";
 import { useOrderStatus } from "@/app/contexts/OrderContext";
 import { OrderStatus } from "@/components/types/OrderStatus";
 import { Person } from "@/database/models/person.model";
-import { FC, useLayoutEffect } from "react";
+import React, { FC, useLayoutEffect } from "react";
 import ConditionalRender from "./ConditionalRender";
 import PersonAutocomplete from "./form/PersonAutocomplete";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
@@ -12,7 +12,31 @@ import { useApproverSelection } from "@/app/contexts/ApproverContext";
 const Approver: FC = () => {
   const { order } = useOrderStatus();
   const { approverList, selectApprover } = useApproverSelection();
-  const { goToNextStep, jumpToStep } = useStepNavigation();
+  const navResult = useStepNavigation();
+  const goToNextStep = React.useCallback(() => {
+    if (navResult._tag === "Success") {
+      const result = navResult.value.goToNextStep();
+      if (result._tag === "Success") {
+        // Dispatch navigation action here if needed
+      } else {
+        // Handle navigation error (e.g., show notification)
+      }
+    }
+  }, [navResult]);
+
+  const jumpToStep = React.useCallback(
+    (stepId: string) => {
+      if (navResult._tag === "Success") {
+        const result = navResult.value.jumpToStep(stepId);
+        if (result._tag === "Success") {
+          // Dispatch navigation action here if needed
+        } else {
+          // Handle navigation error (e.g., show notification)
+        }
+      }
+    },
+    [navResult]
+  );
 
   useLayoutEffect(() => {
     const orderValue = order._tag === "Some" ? order.value : null;

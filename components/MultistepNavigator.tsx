@@ -18,8 +18,11 @@ interface MultistepNavigatorProps {
  * Uses memo for performance and strict typing.
  */
 const StepRenderer: FC<{ children: ReactNode[] }> = ({ children }) => {
-  const { currentStepIndex } = useStepNavigation();
-  const currentStepContent = children[currentStepIndex] || null;
+  const navResult = useStepNavigation();
+  let currentStepContent = null;
+  if (navResult._tag === "Success") {
+    currentStepContent = children[navResult.value.currentStepIndex] || null;
+  }
   return <>{currentStepContent}</>;
 };
 
