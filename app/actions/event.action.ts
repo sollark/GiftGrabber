@@ -1,3 +1,5 @@
+"use server";
+
 /**
  * Logs event-related errors
  */
@@ -17,7 +19,6 @@ const logEventRetrieval = (): void => {
  * Handles event creation, querying, and population of related data (applicants, approvers, gifts).
  * Exports functions for use in API routes and server components.
  */
-("use server");
 
 import { parseEventData } from "@/utils/parseEventData";
 import EventModel, { Event } from "@/database/models/event.model";
