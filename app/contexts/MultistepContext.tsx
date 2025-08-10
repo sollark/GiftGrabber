@@ -104,21 +104,13 @@ const getCurrentStep = (
 
 const validateStep = (
   step: StepDefinition,
-  stepData: any,
-  formContext: Record<string, any>
+  stepData: any
 ): StepValidationResult => {
   const errors: string[] = [];
-  const warnings: string[] = [];
-
-  if (!step.validationRules) {
-    return { isValid: true, errors, warnings };
-  }
-
+  if (!step.validationRules) return { isValid: true, errors, warnings: [] };
   for (const rule of step.validationRules) {
     try {
-      if (!rule.validator(stepData)) {
-        errors.push(rule.message);
-      }
+      if (!rule.validator(stepData)) errors.push(rule.message);
     } catch (error) {
       errors.push(
         `Validation error: ${
@@ -128,11 +120,8 @@ const validateStep = (
     }
   }
 
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-  };
+  // TODO why i have warnings here?
+  return { isValid: errors.length === 0, errors, warnings: [] };
 };
 
 const shouldSkipStep = (
@@ -140,7 +129,6 @@ const shouldSkipStep = (
   formContext: Record<string, any>
 ): boolean => {
   if (!step.skipCondition) return false;
-
   try {
     return step.skipCondition(formContext);
   } catch {
@@ -154,30 +142,26 @@ const canNavigateToStep = (
   completedSteps: Set<string>,
   formContext: Record<string, any>
 ): Result<boolean, string> => {
-  if (targetStepIndex < 0 || targetStepIndex >= steps.length) {
+  if (targetStepIndex < 0 || targetStepIndex >= steps.length)
     return failure("Invalid step index");
-  }
-
   const targetStep = steps[targetStepIndex];
-
-  // Check dependencies
   if (targetStep.dependencies) {
     for (const depId of targetStep.dependencies) {
       if (!completedSteps.has(depId)) {
         const depStep = steps.find((s) => s.id === depId);
         return failure(
-          `Step "${targetStep.title}" requires "${
+          `Step \"${targetStep.title}\" requires \"${
             depStep?.title || depId
-          }" to be completed first`
+          }\" to be completed first`
         );
       }
     }
   }
 
-  // Check if step should be skipped
+  // TODO why i need this check? do i use it anywhere
   if (shouldSkipStep(targetStep, formContext)) {
     return failure(
-      `Step "${targetStep.title}" should be skipped under current conditions`
+      `Step \"${targetStep.title}\" should be skipped under current conditions`
     );
   }
 
@@ -221,11 +205,9 @@ const multistepReducer = (
   action: MultistepAction
 ): Result<MultistepState, Error> => {
   switch (action.type) {
-    case "SET_STEPS":
-      if (!Array.isArray(action.payload)) {
+    case "SET_STEPS": {
+      if (!Array.isArray(action.payload))
         return failure(new Error("Steps must be an array"));
-      }
-
       const newSteps = action.payload as StepDefinition[];
       const firstValidIndex = newSteps.findIndex(
         (step) => !step.skipCondition?.(state.data.formContext)
@@ -244,8 +226,8 @@ const multistepReducer = (
           canComplete: false,
         },
       });
-
-    case "GO_TO_STEP":
+    }
+    case "GO_TO_STEP": {
       const targetIndex = action.payload as number;
       const navigationCheck = canNavigateToStep(
         state.data.steps,
@@ -253,16 +235,9 @@ const multistepReducer = (
         state.data.completedSteps,
         state.data.formContext
       );
-
-      if (navigationCheck._tag === "Failure") {
+      if (navigationCheck._tag === "Failure")
         return failure(new Error(navigationCheck.error));
-      }
-
       const targetStep = state.data.steps[targetIndex];
-      const newCanGoBack = targetIndex > 0;
-      const newCanGoNext = targetIndex < state.data.steps.length - 1;
-      const newCanComplete =
-        state.data.completedSteps.size === state.data.steps.length - 1;
 
       return success({
         ...state,
@@ -270,9 +245,10 @@ const multistepReducer = (
           ...state.data,
           currentStepIndex: targetIndex,
           currentStepId: targetStep.id,
-          canGoBack: newCanGoBack,
-          canGoNext: newCanGoNext,
-          canComplete: newCanComplete,
+          canGoBack: targetIndex > 0,
+          canGoNext: targetIndex < state.data.steps.length - 1,
+          canComplete:
+            state.data.completedSteps.size === state.data.steps.length - 1,
           navigationHistory: [
             ...state.data.navigationHistory,
             {
@@ -284,24 +260,19 @@ const multistepReducer = (
           ],
         },
       });
-
-    case "GO_TO_NEXT_STEP":
+    }
+    case "GO_TO_NEXT_STEP": {
       const nextIndex = state.data.currentStepIndex + 1;
-      if (nextIndex >= state.data.steps.length) {
+      if (nextIndex >= state.data.steps.length)
         return failure(new Error("Already at the last step"));
-      }
-
       const nextNavigationCheck = canNavigateToStep(
         state.data.steps,
         nextIndex,
         state.data.completedSteps,
         state.data.formContext
       );
-
-      if (nextNavigationCheck._tag === "Failure") {
+      if (nextNavigationCheck._tag === "Failure")
         return failure(new Error(nextNavigationCheck.error));
-      }
-
       const nextStep = state.data.steps[nextIndex];
 
       return success({
@@ -325,13 +296,10 @@ const multistepReducer = (
           ],
         },
       });
-
-    case "GO_TO_PREVIOUS_STEP":
+    }
+    case "GO_TO_PREVIOUS_STEP": {
       const prevIndex = state.data.currentStepIndex - 1;
-      if (prevIndex < 0) {
-        return failure(new Error("Already at the first step"));
-      }
-
+      if (prevIndex < 0) return failure(new Error("Already at the first step"));
       const prevStep = state.data.steps[prevIndex];
 
       return success({
@@ -354,25 +322,20 @@ const multistepReducer = (
           ],
         },
       });
-
-    case "JUMP_TO_STEP":
+    }
+    case "JUMP_TO_STEP": {
       const jumpStepId = action.payload as string;
       const jumpIndex = findStepIndex(state.data.steps, jumpStepId);
-
-      if (jumpIndex === -1) {
-        return failure(new Error(`Step with id "${jumpStepId}" not found`));
-      }
-
+      if (jumpIndex === -1)
+        return failure(new Error(`Step with id \"${jumpStepId}\" not found`));
       const jumpNavigationCheck = canNavigateToStep(
         state.data.steps,
         jumpIndex,
         state.data.completedSteps,
         state.data.formContext
       );
-
-      if (jumpNavigationCheck._tag === "Failure") {
+      if (jumpNavigationCheck._tag === "Failure")
         return failure(new Error(jumpNavigationCheck.error));
-      }
 
       return success({
         ...state,
@@ -395,33 +358,27 @@ const multistepReducer = (
           ],
         },
       });
-
-    case "COMPLETE_STEP":
+    }
+    case "COMPLETE_STEP": {
       const completeStepId =
         (action.payload as string) || state.data.currentStepId;
       const newCompletedSteps = new Set(state.data.completedSteps);
       newCompletedSteps.add(completeStepId);
-
-      const allStepsCompleted =
-        newCompletedSteps.size === state.data.steps.length;
 
       return success({
         ...state,
         data: {
           ...state.data,
           completedSteps: newCompletedSteps,
-          canComplete: allStepsCompleted,
+          canComplete: newCompletedSteps.size === state.data.steps.length,
         },
       });
-
-    case "SKIP_STEP":
+    }
+    case "SKIP_STEP": {
       const skipStepId = (action.payload as string) || state.data.currentStepId;
       const stepToSkip = state.data.steps.find((s) => s.id === skipStepId);
-
-      if (!stepToSkip?.isOptional) {
+      if (!stepToSkip?.isOptional)
         return failure(new Error("Cannot skip required step"));
-      }
-
       const newSkippedSteps = new Set(state.data.skippedSteps);
       newSkippedSteps.add(skipStepId);
 
@@ -441,8 +398,8 @@ const multistepReducer = (
           ],
         },
       });
-
-    case "UNSKIP_STEP":
+    }
+    case "UNSKIP_STEP": {
       const unskipStepId = action.payload as string;
       const newUnskippedSteps = new Set(state.data.skippedSteps);
       newUnskippedSteps.delete(unskipStepId);
@@ -454,12 +411,11 @@ const multistepReducer = (
           skippedSteps: newUnskippedSteps,
         },
       });
-
-    case "SET_STEP_DATA":
+    }
+    case "SET_STEP_DATA": {
       const { stepId, data } = action.payload || {};
-      if (!stepId) {
+      if (!stepId)
         return failure(new Error("Step ID required for setting data"));
-      }
 
       return success({
         ...state,
@@ -471,12 +427,11 @@ const multistepReducer = (
           },
         },
       });
-
-    case "UPDATE_STEP_DATA":
+    }
+    case "UPDATE_STEP_DATA": {
       const { stepId: updateStepId, data: updateData } = action.payload || {};
-      if (!updateStepId) {
+      if (!updateStepId)
         return failure(new Error("Step ID required for updating data"));
-      }
 
       return success({
         ...state,
@@ -491,15 +446,12 @@ const multistepReducer = (
           },
         },
       });
-
-    case "CLEAR_STEP_DATA":
+    }
+    case "CLEAR_STEP_DATA": {
       const clearStepId = action.payload as string;
-      if (!clearStepId) {
+      if (!clearStepId)
         return failure(new Error("Step ID required for clearing data"));
-      }
-
-      const { [clearStepId]: removed, ...remainingStepData } =
-        state.data.stepData;
+      const { [clearStepId]: _, ...remainingStepData } = state.data.stepData;
 
       return success({
         ...state,
@@ -508,22 +460,20 @@ const multistepReducer = (
           stepData: remainingStepData,
         },
       });
-
-    case "VALIDATE_STEP":
+    }
+    case "VALIDATE_STEP": {
       const { stepId: validateStepId, data: validateData } =
         action.payload || {};
       const stepToValidate = state.data.steps.find(
         (s) => s.id === validateStepId
       );
-
-      if (!stepToValidate) {
-        return failure(new Error(`Step with id "${validateStepId}" not found`));
-      }
-
+      if (!stepToValidate)
+        return failure(
+          new Error(`Step with id \"${validateStepId}\" not found`)
+        );
       const validationResult = validateStep(
         stepToValidate,
-        validateData || state.data.stepData[validateStepId],
-        state.data.formContext
+        validateData || state.data.stepData[validateStepId]
       );
 
       return success({
@@ -536,15 +486,13 @@ const multistepReducer = (
           },
         },
       });
-
-    case "VALIDATE_ALL_STEPS":
+    }
+    case "VALIDATE_ALL_STEPS": {
       const allValidationResults: Record<string, StepValidationResult> = {};
-
       for (const step of state.data.steps) {
         allValidationResults[step.id] = validateStep(
           step,
-          state.data.stepData[step.id],
-          state.data.formContext
+          state.data.stepData[step.id]
         );
       }
 
@@ -555,11 +503,10 @@ const multistepReducer = (
           validationResults: allValidationResults,
         },
       });
-
-    case "SET_FORM_CONTEXT":
-      if (!action.payload || typeof action.payload !== "object") {
+    }
+    case "SET_FORM_CONTEXT": {
+      if (!action.payload || typeof action.payload !== "object")
         return failure(new Error("Form context must be an object"));
-      }
 
       return success({
         ...state,
@@ -568,11 +515,10 @@ const multistepReducer = (
           formContext: action.payload as Record<string, any>,
         },
       });
-
-    case "UPDATE_FORM_CONTEXT":
-      if (!action.payload || typeof action.payload !== "object") {
+    }
+    case "UPDATE_FORM_CONTEXT": {
+      if (!action.payload || typeof action.payload !== "object")
         return failure(new Error("Form context update must be an object"));
-      }
 
       return success({
         ...state,
@@ -584,16 +530,16 @@ const multistepReducer = (
           },
         },
       });
-
-    case "RESET_FORM":
+    }
+    case "RESET_FORM": {
       const resetSteps =
         (action.payload as StepDefinition[]) || state.data.steps;
-      return success(createInitialState(resetSteps));
 
-    case "ADD_NAVIGATION_ENTRY":
-      if (!action.payload || typeof action.payload !== "object") {
+      return success(createInitialState(resetSteps));
+    }
+    case "ADD_NAVIGATION_ENTRY": {
+      if (!action.payload || typeof action.payload !== "object")
         return failure(new Error("Navigation entry must be an object"));
-      }
 
       return success({
         ...state,
@@ -608,7 +554,7 @@ const multistepReducer = (
           ],
         },
       });
-
+    }
     default:
       return failure(new Error(`Unknown action type: ${action.type}`));
   }
@@ -623,7 +569,7 @@ const multistepValidation = validationMiddleware<
   MultistepAction
 >((action, state) => {
   switch (action.type) {
-    case "GO_TO_NEXT_STEP":
+    case "GO_TO_NEXT_STEP": {
       const currentStep = getCurrentStep(
         state.data.steps,
         state.data.currentStepIndex
@@ -631,21 +577,20 @@ const multistepValidation = validationMiddleware<
       if (currentStep._tag === "Some") {
         const currentValidation =
           state.data.validationResults[currentStep.value.id];
-        if (currentValidation && !currentValidation.isValid) {
+        if (currentValidation && !currentValidation.isValid)
           return failure("Current step has validation errors");
-        }
       }
-      return success(true);
 
-    case "COMPLETE_STEP":
+      return success(true);
+    }
+    case "COMPLETE_STEP": {
       const stepToComplete =
         (action.payload as string) || state.data.currentStepId;
       const stepValidation = state.data.validationResults[stepToComplete];
-      if (stepValidation && !stepValidation.isValid) {
+      if (stepValidation && !stepValidation.isValid)
         return failure("Cannot complete step with validation errors");
-      }
       return success(true);
-
+    }
     default:
       return success(true);
   }
@@ -750,64 +695,58 @@ export const useStepNavigation = () => {
     (state: MultistepState["data"]) => state.steps
   );
 
+  // Navigation actions
   const goToNextStep = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
-        type: "GO_TO_NEXT_STEP",
-      });
-    }
-    return failure(new Error("Multistep context not available"));
+    if (actions._tag !== "Some")
+      return failure(new Error("Multistep context not available"));
+    return actions.value.dispatchSafe({ type: "GO_TO_NEXT_STEP" });
   }, [actions]);
 
   const goToPreviousStep = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
-        type: "GO_TO_PREVIOUS_STEP",
-      });
-    }
-    return failure(new Error("Multistep context not available"));
+    if (actions._tag !== "Some")
+      return failure(new Error("Multistep context not available"));
+    return actions.value.dispatchSafe({ type: "GO_TO_PREVIOUS_STEP" });
   }, [actions]);
 
   const jumpToStep = React.useCallback(
     (stepId: string) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "JUMP_TO_STEP",
-          payload: stepId,
-        });
-      }
-      return failure(new Error("Multistep context not available"));
+      if (actions._tag !== "Some")
+        return failure(new Error("Multistep context not available"));
+      return actions.value.dispatchSafe({
+        type: "JUMP_TO_STEP",
+        payload: stepId,
+      });
     },
     [actions]
   );
 
   const goToStep = React.useCallback(
     (stepIndex: number) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "GO_TO_STEP",
-          payload: stepIndex,
-        });
-      }
-      return failure(new Error("Multistep context not available"));
+      if (actions._tag !== "Some")
+        return failure(new Error("Multistep context not available"));
+      return actions.value.dispatchSafe({
+        type: "GO_TO_STEP",
+        payload: stepIndex,
+      });
     },
     [actions]
   );
 
-  // Computed values
+  // Computed: current step object
   const currentStep = React.useMemo(() => {
     if (steps._tag !== "Some") return null;
-    return (
-      steps.value[
-        currentStepIndex._tag === "Some" ? currentStepIndex.value : 0
-      ] || null
-    );
+    const idx = currentStepIndex._tag === "Some" ? currentStepIndex.value : 0;
+    return steps.value[idx] || null;
   }, [steps, currentStepIndex]);
 
+  // Computed: progress percentage
   const progress = React.useMemo(() => {
     if (steps._tag !== "Some" || currentStepIndex._tag !== "Some") return 0;
     return ((currentStepIndex.value + 1) / steps.value.length) * 100;
   }, [steps, currentStepIndex]);
+
+  // Computed: total step count
+  const stepCount = steps._tag === "Some" ? steps.value.length : 0;
 
   return {
     currentStepIndex,
@@ -821,7 +760,7 @@ export const useStepNavigation = () => {
     goToPreviousStep,
     jumpToStep,
     goToStep,
-    stepCount: steps._tag === "Some" ? steps.value.length : 0,
+    stepCount,
   };
 };
 
@@ -911,34 +850,34 @@ export const useStepValidation = () => {
     (state: MultistepState["data"]) => state.currentStepId
   );
 
+  // Validate a single step
   const validateStep = React.useCallback(
     (stepId: string, data?: any) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
-          type: "VALIDATE_STEP",
-          payload: { stepId, data },
-        });
-      }
-      return failure(new Error("Multistep context not available"));
+      if (actions._tag !== "Some")
+        return failure(new Error("Multistep context not available"));
+      return actions.value.dispatchSafe({
+        type: "VALIDATE_STEP",
+        payload: { stepId, data },
+      });
     },
     [actions]
   );
 
+  // Validate all steps
   const validateAllSteps = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
-        type: "VALIDATE_ALL_STEPS",
-      });
-    }
-    return failure(new Error("Multistep context not available"));
+    if (actions._tag !== "Some")
+      return failure(new Error("Multistep context not available"));
+    return actions.value.dispatchSafe({ type: "VALIDATE_ALL_STEPS" });
   }, [actions]);
 
+  // Get validation result for current step
   const getCurrentStepValidation = React.useCallback(() => {
     if (validationResults._tag !== "Some" || currentStepId._tag !== "Some")
       return null;
     return validationResults.value[currentStepId.value] || null;
   }, [validationResults, currentStepId]);
 
+  // Get validation result for a specific step
   const getStepValidation = React.useCallback(
     (stepId: string) => {
       if (validationResults._tag !== "Some") return null;
@@ -950,16 +889,20 @@ export const useStepValidation = () => {
   // Computed values
   const hasValidationErrors = React.useMemo(() => {
     if (validationResults._tag !== "Some") return false;
-    return Object.values(validationResults.value).some(
-      (result: any) => !result.isValid
-    );
+    const results = Object.values(
+      validationResults.value
+    ) as StepValidationResult[];
+
+    return results.some((result) => !result.isValid);
   }, [validationResults]);
 
+  // Computed: are all steps valid?
   const allStepsValid = React.useMemo(() => {
     if (validationResults._tag !== "Some") return false;
-    return Object.values(validationResults.value).every(
-      (result: any) => result.isValid
-    );
+    const results = Object.values(
+      validationResults.value
+    ) as StepValidationResult[];
+    return results.every((result) => result.isValid);
   }, [validationResults]);
 
   return {
