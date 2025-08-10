@@ -1,3 +1,9 @@
+/**
+ * @file eventService.ts
+ * @description Service layer for event creation logic in GiftGrabber.
+ * Contains helpers and orchestration functions for creating persons, gifts, and event records.
+ * Used by server actions to modularize business logic and database operations.
+ */
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
@@ -24,6 +30,13 @@ interface CreateEventData {
   approverIds: string[];
 }
 
+/**
+ * Helper: Creates person records for a list of person data (applicants or approvers).
+ * @param personList - Array of person objects without _id
+ * @returns Promise resolving to array of created person IDs (as strings)
+ * @remarks
+ * Used for batch creation of applicants/approvers. Pure function: only creates and returns IDs.
+ */
 const createPersonList = async (
   personList: PersonWithoutId[]
 ): Promise<string[]> => {
@@ -35,6 +48,13 @@ const createPersonList = async (
   );
 };
 
+/**
+ * Helper: Creates gift records for a list of applicant IDs.
+ * @param applicantIds - Array of applicant IDs
+ * @returns Promise resolving to array of created gift IDs (as strings)
+ * @remarks
+ * Used for batch creation of gifts for each applicant. Pure function: only creates and returns IDs.
+ */
 const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
   return Promise.all(
     applicantIds.map(async (applicantId) => {
@@ -44,6 +64,13 @@ const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
   );
 };
 
+/**
+ * Helper: Creates the actual event record in the database.
+ * @param eventData - Object containing all event creation fields and related IDs
+ * @returns Promise resolving to the created Event document
+ * @remarks
+ * Used after all related persons and gifts are created. Pure function: only creates and returns the event document.
+ */
 const createEventRecord = async (
   eventData: CreateEventData
 ): Promise<Event> => {
@@ -58,7 +85,6 @@ const createEventRecord = async (
     giftIds,
     approverIds,
   } = eventData;
-
   return EventModel.create({
     name,
     email,
@@ -72,6 +98,14 @@ const createEventRecord = async (
   });
 };
 
+/**
+ * Orchestrator: Creates applicants and approvers, returning their IDs.
+ * @param applicantList - Array of applicant objects
+ * @param approverList - Array of approver objects
+ * @returns Promise resolving to object with applicantIds and approverIds
+ * @remarks
+ * Used by event creation workflow to batch-create related persons.
+ */
 export const createApplicantsAndApprovers = async (
   applicantList: PersonWithoutId[],
   approverList: PersonWithoutId[]
@@ -81,6 +115,13 @@ export const createApplicantsAndApprovers = async (
   return { applicantIds, approverIds };
 };
 
+/**
+ * Orchestrator: Creates a new event with all related applicants, approvers, and gifts.
+ * @param event - The event form data containing all necessary information
+ * @returns Promise<boolean | undefined> - True if event was created successfully, undefined on error
+ * @remarks
+ * Main entry point for event creation. Handles all related entity creation and error handling.
+ */
 export const createEventInternal = async (
   event: EventForm
 ): Promise<boolean | undefined> => {
@@ -94,7 +135,6 @@ export const createEventInternal = async (
     applicantList,
     approverList,
   } = event;
-
   try {
     const { applicantIds, approverIds } = await createApplicantsAndApprovers(
       applicantList,

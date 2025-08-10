@@ -1,5 +1,12 @@
+/**
+ * @file event.action.ts
+ * @description Server-side actions and data access logic for event operations in GiftGrabber.
+ * Handles event creation, querying, and population of related data (applicants, approvers, gifts).
+ * Exports functions for use in API routes and server components.
+ */
 "use server";
 
+import { parseEventData } from "@/utils/parseEventData";
 import EventModel, { Event } from "@/database/models/event.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import GiftModel from "@/database/models/gift.model";
@@ -64,15 +71,15 @@ import {
 } from "@/types/event.types";
 
 /**
- * Creates a new event with associated applicants, approvers, and gifts
+ * Creates a new event with associated applicants, approvers, and gifts.
+ * Orchestrates creation of persons, gifts, and event record in the database.
  * @param event - The event form data containing all necessary information
- * @returns Promise<boolean> - True if event was created successfully, undefined on error
+ * @returns Promise<boolean | undefined> - True if event was created successfully, undefined on error
  */
-
 export const createEvent = withDatabaseBoolean(createEventInternal);
 
 /**
- * Gets event applicants with populated data
+ * Fetches event applicants with populated applicant data.
  * @param eventId - The unique identifier for the event
  * @returns Promise<Event | undefined> - Event with populated applicants or undefined on error
  */
@@ -83,11 +90,9 @@ const getEventApplicantsInternal = async (
     const event = await populateEventApplicants(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPLICANTS)
     );
-
     if (!event) {
       throw new Error(ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
-
     return parseEventData(event);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
@@ -95,10 +100,13 @@ const getEventApplicantsInternal = async (
   }
 };
 
+/**
+ * Action: Gets event applicants with populated data for use in API/server components.
+ */
 export const getEventApplicants = withDatabase(getEventApplicantsInternal);
 
 /**
- * Gets event approvers list
+ * Fetches event approvers list with populated approver data.
  * @param eventId - The unique identifier for the event
  * @returns Promise<Person[]> - Array of approver persons or empty array on error
  */
@@ -109,11 +117,9 @@ const getEventApproversInternal = async (
     const event = await populateEventApprovers(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPROVERS)
     );
-
     if (!event) {
       throw new Error(ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
-
     return parseEventData(event.approverList);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_EVENT_APPROVERS);
@@ -122,10 +128,13 @@ const getEventApproversInternal = async (
   }
 };
 
+/**
+ * Action: Gets event approvers list for use in API/server components.
+ */
 export const getEventApprovers = withDatabaseArray(getEventApproversInternal);
 
 /**
- * Gets complete event details with all populated relationships
+ * Fetches complete event details with all populated relationships (applicants, gifts, approvers).
  * @param eventId - The unique identifier for the event
  * @returns Promise<Event | null> - Complete event data or null on error
  */
@@ -134,15 +143,12 @@ const getEventDetailsInternal = async (
 ): Promise<Event | null> => {
   try {
     console.log(LOG_MESSAGES.GET_EVENT_DETAILS, eventId);
-
     const event = await populateEvent(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.DETAILS)
     );
-
     if (!event) {
       throw new Error(ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
-
     return parseEventData(event);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_EVENT_DETAILS);
@@ -151,10 +157,13 @@ const getEventDetailsInternal = async (
   }
 };
 
+/**
+ * Action: Gets complete event details for use in API/server components.
+ */
 export const getEventDetails = withDatabaseNullable(getEventDetailsInternal);
 
 /**
- * Gets all events from the database
+ * Fetches all events from the database.
  * @returns Promise<Event[] | undefined> - Array of all events or undefined on error
  */
 const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
@@ -167,6 +176,9 @@ const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
   }
 };
 
+/**
+ * Action: Gets all events for use in API/server components.
+ */
 export const getAllEvents = withDatabase(getAllEventsInternal);
 
 import {
@@ -178,8 +190,11 @@ import {
 // Helper Functions
 
 /**
- * Creates person records for a list of person data (applicants or approvers).
- * Pure function: only creates and returns IDs.
+ * Helper: Creates person records for a list of person data (applicants or approvers).
+ * @param personList - Array of person objects without _id
+ * @returns Promise resolving to array of created person IDs (as strings)
+ * @remarks
+ * Used for batch creation of applicants/approvers. Pure function: only creates and returns IDs.
  */
 const createPersonList = async (
   personList: PersonWithoutId[]
@@ -193,8 +208,11 @@ const createPersonList = async (
 };
 
 /**
- * Creates gift records for a list of applicant IDs.
- * Pure function: only creates and returns gift IDs.
+ * Helper: Creates gift records for a list of applicant IDs.
+ * @param applicantIds - Array of applicant IDs
+ * @returns Promise resolving to array of created gift IDs (as strings)
+ * @remarks
+ * Used for batch creation of gifts for each applicant. Pure function: only creates and returns IDs.
  */
 const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
   return Promise.all(
@@ -204,37 +222,3 @@ const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
     })
   );
 };
-
-/**
- * Creates the actual event record in the database.
- * Pure function: only creates and returns the event document.
- */
-const createEventRecord = async (
-  eventData: CreateEventData
-): Promise<Event> => {
-  const {
-    name,
-    email,
-    eventId,
-    ownerId,
-    eventQRCodeBase64,
-    ownerIdQRCodeBase64,
-    applicantIds,
-    giftIds,
-    approverIds,
-  } = eventData;
-
-  return EventModel.create({
-    name,
-    email,
-    eventId,
-    ownerId,
-    eventQRCodeBase64,
-    ownerIdQRCodeBase64,
-    applicantList: applicantIds,
-    giftList: giftIds,
-    approverList: approverIds,
-  });
-};
-
-import { parseEventData } from "@/utils/parseEventData";
