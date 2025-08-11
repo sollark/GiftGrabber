@@ -1,7 +1,5 @@
 import { getEventDetails } from "@/app/actions/event.action";
-import ApproverList from "@/components/ApproverList";
-import { Gift } from "@/database/models/gift.model";
-import { Person } from "@/database/models/person.model";
+import EventDetailsClient from "./EventDetailsClient";
 
 export default async function EventDetails({
   params,
@@ -16,32 +14,10 @@ export default async function EventDetails({
   const { applicantList, giftList, approverList } = event;
 
   return (
-    <div>
-      <h1>Event Details</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Is Grabbed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {applicantList.map((applicant: Person) => (
-            <tr key={applicant._id.toString()}>
-              <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
-              <td>
-                {giftList.find(
-                  (gift: Gift) =>
-                    gift.owner._id.toString() === applicant._id.toString() // ✅ both are now strings
-                )?.receiver
-                  ? "Taken"
-                  : "Available"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <ApproverList personArray={approverList} />
-    </div>
+    <EventDetailsClient
+      applicantList={applicantList}
+      giftList={giftList}
+      approverList={approverList}
+    />
   );
 }

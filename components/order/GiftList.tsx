@@ -1,4 +1,4 @@
-import { FC, memo, useRef, useCallback, useMemo } from "react";
+import React, { FC, memo, useRef, useCallback, useMemo } from "react";
 import { makeOrder } from "@/app/actions/order.action";
 import {
   useApplicantSelection,
@@ -28,9 +28,10 @@ const MESSAGES = {
 } as const;
 
 /**
- * Functional GiftList component.
- * Handles gift list display, removal, and order creation with strict typing and composable error handling.
- * Uses memo for performance.
+ * GiftList - Renders a list of gifts for an applicant.
+ * Props:
+ *   - applicantGifts: Array of gift objects for the applicant
+ *   - onRemoveGift: Function to remove a gift
  */
 const GiftList: FC = () => {
   const router = useRouter();

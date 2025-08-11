@@ -1,6 +1,5 @@
 import { getEventDetails } from "@/app/actions/event.action";
-import Section from "@/components/Section";
-import OrderGifts from "@/components/order/OrderGifts";
+import ApplicantPageClient from "./ApplicantPageClient";
 // User's original type for reference (not used by Next.js, but preserved as requested)
 type SearchParamProps = {
   params: {
@@ -17,10 +16,5 @@ export default async function ApplicantPage({
   const event = await getEventDetails(eventId);
   if (!event) return <div>Event not found</div>;
 
-  return (
-    <Section>
-      <Section.Title>{event.name}</Section.Title>
-      <OrderGifts event={event} />
-    </Section>
-  );
+  return <ApplicantPageClient event={event} />;
 }
