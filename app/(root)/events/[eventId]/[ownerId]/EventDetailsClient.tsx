@@ -1,5 +1,6 @@
 "use client";
 import ApproverList from "@/components/ApproverList";
+import { ApproverProvider } from "@/app/contexts/ApproverContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 
@@ -22,33 +23,37 @@ export default function EventDetailsClient({
   giftList,
   approverList,
 }: EventDetailsClientProps) {
+  // Use the first applicant's eventId as context (or pass a prop if available)
+  const eventId = applicantList[0]?._id?.toString() || "";
   return (
-    <div>
-      <h1>Event Details</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Is Grabbed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {applicantList.map((applicant: Person) => (
-            <tr key={applicant._id.toString()}>
-              <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
-              <td>
-                {giftList.find(
-                  (gift: Gift) =>
-                    gift.owner._id.toString() === applicant._id.toString()
-                )?.receiver
-                  ? "Taken"
-                  : "Available"}
-              </td>
+    <ApproverProvider eventId={eventId} approverList={approverList}>
+      <div>
+        <h1>Event Details</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Is Grabbed</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <ApproverList personArray={approverList} />
-    </div>
+          </thead>
+          <tbody>
+            {applicantList.map((applicant: Person) => (
+              <tr key={applicant._id.toString()}>
+                <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
+                <td>
+                  {giftList.find(
+                    (gift: Gift) =>
+                      gift.owner._id.toString() === applicant._id.toString()
+                  )?.receiver
+                    ? "Taken"
+                    : "Available"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <ApproverList personArray={approverList} />
+      </div>
+    </ApproverProvider>
   );
 }

@@ -22,13 +22,14 @@ import {
 } from "@/app/contexts/OrderContext";
 import { useApproverSelector } from "@/app/contexts/ApproverContext";
 
-import {
-  MultistepProvider,
+import MultistepContextAPI from "@/app/contexts/MultiStep/MultistepContext";
+const {
+  BaseMultistepProvider,
   useStepNavigation,
   useStepData,
   useStepValidation,
-  StepDefinition,
-} from "@/app/contexts/MultiStep/MultistepContext";
+} = MultistepContextAPI;
+import { StepDefinition } from "@/app/contexts/MultiStep/types";
 
 // Model imports
 import { Order } from "@/database/models/order.model";
@@ -78,9 +79,9 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
       */}
       <GiftProvider giftList={gifts}>
         <OrderProvider order={order} approverList={approverList}>
-          <MultistepProvider steps={multistepSteps}>
+          <BaseMultistepProvider steps={multistepSteps}>
             {children}
-          </MultistepProvider>
+          </BaseMultistepProvider>
         </OrderProvider>
       </GiftProvider>
     </ApplicantProvider>
@@ -101,10 +102,20 @@ export const useOrderCreationWorkflow = () => {
     useGiftSelector((state) => state.data.applicantGifts)
   );
   const actions = useGiftActions();
-  const addGift =
-    actions._tag === "Some"
-      ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
-      : () => {};
+  /**
+   * addGift - Adds a gift using context actions. Returns Result.
+   * @param gift - Gift object to add
+   * @returns Result<void, Error>
+   */
+  const addGift = React.useCallback(
+    (gift: Gift) => {
+      if (actions._tag === "Some") {
+        return actions.value.dispatchSafe({ type: "ADD_GIFT", payload: gift });
+      }
+      return failure(new Error("Gift actions unavailable"));
+    },
+    [actions]
+  );
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
   const navResult = useStepNavigation();
   const currentStep =
@@ -140,7 +151,7 @@ export const useOrderCreationWorkflow = () => {
     if (validationResult._tag === "Failure") {
       addNotification({
         type: "error",
-        message: `Validation failed: ${validationResult.value}`,
+        message: `Validation failed: ${validationResult.error}`,
       });
       return validationResult;
     }

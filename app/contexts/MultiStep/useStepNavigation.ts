@@ -7,7 +7,7 @@ import { canNavigateToStep, findStepIndex } from "./multistepUtils";
 
 /**
  * useStepNavigation - Hook for step navigation management.
- * Returns navigation actions and current step info.
+ * Returns navigation actions and current step info, or a failure Result if state is invalid.
  */
 export function useStepNavigation(): Result<
   {
@@ -30,22 +30,37 @@ export function useStepNavigation(): Result<
   },
   Error
 > {
+  // Always call hooks at the top level
   const maybeData = useMultistepSelector((state: MultistepState) => state);
   const actions = useMultistepActions();
+
+  // Extract state data, or use safe defaults if invalid
+  let data: MultistepState extends { data: infer D } ? D : any = {
+    steps: [],
+    currentStepIndex: -1,
+    currentStepId: "",
+    completedSteps: new Set(),
+    skippedSteps: new Set(),
+    stepData: {},
+    validationResults: {},
+    canGoBack: false,
+    canGoNext: false,
+    canComplete: false,
+    progress: 0,
+    navigationHistory: [],
+    formContext: {},
+  };
+  let valid = false;
   if (
-    !maybeData ||
-    maybeData._tag !== "Some" ||
-    !maybeData.value ||
-    !maybeData.value.data ||
-    !Array.isArray(maybeData.value.data.steps)
+    maybeData &&
+    maybeData._tag === "Some" &&
+    maybeData.value &&
+    maybeData.value.data &&
+    Array.isArray(maybeData.value.data.steps)
   ) {
-    console.error(
-      "useStepNavigation: state data is missing or invalid",
-      maybeData
-    );
-    return failure(new Error("Multistep state data not available"));
+    data = maybeData.value.data;
+    valid = true;
   }
-  const data = maybeData.value.data;
   const steps = data.steps;
   const currentStepIndex = data.currentStepIndex;
   const currentStep =
@@ -125,6 +140,11 @@ export function useStepNavigation(): Result<
     return steps.length > 0 ? (currentStepIndex + 1) / steps.length : 0;
   }, [steps, currentStepIndex]);
   const stepCount = steps.length;
+
+  // Only return after all hooks are called
+  if (!valid) {
+    return failure(new Error("Multistep state data not available"));
+  }
 
   return success({
     currentStepIndex,
