@@ -17,12 +17,7 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { act } from "react";
-import {
-  MultistepProvider,
-  useStepNavigation,
-  useStepValidation,
-  useStepData,
-} from "@/app/contexts/MultiStep/MultistepContext";
+import MultistepContextAPI from "@/app/contexts/MultiStep/MultistepContext";
 
 const steps = [
   {
@@ -61,9 +56,9 @@ const steps = [
 describe("MultistepContext integration", () => {
   // Helper test harness to run hooks and trigger assertions after context is ready
   interface ContextHooks {
-    nav: ReturnType<typeof useStepNavigation>;
-    val: ReturnType<typeof useStepValidation>;
-    data: ReturnType<typeof useStepData>;
+    nav: ReturnType<typeof MultistepContextAPI.useStepNavigation>;
+    val: ReturnType<typeof MultistepContextAPI.useStepValidation>;
+    data: ReturnType<typeof MultistepContextAPI.useStepData>;
   }
 
   /**
@@ -71,9 +66,9 @@ describe("MultistepContext integration", () => {
    * This allows direct inspection and manipulation of context state and actions.
    */
   function TestHarness({ onReady }: { onReady: (ctx: ContextHooks) => void }) {
-    const navResult = useStepNavigation();
-    const val = useStepValidation();
-    const data = useStepData();
+    const navResult = MultistepContextAPI.useStepNavigation();
+    const val = MultistepContextAPI.useStepValidation();
+    const data = MultistepContextAPI.useStepData();
     React.useEffect(() => {
       onReady({ nav: navResult, val, data });
     }, [navResult, val, data, onReady]);
@@ -86,9 +81,9 @@ describe("MultistepContext integration", () => {
    */
   function renderWithContext(assertFn: (ctx: ContextHooks) => void) {
     render(
-      <MultistepProvider steps={steps}>
+      <MultistepContextAPI.BaseMultistepProvider steps={steps}>
         <TestHarness onReady={assertFn} />
-      </MultistepProvider>
+      </MultistepContextAPI.BaseMultistepProvider>
     );
   }
 
@@ -100,6 +95,10 @@ describe("MultistepContext integration", () => {
     await renderWithContext(async ({ nav }) => {
       expect(nav._tag).toBe("Success");
       if (nav._tag === "Success") {
+        // Wait for initial step to be set
+        await waitFor(() => {
+          expect(nav.value.currentStepId).not.toBe("");
+        });
         expect(nav.value.currentStepId).toBe("step1");
         act(() => {
           const result = nav.value.goToNextStep();
@@ -221,9 +220,13 @@ describe("MultistepContext integration", () => {
    * Checks that navigation to steps with unmet dependencies is blocked and does not update state.
    */
   it("prevents navigation to steps with unmet dependencies", () => {
-    renderWithContext(({ nav }) => {
+    renderWithContext(async ({ nav }) => {
       expect(nav._tag).toBe("Success");
       if (nav._tag === "Success") {
+        // Wait for initial step to be set
+        await waitFor(() => {
+          expect(nav.value.currentStepId).not.toBe("");
+        });
         act(() => {
           const result = nav.value.jumpToStep("step3");
           if (result._tag === "Success") {
