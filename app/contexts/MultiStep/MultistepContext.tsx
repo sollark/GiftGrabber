@@ -75,7 +75,7 @@ export const useMultistepActions = (contextResult as any).useActions;
 /**
  * EnhancedMultistepContextExports - Encapsulated export object for all context APIs.
  */
-const EnhancedMultistepContextExports = {
+const MultistepContextAPI = {
   BaseMultistepProvider,
   useMultistepContext,
   useMultistepContextResult,
@@ -86,4 +86,4 @@ const EnhancedMultistepContextExports = {
   useStepValidation,
 };
 
-export default EnhancedMultistepContextExports;
+export default MultistepContextAPI;
