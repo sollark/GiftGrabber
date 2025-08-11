@@ -1,9 +1,7 @@
 "use client";
 import { FC, ReactNode, useMemo, memo } from "react";
-import {
-  MultistepProvider,
-  useStepNavigation,
-} from "@/app/contexts/MultiStep/MultistepContext";
+import { MultistepProvider } from "@/app/contexts/MultiStep/MultistepContext";
+import { useStepNavigationActions } from "@/app/contexts/MultiStep/useStepNavigationActions";
 
 /**
  * Props for the MultistepNavigator component
@@ -18,7 +16,7 @@ interface MultistepNavigatorProps {
  * Uses memo for performance and strict typing.
  */
 const StepRenderer: FC<{ children: ReactNode[] }> = ({ children }) => {
-  const navResult = useStepNavigation();
+  const { navResult } = useStepNavigationActions();
   let currentStepContent = null;
   if (navResult._tag === "Success") {
     currentStepContent = children[navResult.value.currentStepIndex] || null;

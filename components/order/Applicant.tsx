@@ -4,7 +4,7 @@ import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
 import { Maybe, some, none } from "@/lib/fp-utils";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
-import { useStepNavigation } from "@/app/contexts/MultiStep/MultistepContext";
+import { useStepNavigationActions } from "@/app/contexts/MultiStep/useStepNavigationActions";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import PersonAutocomplete from "../form/PersonAutocomplete";
@@ -34,20 +34,7 @@ const Applicant: FC = () => {
   );
   // Local state for selected person
   const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
-  const navResult = useStepNavigation();
-  const goToNextStep = React.useMemo(() => {
-    if (navResult._tag === "Success") {
-      return () => {
-        const result = navResult.value.goToNextStep();
-        if (result._tag === "Success") {
-          // Dispatch navigation action here if needed
-        } else {
-          // Handle navigation error (e.g., show notification)
-        }
-      };
-    }
-    return () => {};
-  }, [navResult]);
+  const { goToNextStep } = useStepNavigationActions();
 
   const findApplicantGift = useCallback(
     (person: Person): Gift | undefined =>
