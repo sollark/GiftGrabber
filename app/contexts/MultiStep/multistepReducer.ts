@@ -5,8 +5,8 @@
  * @param action - MultistepAction to process
  * @returns Result<MultistepState, Error>
  */
-import { MultistepState } from "./MultistepContext";
-import {
+import type { MultistepState } from "./types";
+import type {
   MultistepAction,
   StepDefinition,
   StepValidationResult,
