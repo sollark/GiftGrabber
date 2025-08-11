@@ -4,7 +4,7 @@ import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
 import { Maybe, some, none } from "@/lib/fp-utils";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
-import { useStepNavigation } from "@/app/contexts/MultistepContext";
+import { useStepNavigation } from "@/app/contexts/MultiStep/MultistepContext";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import PersonAutocomplete from "../form/PersonAutocomplete";

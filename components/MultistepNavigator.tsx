@@ -3,7 +3,7 @@ import { FC, ReactNode, useMemo, memo } from "react";
 import {
   MultistepProvider,
   useStepNavigation,
-} from "@/app/contexts/MultistepContext";
+} from "@/app/contexts/MultiStep/MultistepContext";
 
 /**
  * Props for the MultistepNavigator component

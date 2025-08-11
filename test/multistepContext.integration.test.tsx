@@ -22,7 +22,7 @@ import {
   useStepNavigation,
   useStepValidation,
   useStepData,
-} from "@/app/contexts/MultistepContext";
+} from "@/app/contexts/MultiStep/MultistepContext";
 
 const steps = [
   {

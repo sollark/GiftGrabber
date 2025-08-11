@@ -1,6 +1,6 @@
 "use client";
 
-import { useStepNavigation } from "@/app/contexts/MultistepContext";
+import { useStepNavigation } from "@/app/contexts/MultiStep/MultistepContext";
 import { useOrderStatus } from "@/app/contexts/OrderContext";
 import { OrderStatus } from "@/components/types/OrderStatus";
 import { Person } from "@/database/models/person.model";
