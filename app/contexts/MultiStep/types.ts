@@ -1,5 +1,8 @@
-import type { FunctionalAction } from "@/lib/fp-contexts";
+import type { FunctionalAction, FunctionalState } from "@/lib/fp-contexts";
 
+/**
+ * MultistepAction - Action type for multistep context reducer.
+ */
 export interface MultistepAction extends FunctionalAction {
   type:
     | "SET_STEPS"
@@ -22,17 +25,19 @@ export interface MultistepAction extends FunctionalAction {
   payload?: unknown;
 }
 
+/**
+ * MultistepProviderProps - Props for MultistepProvider component.
+ */
 export interface MultistepProviderProps {
   steps: StepDefinition[];
   children: React.ReactNode;
   initialStepIndex?: number;
   initialFormContext?: Record<string, unknown>;
 }
-/**
- * Types and interfaces for MultistepContext
- * Decomposed from MultistepContext.tsx for modularity and clarity
- */
 
+/**
+ * StepDefinition - Defines a single step in the multistep form.
+ */
 export interface StepDefinition {
   id: string;
   title: string;
@@ -43,17 +48,26 @@ export interface StepDefinition {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * ValidationRule - Rule for validating a step.
+ */
 export interface ValidationRule {
   id: string;
   message: string;
   validator: (data: unknown) => boolean;
 }
 
+/**
+ * StepValidationResult - Result of validating a step.
+ */
 export interface StepValidationResult {
   isValid: boolean;
   errors: string[];
 }
 
+/**
+ * NavigationHistoryEntry - Entry for navigation history in multistep context.
+ */
 export interface NavigationHistoryEntry {
   fromStepId: string;
   toStepId: string;
@@ -62,6 +76,9 @@ export interface NavigationHistoryEntry {
   data?: unknown;
 }
 
+/**
+ * MultistepData - State shape for multistep context.
+ */
 export interface MultistepData {
   steps: StepDefinition[];
   currentStepIndex: number;
@@ -76,3 +93,8 @@ export interface MultistepData {
   navigationHistory: NavigationHistoryEntry[];
   formContext: Record<string, unknown>;
 }
+
+/**
+ * MultistepState - State type for multistep context.
+ */
+export type MultistepState = FunctionalState<MultistepData> | "RESET_FORM";

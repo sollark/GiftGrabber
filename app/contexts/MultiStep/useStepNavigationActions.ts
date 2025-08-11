@@ -3,10 +3,10 @@
  * Not intended for reuse outside MultistepContext consumers
  * Returns navigation actions and error handling for current step
  */
-import { useStepNavigation } from "./MultistepContext";
+import EnhancedMultistepContextExports from "./MultistepContext";
 
 export function useStepNavigationActions() {
-  const navResult = useStepNavigation();
+  const navResult = EnhancedMultistepContextExports.useStepNavigation();
 
   /**
    * Go to next step, returns error string if navigation fails

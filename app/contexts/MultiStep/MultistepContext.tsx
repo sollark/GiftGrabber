@@ -1,47 +1,18 @@
 /**
- * Enhanced MultistepContext with functional programming patterns
- * Provides immutable state management for multistep form navigation
+ * MultistepContext - Provides context, provider, and hooks for multistep form navigation.
+ * All types are imported from types.ts for consistency and maintainability.
  */
 
 import React from "react";
 import {
-  createFunctionalContext,
-  FunctionalAction,
-  FunctionalState,
-} from "@/lib/fp-contexts";
-import { loggingMiddleware } from "@/lib/fp-contexts";
-import { validationMiddleware } from "@/lib/fp-contexts";
-import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
-import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
-
-// ============================================================================
-
-import {
-  MultistepAction,
-  MultistepProviderProps,
+  MultistepData,
+  MultistepState,
   StepDefinition,
-  ValidationRule,
   StepValidationResult,
   NavigationHistoryEntry,
+  MultistepProviderProps,
+  MultistepAction,
 } from "./types";
-
-export interface MultistepData {
-  steps: StepDefinition[];
-  currentStepIndex: number;
-  currentStepId: string;
-  completedSteps: Set<string>;
-  skippedSteps: Set<string>;
-  stepData: Record<string, unknown>;
-  validationResults: Record<string, StepValidationResult>;
-  canGoBack: boolean;
-  canGoNext: boolean;
-  canComplete: boolean;
-  navigationHistory: NavigationHistoryEntry[];
-  formContext: Record<string, unknown>;
-}
-
-export type MultistepState = FunctionalState<MultistepData> | "RESET_FORM";
-
 import {
   findStepIndex,
   getCurrentStep,
@@ -50,17 +21,31 @@ import {
   isStepOptional,
   canNavigateToStep,
 } from "./multistepUtils";
-
-// ============================================================================
-// INITIAL STATE AND REDUCER (IMPORTED)
-// ============================================================================
-
 import { createInitialState, multistepReducer } from "./multistepReducer";
+import { loggingMiddleware } from "@/lib/fp-contexts";
+import { validationMiddleware } from "@/lib/fp-contexts";
+import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
+import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
+import { createFunctionalContext } from "@/lib/fp-contexts";
+import {
+  selectStepData,
+  selectCurrentStepId,
+  selectValidationResults,
+  selectSteps,
+  selectCompletedSteps,
+  selectSkippedSteps,
+  selectNavigationHistory,
+  selectFormContext,
+  selectCurrentStepIndex,
+  selectCanGoBack,
+  selectCanGoNext,
+  selectCanComplete,
+} from "./multistepSelectors";
 
-// ============================================================================
-// VALIDATION MIDDLEWARE
-// ============================================================================
-
+/**
+ * Validation middleware for multistep context.
+ * Ensures steps are validated before navigation.
+ */
 const multistepValidation = validationMiddleware<
   MultistepState,
   MultistepAction
@@ -99,10 +84,9 @@ const multistepValidation = validationMiddleware<
   }
 });
 
-// ============================================================================
-// CONTEXT CREATION
-// ============================================================================
-
+/**
+ * Create context and provider for multistep state.
+ */
 const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
   name: "Multistep",
   initialState: createInitialState([]),
@@ -123,20 +107,25 @@ const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
   debugMode: process.env.NODE_ENV === "development",
 });
 
+/** MultistepContext - React context for multistep state */
 export const MultistepContext: React.Context<MultistepState> = (
   contextResult as any
 ).Context;
+/** BaseMultistepProvider - Provider for multistep context */
 export const BaseMultistepProvider = (contextResult as any).Provider;
+/** useMultistepContext - Hook to access multistep context */
 export const useMultistepContext = (contextResult as any).useContext;
+/** useMultistepContextResult - Hook to access context result */
 export const useMultistepContextResult = (contextResult as any)
   .useContextResult;
+/** useMultistepSelector - Hook to select state from context */
 export const useMultistepSelector = (contextResult as any).useSelector;
+/** useMultistepActions - Hook to access context actions */
 export const useMultistepActions = (contextResult as any).useActions;
 
-// ============================================================================
-// ENHANCED PROVIDER WITH PROPS
-// ============================================================================
-
+/**
+ * MultistepProvider - Enhanced provider with props for initial steps and form context.
+ */
 export const MultistepProvider: React.FC<MultistepProviderProps> = ({
   steps,
   children,
@@ -148,7 +137,6 @@ export const MultistepProvider: React.FC<MultistepProviderProps> = ({
     return {
       ...(state !== "RESET_FORM" ? state : {}),
       data: {
-        // removed, already spread above
         currentStepIndex: Math.max(
           0,
           Math.min(initialStepIndex, steps.length - 1)
@@ -165,59 +153,54 @@ export const MultistepProvider: React.FC<MultistepProviderProps> = ({
   );
 };
 
-// ============================================================================
-// ENHANCED HOOKS FOR MULTISTEP OPERATIONS
-// ============================================================================
-
 /**
- * Hook for step data management
+ * useStepData - Hook for step data management.
+ * Returns step data and actions for setting, updating, and clearing step data.
  */
 export const useStepData = () => {
   const actions = useMultistepActions();
-  // Type-safe context access
-  const stepData = useMultistepSelector((state: MultistepState) =>
-    state !== "RESET_FORM" ? state.data.stepData : undefined
-  );
-  const currentStepId = useMultistepSelector((state: MultistepState) =>
-    state !== "RESET_FORM" ? state.data.currentStepId : undefined
-  );
+  const stepData = useMultistepSelector(selectStepData);
+  const currentStepId = useMultistepSelector(selectCurrentStepId);
 
+  /** Sets step data for a given stepId. Returns Result<void, Error>. */
   const setStepData = React.useCallback(
-    (stepId: string, data: unknown) => {
+    (stepId: string, data: unknown): Result<void, Error> => {
       const safeActions = actions._tag === "Some" && actions.value;
       if (safeActions) {
-        return safeActions.dispatchSafe({
+        safeActions.dispatchSafe({
           type: "SET_STEP_DATA",
           payload: { stepId, data },
         });
+        return success(undefined);
       }
       return failure(new Error("Multistep context not available"));
     },
     [actions]
   );
 
+  /** Updates step data for a given stepId. Returns Result<void, Error>. */
   const updateStepData = React.useCallback(
-    (stepId: string, data: unknown) => {
+    (stepId: string, data: unknown): Result<void, Error> => {
       const safeActions = actions._tag === "Some" && actions.value;
       if (safeActions) {
-        return safeActions.dispatchSafe({
+        safeActions.dispatchSafe({
           type: "UPDATE_STEP_DATA",
           payload: { stepId, data },
         });
+        return success(undefined);
       }
       return failure(new Error("Multistep context not available"));
     },
     [actions]
   );
 
+  /** Clears step data for a given stepId. Returns Result<void, Error>. */
   const clearStepData = React.useCallback(
-    (stepId: string) => {
+    (stepId: string): Result<void, Error> => {
       const safeActions = actions._tag === "Some" && actions.value;
       if (safeActions) {
-        return safeActions.dispatchSafe({
-          type: "CLEAR_STEP_DATA",
-          payload: stepId,
-        });
+        safeActions.dispatchSafe({ type: "CLEAR_STEP_DATA", payload: stepId });
+        return success(undefined);
       }
       return failure(new Error("Multistep context not available"));
     },
@@ -226,12 +209,12 @@ export const useStepData = () => {
 
   const getCurrentStepData = React.useCallback(() => {
     if (!currentStepId) return null;
-    return stepData[currentStepId] ?? null;
+    return stepData?.[currentStepId] ?? null;
   }, [stepData, currentStepId]);
 
   const getStepData = React.useCallback(
     (stepId: string) => {
-      return stepData[stepId] ?? null;
+      return stepData?.[stepId] ?? null;
     },
     [stepData]
   );
@@ -247,75 +230,66 @@ export const useStepData = () => {
 };
 
 /**
- * Hook for step validation
+ * useStepValidation - Hook for step validation management.
+ * Returns validation results and actions for validating steps.
  */
 export const useStepValidation = () => {
   const actions = useMultistepActions();
-  // Type-safe context access
-  const validationResults = useMultistepSelector((state: MultistepState) =>
-    state !== "RESET_FORM" ? state.data.validationResults : undefined
-  );
-  const currentStepId = useMultistepSelector((state: MultistepState) =>
-    state !== "RESET_FORM" ? state.data.currentStepId : undefined
-  );
-  // Unwrap Maybe for steps
-  const maybeSteps = useMultistepSelector((state: MultistepState) =>
-    state !== "RESET_FORM" ? state.data.steps : []
-  );
-  const steps = Array.isArray(maybeSteps) ? maybeSteps : [];
-  const stepData = useMultistepSelector((state: MultistepState) =>
-    state !== "RESET_FORM" ? state.data.stepData : undefined
-  );
+  const validationResults = useMultistepSelector(selectValidationResults);
+  const currentStepId = useMultistepSelector(selectCurrentStepId);
+  const steps = useMultistepSelector(selectSteps);
+  const stepData = useMultistepSelector(selectStepData);
 
-  // Validate a single step using pure utility
+  /** Validates a single step by stepId. Returns Result<void, Error>. */
   const validateStepAction = React.useCallback(
-    (stepId: string, data?: unknown) => {
+    (stepId: string, data?: unknown): Result<void, Error> => {
       const safeActions = actions._tag === "Some" && actions.value;
       if (!safeActions)
         return failure(new Error("Multistep context not available"));
       const step = steps.find((s: StepDefinition) => s.id === stepId);
-      if (!step)
-        return failure(new Error(`Step with id "${stepId}" not found`));
-      const validationResult = validateStep(step, data ?? stepData[stepId]);
-      return safeActions.dispatchSafe({
+      if (!step) return failure(new Error("Step not found"));
+      validateStep(step, data ?? stepData?.[stepId]);
+      safeActions.dispatchSafe({
         type: "VALIDATE_STEP",
         payload: { stepId, data },
       });
+      return success(undefined);
     },
     [actions, steps, stepData]
   );
 
-  // Validate all steps
-  const validateAllSteps = React.useCallback(() => {
+  /** Validates all steps in the form. Returns Result<void, Error>. */
+  const validateAllSteps = React.useCallback((): Result<void, Error> => {
     const safeActions = actions._tag === "Some" && actions.value;
     if (!safeActions)
       return failure(new Error("Multistep context not available"));
-    return safeActions.dispatchSafe({ type: "VALIDATE_ALL_STEPS" });
+    safeActions.dispatchSafe({ type: "VALIDATE_ALL_STEPS" });
+    return success(undefined);
   }, [actions]);
 
-  // Get validation result for current step
   const getCurrentStepValidation = React.useCallback(() => {
     if (!currentStepId) return null;
-    return validationResults[currentStepId] ?? null;
+    return validationResults?.[currentStepId] ?? null;
   }, [validationResults, currentStepId]);
 
-  // Get validation result for a specific step
   const getStepValidation = React.useCallback(
     (stepId: string) => {
-      return validationResults[stepId] ?? null;
+      return validationResults?.[stepId] ?? null;
     },
     [validationResults]
   );
 
-  // Computed values
   const hasValidationErrors = React.useMemo(() => {
-    const results = Object.values(validationResults) as StepValidationResult[];
+    const results = Object.values(
+      validationResults ?? {}
+    ) as StepValidationResult[];
     return results.some((result) => !result.isValid);
   }, [validationResults]);
 
-  // Computed: are all steps valid?
   const allStepsValid = React.useMemo(() => {
-    const results = Object.values(validationResults) as StepValidationResult[];
+    const results = Object.values(
+      validationResults ?? {}
+    ) as StepValidationResult[];
     return results.every((result) => result.isValid);
   }, [validationResults]);
 
@@ -331,7 +305,8 @@ export const useStepValidation = () => {
 };
 
 /**
- * Hook for step navigation
+ * useStepNavigation - Hook for step navigation management.
+ * Returns navigation actions and current step info.
  */
 export function useStepNavigation(): Result<
   {
@@ -354,8 +329,6 @@ export function useStepNavigation(): Result<
   },
   Error
 > {
-  // Use selector to get state data (unwrap Maybe)
-  // Selector returns Maybe<MultistepState>, need .value.data
   const maybeData = useMultistepSelector((state: MultistepState) => state);
   const actions = useMultistepActions();
   if (
@@ -365,8 +338,6 @@ export function useStepNavigation(): Result<
     !maybeData.value.data ||
     !Array.isArray(maybeData.value.data.steps)
   ) {
-    // Debug output for context issues
-    // eslint-disable-next-line no-console
     console.error(
       "useStepNavigation: state data is missing or invalid",
       maybeData
@@ -374,12 +345,6 @@ export function useStepNavigation(): Result<
     return failure(new Error("Multistep state data not available"));
   }
   const data = maybeData.value.data;
-
-  // Debug output for steps and state
-  // eslint-disable-next-line no-console
-  console.log("useStepNavigation: steps", data.steps);
-  // eslint-disable-next-line no-console
-  console.log("useStepNavigation: currentStepIndex", data.currentStepIndex);
   const steps = data.steps;
   const currentStepIndex = data.currentStepIndex;
   const currentStep =
@@ -387,13 +352,12 @@ export function useStepNavigation(): Result<
       ? steps[currentStepIndex] ?? null
       : null;
 
-  // Navigation actions now dispatch
   const goToNextStep = React.useCallback((): Result<
     { type: string },
     string
   > => {
     const safeActions = actions._tag === "Some" && actions.value;
-    if (!safeActions) return failure("Multistep context not available");
+    if (!safeActions) return failure("Navigation context unavailable");
     const nextIndex = currentStepIndex + 1;
     const navResult = canNavigateToStep(steps, nextIndex, data.completedSteps);
     if (navResult._tag === "Failure") return failure(navResult.error);
@@ -462,6 +426,9 @@ export function useStepNavigation(): Result<
   });
 }
 
+/**
+ * EnhancedMultistepContextExports - Encapsulated export object for all context APIs.
+ */
 const EnhancedMultistepContextExports = {
   MultistepProvider,
   useMultistepContext,
