@@ -17,7 +17,7 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { act } from "react";
-import MultistepContextAPI from "@/app/contexts/MultiStep/MultistepContext";
+import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
 
 const steps = [
   {

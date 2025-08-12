@@ -22,14 +22,14 @@ import {
 } from "@/app/contexts/order/OrderContext";
 import { useApproverSelector } from "@/app/contexts/ApproverContext";
 
-import MultistepContextAPI from "@/app/contexts/MultiStep/MultistepContext";
+import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
 const {
   BaseMultistepProvider,
   useStepNavigation,
   useStepData,
   useStepValidation,
 } = MultistepContextAPI;
-import { StepDefinition } from "@/app/contexts/MultiStep/types";
+import { StepDefinition } from "@/app/contexts/multistep/types";
 
 // Model imports
 import { Order } from "@/database/models/order.model";
