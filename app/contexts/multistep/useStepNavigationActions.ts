@@ -1,4 +1,11 @@
 /**
+ * useStepNavigationActions.ts
+ * Purpose: Custom hook for dispatching navigation actions in multistep context.
+ * Responsibilities: Exposes action dispatchers for step navigation.
+ * Architecture: Public API for multistep-related components.
+ */
+// ...existing code...
+/**
  * useStepNavigationActions - Encapsulates navigation logic for multistep context
  * Not intended for reuse outside MultistepContext consumers
  * Returns navigation actions and error handling for current step

@@ -1,3 +1,10 @@
+/**
+ * types.ts
+ * Purpose: Declares TypeScript types and interfaces for multistep context.
+ * Responsibilities: Defines shape of state, actions, steps, and related entities.
+ * Architecture: Shared by reducer, context, selectors, and hooks for type safety.
+ */
+// ...existing code...
 import type { FunctionalAction, FunctionalState } from "@/lib/fp-contexts";
 
 /**

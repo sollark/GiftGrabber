@@ -1,3 +1,10 @@
+/**
+ * OrderContext.tsx
+ * Purpose: Provides the main React context for order state management in the app.
+ * Responsibilities: Sets up context, provider, and exposes hooks/selectors/actions for order operations.
+ * Architecture: Centralizes order state, connects reducer and middleware, and enables modular access to order logic.
+ */
+// ...existing code...
 import React from "react";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
@@ -74,6 +81,16 @@ interface OrderProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * Provider component for OrderContext.
+ * Initializes context state with order and approver list.
+ * @param {Order} order - The order object to initialize state.
+ * @param {Person[]} approverList - List of approvers.
+ * @param {React.ReactNode} children - Child components.
+ * @returns {JSX.Element} Context provider wrapping children.
+ * Side effects: Initializes context state.
+ * Public API.
+ */
 export const OrderProvider: React.FC<OrderProviderProps> = ({
   order,
   approverList,

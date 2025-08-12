@@ -1,3 +1,10 @@
+/**
+ * useApproverSelection.ts
+ * Purpose: Custom hook for managing approver selection logic in order context.
+ * Responsibilities: Exposes selection state and actions for approvers.
+ * Architecture: Public API for order-related components.
+ */
+// ...existing code...
 import { Person } from "@/database/models/person.model";
 import { useOrderActions, useOrderSelector } from "./OrderContext";
 import { failure } from "@/lib/fp-utils";

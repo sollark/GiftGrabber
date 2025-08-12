@@ -1,3 +1,10 @@
+/**
+ * useStepData.ts
+ * Purpose: Custom hook for accessing and managing step data in multistep context.
+ * Responsibilities: Exposes step data and helpers for components.
+ * Architecture: Public API for consumers of MultistepContext.
+ */
+// ...existing code...
 import React from "react";
 import { Result, success, failure } from "@/lib/fp-utils";
 import MultistepContext from "./MultistepContext";

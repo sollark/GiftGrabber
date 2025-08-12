@@ -1,3 +1,9 @@
+/**
+ * orderReducer.ts
+ * Purpose: Contains the reducer function for order state transitions.
+ * Responsibilities: Handles all order-related actions and updates state accordingly.
+ * Architecture: Used by OrderContext to manage state changes in a functional, predictable way.
+ */
 import { Result, success, failure, some, none } from "@/lib/fp-utils";
 import { Order } from "@/database/models/order.model";
 import type { Person } from "@/database/models/person.model";
@@ -12,10 +18,14 @@ import {
 import { getPersonName, convertOrderToEnhanced } from "./orderUtils";
 
 /**
- * Reducer for order context state transitions.
- * @param state - Current OrderState.
- * @param action - OrderAction to apply.
- * @returns Result<OrderState, Error>
+ * Reducer for order state.
+ * Purpose: Handles all order-related actions and updates state accordingly.
+ * @param state {OrderState} - Current order state.
+ * @param action {OrderAction} - Action to process.
+ * @returns {Result<OrderState, Error>} New state after applying action or error.
+ * Side effects: None (pure function).
+ * Public API.
+ * Business logic: Implements rules for order status, updates, and error handling.
  */
 export const orderReducer = (
   state: OrderState,

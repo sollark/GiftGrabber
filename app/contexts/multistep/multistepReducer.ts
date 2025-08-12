@@ -1,4 +1,11 @@
 /**
+ * multistepReducer.ts
+ * Purpose: Contains the reducer function for multistep state transitions.
+ * Responsibilities: Handles all step-related actions and updates state accordingly.
+ * Architecture: Used by MultistepContext to manage step changes in a functional, predictable way.
+ */
+// ...existing code...
+/**
  * Multistep reducer and initial state for multistep form navigation.
  * All logic is pure, functional, and type-safe.
  */

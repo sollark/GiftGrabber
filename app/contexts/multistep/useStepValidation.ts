@@ -1,3 +1,10 @@
+/**
+ * useStepValidation.ts
+ * Purpose: Custom hook for validating steps in multistep context.
+ * Responsibilities: Exposes validation state and helpers for steps.
+ * Architecture: Public API for multistep-related components.
+ */
+// ...existing code...
 import React from "react";
 import { Result, success, failure } from "@/lib/fp-utils";
 import MultistepContext from "./MultistepContext";

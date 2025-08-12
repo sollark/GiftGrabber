@@ -1,4 +1,11 @@
 /**
+ * multistepUtils.ts
+ * Purpose: Utility functions for multistep context (step validation, navigation helpers, etc.).
+ * Responsibilities: Encapsulates reusable logic for step workflows.
+ * Architecture: Used by reducer, context, and hooks.
+ */
+// ...existing code...
+/**
  * Utility functions for MultistepContext
  * Pure, functional helpers for step navigation and validation
  */

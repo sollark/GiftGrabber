@@ -1,3 +1,10 @@
+/**
+ * MultistepContext.tsx
+ * Purpose: Provides the main React context for multistep workflows (e.g., forms, wizards).
+ * Responsibilities: Sets up context, provider, and exposes hooks/selectors/actions for step navigation and validation.
+ * Architecture: Centralizes multistep state, connects reducer and middleware, enables modular access to step logic.
+ */
+// ...existing code...
 import { MultistepState, MultistepAction } from "./types";
 import { createInitialState, multistepReducer } from "./multistepReducer";
 import {

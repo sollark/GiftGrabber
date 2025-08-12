@@ -1,4 +1,11 @@
 /**
+ * multistepSelectors.ts
+ * Purpose: Provides selector functions for extracting data from multistep state.
+ * Responsibilities: Encapsulates logic for querying step state, progress, and validation.
+ * Architecture: Used by context, hooks, and components for modular state access.
+ */
+// ...existing code...
+/**
  * Selector functions for MultistepContext state.
  * Encapsulate state access for improved modularity and testability.
  */

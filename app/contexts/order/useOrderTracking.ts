@@ -1,3 +1,10 @@
+/**
+ * useOrderTracking.ts
+ * Purpose: Custom hook for tracking order changes, history, or notifications.
+ * Responsibilities: Exposes tracking state and helpers for order lifecycle.
+ * Architecture: Public API for order-related components.
+ */
+// ...existing code...
 import { useOrderActions, useOrderSelector } from "./OrderContext";
 import { failure } from "@/lib/fp-utils";
 import { OrderNotification, OrderHistoryEntry } from "./types";

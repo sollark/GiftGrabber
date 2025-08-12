@@ -1,3 +1,10 @@
+/**
+ * useStepNavigation.ts
+ * Purpose: Custom hook for managing step navigation in multistep context.
+ * Responsibilities: Exposes navigation state and actions for steps.
+ * Architecture: Public API for multistep-related components.
+ */
+// ...existing code...
 import React from "react";
 import { Result, success, failure } from "@/lib/fp-utils";
 import { useMultistepActions, useMultistepSelector } from "./MultistepContext";

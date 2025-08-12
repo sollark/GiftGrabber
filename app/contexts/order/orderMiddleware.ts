@@ -1,3 +1,10 @@
+/**
+ * orderMiddleware.ts
+ * Purpose: Defines middleware functions for order context (logging, validation, optimistic updates, persistence).
+ * Responsibilities: Intercepts actions, adds side effects, and enforces business rules.
+ * Architecture: Pluggable middleware for OrderContext, enhancing reducer logic.
+ */
+// ...existing code...
 import { validationMiddleware, optimisticMiddleware } from "@/lib/fp-contexts";
 import { success, failure } from "@/lib/fp-utils";
 import { OrderState, OrderAction } from "./types";
