@@ -2,7 +2,7 @@
 
 import { getEventApprovers } from "@/app/actions/event.action";
 import { getOrder } from "@/app/actions/order.action";
-import { OrderProvider } from "@/app/contexts/OrderContext";
+import { OrderProvider } from "@/app/contexts/order/OrderContext";
 import { Order } from "@/database/models/order.model";
 import { FC, useMemo, ReactElement } from "react";
 import useSWR from "swr";

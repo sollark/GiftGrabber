@@ -1,7 +1,7 @@
 "use client";
 
 import { useStepNavigationActions } from "@/app/contexts/MultiStep/useStepNavigationActions";
-import { useOrderStatus } from "@/app/contexts/OrderContext";
+import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { OrderStatus } from "@/components/types/OrderStatus";
 import { Person } from "@/database/models/person.model";
 import React, { FC, useLayoutEffect } from "react";
