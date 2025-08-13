@@ -1,3 +1,21 @@
+/**
+ * ConfirmOrder.tsx
+ *
+ * This file defines the ConfirmOrder component, which is responsible for rendering the order confirmation flow in the Gift Grabber app.
+ * It fetches order and approver data, handles loading and error states, and composes the UI using context providers and subcomponents.
+ *
+ * Responsibilities:
+ * - Fetch order and approver data for a given event/order
+ * - Handle loading, error, and not-found states
+ * - Provide order/approver context to child components
+ * - Render the multi-step order confirmation UI
+ *
+ * Constraints:
+ * - No new UI or styling changes
+ * - No new features or business logic
+ * - Only code quality, structure, and documentation improvements
+ */
+
 "use client";
 
 import { getEventApprovers } from "@/app/actions/event.action";
@@ -6,23 +24,18 @@ import { OrderProvider } from "@/app/contexts/order/OrderContext";
 import { Order } from "@/database/models/order.model";
 import { FC, useMemo, ReactElement } from "react";
 import useSWR from "swr";
-import Approver from "./Approver";
+import Approver from "../approver/Approver";
 import { ConfirmOrderButton } from "@/ui/primitives";
-import MultistepNavigator from "../ui/navigation/MultistepNavigator";
-import OrderDetails from "./order/OrderDetails";
+import MultistepNavigator from "../../ui/navigation/MultistepNavigator";
+import OrderDetails from "./OrderDetails";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 
-/**
- * Configuration constants for the ConfirmOrder component
- */
+// --- Constants ---
 const SWR_CONFIG = {
   REVALIDATE_ON_FOCUS: false,
 } as const;
 
-/**
- * UI messages for different loading and error states
- */
 const UI_MESSAGES = {
   LOADING: "Loading...",
   ORDER_ERROR: "Error loading order",
@@ -31,17 +44,28 @@ const UI_MESSAGES = {
   EVENT_NOT_FOUND: "Event not found",
 } as const;
 
+// --- Types ---
+/**
+ * Props for ConfirmOrder component
+ * @property eventId - The event ID
+ * @property orderId - The order ID
+ */
 type ConfirmOrderProps = {
   eventId: string;
   orderId: string;
 };
 
-const ConfirmOrder: FC<ConfirmOrderProps> = ({
-  eventId,
-  orderId,
-}: ConfirmOrderProps) => {
-  const { selectedApplicant } = useApplicantSelection();
-  const { selectedApprover } = useApproverSelection();
+/**
+ * ConfirmOrder component
+ * Fetches order and approver data, handles loading/error states, and renders the order confirmation UI.
+ * @param eventId - The event ID
+ * @param orderId - The order ID
+ * @returns The order confirmation UI or appropriate loading/error state
+ */
+const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
+  // Context hooks (used for side effects or future extensibility)
+  useApplicantSelection();
+  useApproverSelection();
 
   // Fetch order data with SWR
   const {
@@ -66,24 +90,25 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   );
 
   // Memoize loading and error states for better performance
-  const loadingState = useMemo(() => {
-    return {
+  const loadingState = useMemo(
+    () => ({
       isLoading: orderLoading || approversLoading,
       hasOrderError: !!orderError,
       hasApproversError: !!approversError,
       hasOrder: Boolean(order),
       hasApprovers: Boolean(approvers),
-    };
-  }, [
-    orderLoading,
-    approversLoading,
-    orderError,
-    approversError,
-    order,
-    approvers,
-  ]);
+    }),
+    [
+      orderLoading,
+      approversLoading,
+      orderError,
+      approversError,
+      order,
+      approvers,
+    ]
+  );
 
-  // Early return for loading/error states
+  // Handle loading and error states
   const errorComponent = getErrorComponent(loadingState);
   if (errorComponent) return errorComponent;
 
@@ -102,7 +127,6 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
   // Only render OrderProvider if order and approvers are present and valid
   if (!isValidOrder(order) || !Array.isArray(approvers)) return null;
 
-  // ...existing code...
   return (
     <OrderProvider order={order as Order} approverList={approvers}>
       <MultistepNavigator>
@@ -114,7 +138,9 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({
 };
 
 /**
- * Renders the order confirmation section with details and button
+ * OrderConfirmationSection
+ * Renders the order details and the confirm order button.
+ * @returns JSX for the order confirmation section
  */
 const OrderConfirmationSection: FC = () => (
   <>
@@ -139,7 +165,8 @@ const createEventCacheKey = (eventId: string): string =>
   `events/${eventId}/approvers`;
 
 /**
- * Loading state interface for better type safety
+ * LoadingState
+ * Interface for loading and error state tracking.
  */
 interface LoadingState {
   isLoading: boolean;
@@ -150,7 +177,8 @@ interface LoadingState {
 }
 
 /**
- * Determines and returns the appropriate error component based on loading state
+ * getErrorComponent
+ * Determines and returns the appropriate error component based on loading state.
  * @param loadingState - Current loading and error state
  * @returns React element for error/loading state or null if no error
  */

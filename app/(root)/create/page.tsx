@@ -1,4 +1,4 @@
-import CreateEventForm from "@/components/CreateEventForm";
+import CreateEventForm from "@/components/event/CreateEventForm";
 import { Section } from "@/ui/layout";
 import { FC } from "react";
 

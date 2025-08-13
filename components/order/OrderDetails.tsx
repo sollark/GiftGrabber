@@ -1,7 +1,7 @@
 import { FC, useMemo, memo } from "react";
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import GiftList from "./GiftList";
+import GiftList from "../gift/GiftList";
 
 /**
  * Formats a person's full name

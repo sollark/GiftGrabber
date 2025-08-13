@@ -23,10 +23,10 @@ import { GiftProvider } from "@/app/contexts/GiftContext";
 import { ApproverProvider } from "@/app/contexts/ApproverContext";
 import { Event } from "@/database/models/event.model";
 import MultistepNavigator from "../../ui/navigation/MultistepNavigator";
-import SelectUnclaimedGift from "../SelectUnclaimedGift";
-import Applicant from "./Applicant";
-import GiftInfo from "./GiftInfo";
-import GiftList from "./GiftList";
+import SelectUnclaimedGift from "./SelectUnclaimedGift";
+import Applicant from "../applicant/Applicant";
+import GiftInfo from "../gift/GiftInfo";
+import GiftList from "../gift/GiftList";
 
 type OrderGiftsProps = {
   event: Event;

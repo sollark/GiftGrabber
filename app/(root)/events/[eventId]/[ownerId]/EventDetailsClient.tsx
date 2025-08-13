@@ -1,5 +1,5 @@
 "use client";
-import ApproverList from "@/components/ApproverList";
+import ApproverList from "@/components/approver/ApproverList";
 import { ApproverProvider } from "@/app/contexts/ApproverContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";

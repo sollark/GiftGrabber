@@ -5,13 +5,13 @@ import { generateEventId, generateOwnerId } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useCallback, useMemo, FC } from "react";
-import ErrorMessage from "./form/ErrorMessage";
-import Form from "./form/Form";
+import ErrorMessage from "../form/ErrorMessage";
+import Form from "../form/Form";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import FormInputSection from "./createEvent/FormInputSection";
-import FormFileSection from "./createEvent/FormFileSection";
-import QRCodeSection from "./createEvent/QRCodeSection";
+import FormInputSection from "./FormInputSection";
+import FormFileSection from "./FormFileSection";
+import QRCodeSection from "./QRCodeSection";
 import {
   processFormData,
   generateQRCodes,

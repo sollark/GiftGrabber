@@ -1,5 +1,5 @@
 "use client";
-import ConfirmOrder from "../../../../../../components/ConfirmOrder";
+import ConfirmOrder from "../../../../../../components/order/ConfirmOrder";
 
 interface OrderPageClientProps {
   eventId: string;

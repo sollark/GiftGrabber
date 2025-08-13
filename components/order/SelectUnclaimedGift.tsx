@@ -3,7 +3,7 @@ import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
-import PersonAutocomplete from "./form/PersonAutocomplete";
+import PersonAutocomplete from "../PersonAutocomplete";
 
 /**
  * Finds an available unclaimed gift for a specific person

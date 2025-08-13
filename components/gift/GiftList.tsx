@@ -1,3 +1,20 @@
+/**
+ * GiftList.tsx
+ *
+ * This file defines the GiftList component, which manages and displays a list of gifts for an applicant.
+ *
+ * Responsibilities:
+ * - Display a list of gifts for the selected applicant
+ * - Allow removal of gifts from the list
+ * - Handle order creation and QR code generation
+ * - Use context for applicant, approver, and gift data
+ *
+ * Constraints:
+ * - No styling or UI changes
+ * - No new features or business logic
+ * - Only code quality, structure, and documentation improvements
+ */
+
 import React, { FC, memo, useRef, useCallback, useMemo } from "react";
 import { makeOrder } from "@/app/actions/order.action";
 import {
@@ -9,7 +26,7 @@ import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
-import GiftComponent from "../GiftComponent";
+import GiftComponent from "./GiftComponent";
 import QRcode from "@/ui/data-display/QRcode";
 import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import { Box } from "@mui/material";
@@ -27,10 +44,10 @@ const MESSAGES = {
 } as const;
 
 /**
- * GiftList - Renders a list of gifts for an applicant.
- * Props:
- *   - applicantGifts: Array of gift objects for the applicant
- *   - onRemoveGift: Function to remove a gift
+ * GiftList
+ * Renders a list of gifts for the selected applicant, allows removal, and handles order creation.
+ * Uses context for applicant, approver, and gift data.
+ * @returns The gift list UI for the applicant
  */
 const GiftList: FC = () => {
   const router = useRouter();
@@ -73,11 +90,21 @@ const GiftList: FC = () => {
   const gifts = useMemo(() => applicantGifts, [applicantGifts]);
   const hasGifts = useMemo(() => gifts.length > 0, [gifts.length]);
 
+  /**
+   * handleRemoveGift
+   * Removes a gift from the list by ID.
+   * @param gift - The gift to remove
+   */
   const handleRemoveGift = useCallback(
     (gift: Gift) => removeGift(gift._id.toString()),
     [removeGift]
   );
 
+  /**
+   * generateQRCodeData
+   * Generates a base64-encoded QR code string from the QR code ref.
+   * @returns The base64 QR code string or null if generation fails
+   */
   const generateQRCodeData = useCallback(async (): Promise<string | null> => {
     const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef);
     if (!orderQRCodeBuffer) {
@@ -87,6 +114,12 @@ const GiftList: FC = () => {
     return orderQRCodeBuffer.toString("base64");
   }, []);
 
+  /**
+   * submitOrder
+   * Submits the order with the given QR code data.
+   * @param qrCodeData - The base64 QR code string
+   * @returns True if the order was created successfully, false otherwise
+   */
   const submitOrder = useCallback(
     async (qrCodeData: string): Promise<boolean> => {
       if (!applicant) {
@@ -111,6 +144,10 @@ const GiftList: FC = () => {
     [approverList, applicant, gifts, orderId]
   );
 
+  /**
+   * processOrder
+   * Handles the full order process: generates QR code, submits order, and navigates on success.
+   */
   const processOrder = useCallback(async () => {
     if (!applicant) return;
 
@@ -123,6 +160,12 @@ const GiftList: FC = () => {
     }
   }, [applicant, eventId, orderId, router, generateQRCodeData, submitOrder]);
 
+  /**
+   * renderGiftItem
+   * Renders a single gift item with a remove button.
+   * @param gift - The gift to render
+   * @returns JSX for the gift list item
+   */
   const renderGiftItem = useCallback(
     (gift: Gift) => (
       <li key={gift._id.toString()}>
@@ -137,6 +180,11 @@ const GiftList: FC = () => {
     [handleRemoveGift]
   );
 
+  /**
+   * renderGiftsList
+   * Renders the list of gifts or a message if there are none.
+   * @returns JSX for the gift list or a no-gifts message
+   */
   const renderGiftsList = useCallback(() => {
     if (!hasGifts) {
       return <p>{MESSAGES.NO_GIFTS}</p>;

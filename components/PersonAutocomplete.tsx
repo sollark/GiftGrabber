@@ -1,3 +1,19 @@
+/**
+ * PersonAutocomplete.tsx
+ *
+ * This file defines the PersonAutocomplete component, which provides a search and selection UI for people using MUI Autocomplete.
+ *
+ * Responsibilities:
+ * - Display a list of people for selection with search
+ * - Require explicit confirmation to select a person
+ * - Remain decoupled and reusable
+ *
+ * Constraints:
+ * - No styling or UI changes
+ * - No new features or business logic
+ * - Only code quality, structure, and documentation improvements
+ */
+
 "use client";
 
 import {
@@ -10,7 +26,7 @@ import {
 } from "react";
 import { Person } from "@/database/models/person.model";
 import { Autocomplete, TextField } from "@mui/material";
-import { SecondaryButton } from "../../ui/primitives";
+import { SecondaryButton } from "../ui/primitives";
 
 /**
  * Option structure for the autocomplete component
@@ -39,6 +55,12 @@ const AUTOCOMPLETE_CONFIG = {
   CLASS_NAME: "input",
 } as const;
 
+/**
+ * mapPersonListToOptions
+ * Maps a list of Person objects to OptionType objects for the autocomplete.
+ * @param people - Array of Person objects
+ * @returns Array of OptionType objects
+ */
 const mapPersonListToOptions = (people: Person[]): OptionType[] =>
   people.map((person) => ({
     id: person._id.toString(),
@@ -61,10 +83,16 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
     () => mapPersonListToOptions(peopleList),
     [peopleList]
   );
+
+  /**
+   * handleOptionSelect
+   * Handles selection from the autocomplete dropdown (does not confirm selection).
+   * @param event - The change event
+   * @param value - The selected option or null
+   */
   const handleOptionSelect = useCallback(
     (event: SyntheticEvent, value: OptionType | null) => {
       if (!value) return;
-
       const { person } = value;
       setSelectedPerson(person);
       onChangePerson(person);
@@ -72,18 +100,29 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
     [onChangePerson]
   );
 
-  // Handles final selection confirmation
+  /**
+   * handleConfirmSelection
+   * Handles the explicit confirmation of the selected person.
+   */
   const handleConfirmSelection = useCallback(() => {
     if (selectedPerson) {
       onSelectPerson(selectedPerson);
     }
   }, [selectedPerson, onSelectPerson]);
 
-  // Option equality comparison for autocomplete
+  /**
+   * isOptionEqualToValue
+   * Compares two options for equality by ID.
+   */
   const isOptionEqualToValue = useCallback(
     (option: OptionType, value: OptionType) => option.id === value.id,
     []
   );
+
+  /**
+   * renderInput
+   * Renders the input field for the autocomplete.
+   */
   const renderInput = useCallback(
     (params: any) => (
       <TextField {...params} label={AUTOCOMPLETE_CONFIG.LABEL} />
