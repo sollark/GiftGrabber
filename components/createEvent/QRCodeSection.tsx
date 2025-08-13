@@ -1,4 +1,4 @@
-import QRcode from "../QRcode";
+import QRcode from "../../ui/data-display/QRcode";
 
 export interface QRCodeSectionProps {
   eventQRCodeRef: React.RefObject<HTMLDivElement>;

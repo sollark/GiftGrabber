@@ -10,9 +10,9 @@ import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
 import GiftComponent from "../GiftComponent";
-import QRcode from "../QRcode";
-import StyledButton from "../buttons/AccentButton";
-import SecondaryButton from "../buttons/SecondaryButton";
+import QRcode from "@/ui/data-display/QRcode";
+import StyledButton from "@/ui/primitives/AccentButton";
+import SecondaryButton from "@/ui/primitives/SecondaryButton";
 import { Box } from "@mui/material";
 
 const BASE_URL = "https://gift-grabber.onrender.com";

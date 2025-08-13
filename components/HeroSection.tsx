@@ -1,9 +1,9 @@
-import { FC } from 'react'
-import HeroButton from './buttons/HeroButton'
+import { FC } from "react";
+import HeroButton from "../ui/primitives/HeroButton";
 
 const HeroSection: FC = () => {
   return (
-    <section className='hero-section'>
+    <section className="hero-section">
       <h1>Welcome to Gift Grabber</h1>
       <h3>Effortless Gift-Giving with Our Event Management App</h3>
       <p>
@@ -17,7 +17,7 @@ const HeroSection: FC = () => {
       </p>
       <HeroButton />
     </section>
-  )
-}
+  );
+};
 
-export default HeroSection
+export default HeroSection;

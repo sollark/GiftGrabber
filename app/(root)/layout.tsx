@@ -1,11 +1,11 @@
-import Footer from '@/components/shared/Footer'
-import Header from '@/components/shared/Header'
-import Main from '@/components/shared/Main'
-import { FC, ReactNode } from 'react'
+import Footer from "../../ui/layout/Footer";
+import Header from "../../ui/layout/Header";
+import Main from "../../ui/layout/Main";
+import { FC, ReactNode } from "react";
 
 type AppLayoutProps = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
 const AppLayout: FC<AppLayoutProps> = ({ children }: AppLayoutProps) => {
   return (
@@ -14,7 +14,7 @@ const AppLayout: FC<AppLayoutProps> = ({ children }: AppLayoutProps) => {
       <Main>{children}</Main>
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default AppLayout
+export default AppLayout;

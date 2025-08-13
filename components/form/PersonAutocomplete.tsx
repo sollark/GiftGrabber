@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Person } from "@/database/models/person.model";
 import { Autocomplete, TextField } from "@mui/material";
-import SecondaryButton from "../buttons/SecondaryButton";
+import SecondaryButton from "../../ui/primitives/SecondaryButton";
 
 /**
  * Option structure for the autocomplete component
