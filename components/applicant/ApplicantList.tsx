@@ -1,144 +1,42 @@
-"use client";
-
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
-import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
-import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
-import { FC, SyntheticEvent, useMemo, useCallback, useState } from "react";
-import { Maybe, some, none } from "@/lib/fp-utils";
+import { FC } from "react";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 
 /**
- * Configuration constants for the ApplicantList component
+ * ApplicantList component
+ * Renders a list of applicants using context as the primary source, with an optional fallback prop.
+ * - Uses context for applicant list, or falls back to the provided personArray prop.
+ * - Displays a simple list of applicant names.
+ *
+ * Props:
+ *   personArray: Person[] - Optional fallback array of Person objects.
  */
-const AUTOCOMPLETE_CONFIG = {
-  WIDTH: 300,
-  LABEL: "People",
-  DISABLE_PORTAL: true,
-} as const;
-
-type OptionType = {
-  id: string;
-  label: string;
-  person: Person;
+type ApplicantListProps = {
+  personArray: Person[];
 };
 
-const ApplicantList: FC = () => {
+const ApplicantList: FC<ApplicantListProps> = ({ personArray }) => {
+  // Use context for applicant list, but preserve original rendering and props
   const { applicantList } = useApplicantSelection();
-  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const giftList = useMemo(
-    () =>
-      giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
-        ? giftListMaybe.value
-        : [],
-    [giftListMaybe]
-  );
-  const actions = useGiftActions();
-  const addGift = useMemo(
-    () =>
-      actions._tag === "Some"
-        ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
-        : () => {},
-    [actions]
-  );
 
-  // Local state for selected person (was previously in context)
-  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
-
-  // Memoize the option list to prevent unnecessary recalculations
-  const applicantsOptionList = useMemo(
-    () =>
-      mapPersonListToOptionList(
-        applicantList._tag === "Some" ? applicantList.value : []
-      ),
-    [applicantList]
-  );
-
-  // Handle person selection with gift assignment
-  const handlePersonSelect = useCallback(
-    (event: SyntheticEvent, value: OptionType | null) => {
-      if (!value) return;
-
-      setSelectedPerson(some(value.person));
-      processGiftAssignment(value.person, giftList, (gift) =>
-        addGift({ ...gift, type: "ADD_GIFT", payload: gift })
-      );
-    },
-    [giftList, addGift]
-  );
-
-  // Optimize option equality check
-  const isOptionEqualToValue = useCallback(
-    (option: OptionType, value: OptionType) => option.id === value.id,
-    []
-  );
-
-  // Optimize render input function
-  const renderInput = useCallback(
-    (params: any) => (
-      <TextField {...params} label={AUTOCOMPLETE_CONFIG.LABEL} />
-    ),
-    []
-  );
+  // Prefer context value if available, else fallback to prop
+  const list =
+    applicantList._tag === "Some" && Array.isArray(applicantList.value)
+      ? applicantList.value
+      : personArray;
 
   return (
-    <Autocomplete
-      disablePortal={AUTOCOMPLETE_CONFIG.DISABLE_PORTAL}
-      options={applicantsOptionList}
-      onChange={handlePersonSelect}
-      sx={{ width: AUTOCOMPLETE_CONFIG.WIDTH }}
-      renderInput={renderInput}
-      isOptionEqualToValue={isOptionEqualToValue}
-    />
+    <div>
+      <h3>Applicants</h3>
+      <ul>
+        {list.map((applicant: Person) => (
+          <li key={applicant._id.toString()}>
+            {`${applicant.firstName} ${applicant.lastName}`}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
-};
-
-/**
- * Maps a list of Person objects to OptionType objects for the autocomplete
- * @param people - Array of Person objects
- * @returns Array of OptionType objects with id, label, and person properties
- */
-const mapPersonListToOptionList = (people: Person[]): OptionType[] => {
-  return people.map((person) => ({
-    id: person._id.toString(),
-    label: `${person.firstName} ${person.lastName}`,
-    person,
-  }));
-};
-
-/**
- * Finds an available gift for a specific person
- * @param person - The person to find a gift for
- * @param giftList - Array of available gifts
- * @returns The found gift or null if none available
- */
-const findAvailableGiftForPerson = (
-  person: Person,
-  giftList: Gift[]
-): Gift | null => {
-  return (
-    giftList.find(
-      (gift) => gift.owner._id === person._id && gift.receiver !== null
-    ) || null
-  );
-};
-
-/**
- * Processes gift assignment for the selected person
- * @param person - The selected person
- * @param giftList - Array of available gifts
- * @param addGift - Function to add a gift
- */
-const processGiftAssignment = (
-  person: Person,
-  giftList: Gift[],
-  addGift: (gift: Gift) => void
-): void => {
-  const availableGift = findAvailableGiftForPerson(person, giftList);
-  if (availableGift) {
-    addGift(availableGift);
-  }
 };
 
 export default ApplicantList;
