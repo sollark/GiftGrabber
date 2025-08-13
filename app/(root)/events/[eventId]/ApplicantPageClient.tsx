@@ -1,5 +1,5 @@
 "use client";
-import Section from "@/components/Section";
+import { Section } from "@/ui/layout";
 import OrderGifts from "@/components/order/OrderGifts";
 import type { Event } from "@/database/models/event.model";
 

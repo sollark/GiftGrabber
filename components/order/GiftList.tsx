@@ -11,8 +11,7 @@ import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { useRouter } from "next/navigation";
 import GiftComponent from "../GiftComponent";
 import QRcode from "@/ui/data-display/QRcode";
-import StyledButton from "@/ui/primitives/AccentButton";
-import SecondaryButton from "@/ui/primitives/SecondaryButton";
+import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import { Box } from "@mui/material";
 
 const BASE_URL = "https://gift-grabber.onrender.com";

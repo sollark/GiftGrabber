@@ -1,6 +1,6 @@
-import CreateEventForm from '@/components/CreateEventForm'
-import Section from '@/components/Section'
-import { FC } from 'react'
+import CreateEventForm from "@/components/CreateEventForm";
+import { Section } from "@/ui/layout";
+import { FC } from "react";
 
 const CreatePage: FC = () => {
   return (
@@ -8,7 +8,7 @@ const CreatePage: FC = () => {
       <Section.Title>Create New Event</Section.Title>
       <CreateEventForm />
     </Section>
-  )
-}
+  );
+};
 
-export default CreatePage
+export default CreatePage;

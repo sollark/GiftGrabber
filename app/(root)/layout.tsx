@@ -1,6 +1,4 @@
-import Footer from "../../ui/layout/Footer";
-import Header from "../../ui/layout/Header";
-import Main from "../../ui/layout/Main";
+import { Footer, Header, Main } from "../../ui/layout";
 import { FC, ReactNode } from "react";
 
 type AppLayoutProps = {

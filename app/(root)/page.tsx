@@ -1,8 +1,8 @@
-import HeroSection from '@/components/HeroSection'
-import { FC } from 'react'
+import { HeroSection } from "@/ui/layout";
+import { FC } from "react";
 
 const Home: FC = () => {
-  return <HeroSection />
-}
+  return <HeroSection />;
+};
 
-export default Home
+export default Home;

@@ -56,7 +56,7 @@ const OrderDetails: FC = () => {
         <p>
           <strong>Approver:</strong> {approverName}
         </p>
-        <GiftList gifts={gifts} />
+        <GiftList />
       </div>
     </div>
   );

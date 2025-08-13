@@ -5,7 +5,7 @@ import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { OrderStatus } from "@/components/types/OrderStatus";
 import { Person } from "@/database/models/person.model";
 import React, { FC, useLayoutEffect } from "react";
-import ConditionalRender from "../ui/primitives/ConditionalRender";
+import { ConditionalRender } from "../ui/primitives";
 import PersonAutocomplete from "./form/PersonAutocomplete";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 

@@ -7,9 +7,9 @@ import { Order } from "@/database/models/order.model";
 import { FC, useMemo, ReactElement } from "react";
 import useSWR from "swr";
 import Approver from "./Approver";
-import ConfirmOrderButton from "@/ui/primitives/ConfirmOrderButton";
+import { ConfirmOrderButton } from "@/ui/primitives";
 import MultistepNavigator from "../ui/navigation/MultistepNavigator";
-import OrderDetails from "./OrderDetails";
+import OrderDetails from "./order/OrderDetails";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 

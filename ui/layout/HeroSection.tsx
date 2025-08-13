@@ -1,5 +1,5 @@
 import { FC } from "react";
-import HeroButton from "../ui/primitives/HeroButton";
+import HeroButton from "../primitives/HeroButton";
 
 const HeroSection: FC = () => {
   return (
