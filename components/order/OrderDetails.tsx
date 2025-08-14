@@ -1,7 +1,7 @@
 import { FC, useMemo, memo } from "react";
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import GiftList from "../gift/GiftList";
+import OrderGifts from "./OrderGifts";
 
 /**
  * Formats a person's full name
@@ -41,7 +41,7 @@ const OrderDetails: FC = () => {
   // Early return if no order exists
   if (!order) return null;
 
-  const { createdAt, applicant, gifts } = order;
+  const { createdAt, applicant } = order;
 
   return (
     <div>
@@ -56,10 +56,10 @@ const OrderDetails: FC = () => {
         <p>
           <strong>Approver:</strong> {approverName}
         </p>
-        <GiftList />
+        <OrderGifts />
       </div>
     </div>
   );
 };
 
-export default OrderDetails;
+export default memo(OrderDetails);
