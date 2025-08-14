@@ -16,8 +16,8 @@ import {
   processFormData,
   generateQRCodes,
   createEmailAttachments,
-  PersonWithoutId,
 } from "@/service/createEventFormService";
+import { PersonWithoutId } from "@/types/event.types";
 import {
   FORM_CONFIG,
   BASE_URL,

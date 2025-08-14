@@ -1,3 +1,24 @@
+/**
+ * Input type for processing event form data
+ * Contains event name, email, and applicant/approver files
+ */
+export type ProcessFormDataInput = {
+  eventName: string;
+  eventEmail: string;
+  applicantsFile: File;
+  approversFile: File;
+};
+
+/**
+ * Output type for processed event form data
+ * Contains normalized event name, email, and applicant/approver lists
+ */
+export type ProcessFormDataOutput = {
+  name: string;
+  email: string;
+  applicantList: PersonWithoutId[];
+  approverList: PersonWithoutId[];
+};
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
 

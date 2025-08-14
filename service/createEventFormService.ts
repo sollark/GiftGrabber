@@ -1,22 +1,10 @@
 import { excelToPersonList, getQRcodeBuffer } from "@/utils/utils";
-import { Person } from "@/database/models/person.model";
+import {
+  PersonWithoutId,
+  ProcessFormDataInput,
+  ProcessFormDataOutput,
+} from "@/types/event.types";
 import { Result, success, failure } from "@/lib/fp-utils";
-
-export type PersonWithoutId = Omit<Person, "_id">;
-
-export type ProcessFormDataInput = {
-  eventName: string;
-  eventEmail: string;
-  applicantsFile: File;
-  approversFile: File;
-};
-
-export type ProcessFormDataOutput = {
-  name: string;
-  email: string;
-  applicantList: PersonWithoutId[];
-  approverList: PersonWithoutId[];
-};
 
 /**
  * Processes form data and returns structured event information.
