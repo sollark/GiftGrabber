@@ -1,36 +1,39 @@
+import { Event } from "@/database/models/event.model";
+import { Person } from "@/database/models/person.model";
+
+// --- Utility Types ---
+// Utility type: removes _id from Person for form usage
+export type PersonWithoutId = Omit<Person, "_id">;
+
+// --- Form Data Types ---
 /**
  * Input type for processing event form data
  * Contains event name, email, and applicant/approver files
  */
-export type ProcessFormDataInput = {
+export interface ProcessFormDataInput {
   eventName: string;
   eventEmail: string;
   applicantsFile: File;
   approversFile: File;
-};
+}
 
 /**
  * Output type for processed event form data
  * Contains normalized event name, email, and applicant/approver lists
  */
-export type ProcessFormDataOutput = {
+export interface ProcessFormDataOutput {
   name: string;
   email: string;
   applicantList: PersonWithoutId[];
   approverList: PersonWithoutId[];
-};
-import { Event } from "@/database/models/event.model";
-import { Person } from "@/database/models/person.model";
+}
 
-export type PersonWithoutId = Omit<Person, "_id">;
-
-export type EventForm = Omit<
-  Event,
-  "_id" | "giftList" | "applicantList" | "approverList"
-> & {
+// --- Event Types ---
+export interface EventForm
+  extends Omit<Event, "_id" | "giftList" | "applicantList" | "approverList"> {
   applicantList: PersonWithoutId[];
   approverList: PersonWithoutId[];
-};
+}
 
 export interface CreateEventData {
   name: string;
