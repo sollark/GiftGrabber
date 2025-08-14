@@ -23,19 +23,13 @@ interface EmailPayload {
 /**
  * SMTP configuration for email transport
  */
-const SMTP_CONFIG = {
-  service: "Yahoo",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-} as const;
+import { EMAIL_CONFIG } from "@/config/emailConfig";
 
 /**
  * Creates and configures email transporter
  */
 const createEmailTransporter = () => {
-  return nodemailer.createTransport(SMTP_CONFIG);
+  return nodemailer.createTransport(EMAIL_CONFIG.SMTP);
 };
 
 /**

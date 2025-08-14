@@ -1,13 +1,14 @@
+// EXCEL_JSON_CONFIG removed; use EXCEL_CONFIG from config/excelConfig.ts
+
+/**
+ * Configuration constants for Excel to JSON conversion
+ */
 import * as XLSX from "xlsx";
 
 /**
  * Configuration constants for Excel to JSON conversion
  */
-const EXCEL_JSON_CONFIG = {
-  WORKBOOK_TYPE: "array" as const,
-  HEADER_ROW_INDEX: 1,
-  DEFAULT_SHEET_INDEX: 0,
-} as const;
+import { EXCEL_CONFIG } from "@/config/excelConfig";
 
 /**
  * Error messages for Excel JSON processing
@@ -51,7 +52,7 @@ export const convertExcelToJson = async (
  */
 const processExcelFile = async (excelFile: File): Promise<XLSX.WorkBook> => {
   const arrayBuffer = await excelFile.arrayBuffer();
-  return XLSX.read(arrayBuffer, { type: EXCEL_JSON_CONFIG.WORKBOOK_TYPE });
+  return XLSX.read(arrayBuffer, { type: EXCEL_CONFIG.WORKBOOK_TYPE });
 };
 
 /**
@@ -60,7 +61,7 @@ const processExcelFile = async (excelFile: File): Promise<XLSX.WorkBook> => {
  * @returns XLSX.WorkSheet - The first worksheet
  */
 const getFirstWorksheet = (workbook: XLSX.WorkBook): XLSX.WorkSheet => {
-  const sheetName = workbook.SheetNames[EXCEL_JSON_CONFIG.DEFAULT_SHEET_INDEX];
+  const sheetName = workbook.SheetNames[EXCEL_CONFIG.DEFAULT_SHEET_INDEX];
   return workbook.Sheets[sheetName];
 };
 
@@ -71,7 +72,7 @@ const getFirstWorksheet = (workbook: XLSX.WorkBook): XLSX.WorkSheet => {
  */
 const convertSheetToJsonData = (worksheet: XLSX.WorkSheet): ExcelData => {
   return XLSX.utils.sheet_to_json(worksheet, {
-    header: EXCEL_JSON_CONFIG.HEADER_ROW_INDEX,
+    header: EXCEL_CONFIG.HEADER_ROW_INDEX,
   }) as ExcelData;
 };
 
@@ -99,7 +100,7 @@ const processJsonData = (jsonData: ExcelData): JsonRecord[] => {
  * @returns ExcelRow - The header row
  */
 const getHeaderRow = (jsonData: ExcelData): ExcelRow => {
-  return jsonData[EXCEL_JSON_CONFIG.DEFAULT_SHEET_INDEX];
+  return jsonData[EXCEL_CONFIG.DEFAULT_SHEET_INDEX];
 };
 
 /**
@@ -108,7 +109,7 @@ const getHeaderRow = (jsonData: ExcelData): ExcelRow => {
  * @returns ExcelData - Data rows without header
  */
 const getDataRowsWithoutHeader = (jsonData: ExcelData): ExcelData => {
-  return jsonData.slice(EXCEL_JSON_CONFIG.HEADER_ROW_INDEX);
+  return jsonData.slice(EXCEL_CONFIG.HEADER_ROW_INDEX);
 };
 
 /**

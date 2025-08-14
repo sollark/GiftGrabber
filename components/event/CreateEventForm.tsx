@@ -19,7 +19,7 @@ import {
   FORM_CONFIG,
   BASE_URL,
   ERROR_MESSAGES,
-} from "@/components/event/createEventFormConfig";
+} from "@/config/eventFormConfig";
 import { sendMailToClient } from "@/service/mailService";
 
 /**

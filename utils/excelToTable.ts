@@ -5,11 +5,7 @@ import { ReactNode } from "react";
 /**
  * Configuration constants for the Excel to Table conversion
  */
-const EXCEL_CONFIG = {
-  MIME_TYPE: "text/html",
-  DEFAULT_SHEET_INDEX: 0,
-  FALLBACK_HTML: "<div></div>",
-} as const;
+import { EXCEL_CONFIG } from "@/config/excelConfig";
 
 /**
  * Error messages for Excel processing

@@ -6,19 +6,12 @@
 
 import { sendQRCodesToOwner } from "@/app/actions/email.action";
 import { Result, success, failure } from "@/utils/fp";
-import { ERROR_MESSAGES } from "@/components/event/createEventFormConfig";
+import { ERROR_MESSAGES } from "@/config/eventFormConfig";
 
 /**
  * Email configuration for event-related notifications.
  */
-const EMAIL_CONFIG = {
-  HTML_CONTENT: `<html><h1>QR codes</h1></html>`,
-  ATTACHMENTS: {
-    EVENT_QR_FILENAME: "event QR code.png",
-    OWNER_QR_FILENAME: "owner QR code.png",
-    ENCODING: "base64" as const,
-  },
-} as const;
+import { EMAIL_CONFIG } from "@/config/emailConfig";
 
 /**
  * Creates email attachments for QR codes.
