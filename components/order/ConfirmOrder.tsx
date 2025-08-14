@@ -22,7 +22,7 @@ import { getEventApprovers } from "@/app/actions/event.action";
 import { getOrder } from "@/app/actions/order.action";
 import { OrderProvider } from "@/app/contexts/order/OrderContext";
 import { Order } from "@/database/models/order.model";
-import { FC, useMemo, ReactElement } from "react";
+import { FC, useMemo } from "react";
 import useSWR from "swr";
 import Approver from "../approver/Approver";
 import { ConfirmOrderButton } from "@/ui/primitives";
@@ -89,28 +89,26 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
     { revalidateOnFocus: SWR_CONFIG.REVALIDATE_ON_FOCUS }
   );
 
-  // Memoize loading and error states for better performance
-  const loadingState = useMemo(
-    () => ({
-      isLoading: orderLoading || approversLoading,
-      hasOrderError: !!orderError,
-      hasApproversError: !!approversError,
-      hasOrder: Boolean(order),
-      hasApprovers: Boolean(approvers),
-    }),
-    [
-      orderLoading,
-      approversLoading,
-      orderError,
-      approversError,
-      order,
-      approvers,
-    ]
-  );
+  // Simplified error and loading state handling with early returns
+  if (orderLoading || approversLoading) {
+    return <div>{UI_MESSAGES.LOADING}</div>;
+  }
 
-  // Handle loading and error states
-  const errorComponent = getErrorComponent(loadingState);
-  if (errorComponent) return errorComponent;
+  if (orderError) {
+    return <div>{UI_MESSAGES.ORDER_ERROR}</div>;
+  }
+
+  if (!order) {
+    return <div>{UI_MESSAGES.ORDER_NOT_FOUND}</div>;
+  }
+
+  if (approversError) {
+    return <div>{UI_MESSAGES.APPROVERS_ERROR}</div>;
+  }
+
+  if (!approvers) {
+    return <div>{UI_MESSAGES.EVENT_NOT_FOUND}</div>;
+  }
 
   // Type guard for Order object
   const isValidOrder = (obj: any): obj is Order => {
@@ -124,8 +122,10 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
     );
   };
 
-  // Only render OrderProvider if order and approvers are present and valid
-  if (!isValidOrder(order) || !Array.isArray(approvers)) return null;
+  // Validate order structure before rendering
+  if (!isValidOrder(order) || !Array.isArray(approvers)) {
+    return null;
+  }
 
   return (
     <OrderProvider order={order as Order} approverList={approvers}>
@@ -163,40 +163,5 @@ const createOrderCacheKey = (orderId: string): string => `orders/${orderId}`;
  */
 const createEventCacheKey = (eventId: string): string =>
   `events/${eventId}/approvers`;
-
-/**
- * LoadingState
- * Interface for loading and error state tracking.
- */
-interface LoadingState {
-  isLoading: boolean;
-  hasOrderError: any;
-  hasApproversError: any;
-  hasOrder: boolean;
-  hasApprovers: boolean;
-}
-
-/**
- * getErrorComponent
- * Determines and returns the appropriate error component based on loading state.
- * @param loadingState - Current loading and error state
- * @returns React element for error/loading state or null if no error
- */
-const getErrorComponent = (loadingState: LoadingState): ReactElement | null => {
-  const {
-    isLoading,
-    hasOrderError,
-    hasApproversError,
-    hasOrder,
-    hasApprovers,
-  } = loadingState;
-
-  if (isLoading) return <div>{UI_MESSAGES.LOADING}</div>;
-  if (hasOrderError) return <div>{UI_MESSAGES.ORDER_ERROR}</div>;
-  if (!hasOrder) return <div>{UI_MESSAGES.ORDER_NOT_FOUND}</div>;
-  if (hasApproversError) return <div>{UI_MESSAGES.APPROVERS_ERROR}</div>;
-  if (!hasApprovers) return <div>{UI_MESSAGES.EVENT_NOT_FOUND}</div>;
-  return null;
-};
 
 export default ConfirmOrder;

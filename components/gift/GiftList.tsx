@@ -79,18 +79,29 @@ const GiftList: FC = () => {
   );
   const actions = useGiftActions();
 
-  // Derived state with safe context access
-  const eventId = eventIdMaybe._tag === "Some" ? eventIdMaybe.value : "";
-  const applicantGifts =
-    applicantGiftsMaybe._tag === "Some" &&
-    Array.isArray(applicantGiftsMaybe.value)
-      ? applicantGiftsMaybe.value
-      : [];
-  const removeGiftAction =
-    actions._tag === "Some"
-      ? (id: string) =>
-          actions.value.dispatchSafe({ type: "REMOVE_GIFT", payload: id })
-      : () => {};
+  // Memoized derived state with safe context access for consistent dependencies
+  const eventId = useMemo(
+    () => (eventIdMaybe._tag === "Some" ? eventIdMaybe.value : ""),
+    [eventIdMaybe]
+  );
+
+  const applicantGifts = useMemo(
+    () =>
+      applicantGiftsMaybe._tag === "Some" &&
+      Array.isArray(applicantGiftsMaybe.value)
+        ? applicantGiftsMaybe.value
+        : [],
+    [applicantGiftsMaybe]
+  );
+
+  const removeGiftAction = useMemo(
+    () =>
+      actions._tag === "Some"
+        ? (id: string) =>
+            actions.value.dispatchSafe({ type: "REMOVE_GIFT", payload: id })
+        : () => {},
+    [actions]
+  );
 
   // Memoized computed values
   const orderId = useMemo(() => generateOrderId(), []);

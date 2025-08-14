@@ -16,14 +16,7 @@
 
 "use client";
 
-import {
-  FC,
-  memo,
-  useState,
-  useCallback,
-  useMemo,
-  SyntheticEvent,
-} from "react";
+import { FC, useState, useCallback, useMemo, SyntheticEvent } from "react";
 import { Person } from "@/database/models/person.model";
 import { Autocomplete, TextField } from "@mui/material";
 import { SecondaryButton } from "../ui/primitives";
@@ -58,6 +51,7 @@ const AUTOCOMPLETE_CONFIG = {
 /**
  * mapPersonListToOptions
  * Maps a list of Person objects to OptionType objects for the autocomplete.
+ * Moved outside component to avoid recreation on every render.
  * @param people - Array of Person objects
  * @returns Array of OptionType objects
  */
@@ -69,9 +63,17 @@ const mapPersonListToOptions = (people: Person[]): OptionType[] =>
   }));
 
 /**
- * Functional PersonAutocomplete component.
+ * isOptionEqualToValue
+ * Compares two options for equality by ID.
+ * Moved outside component for consistent reference equality.
+ */
+const isOptionEqualToValue = (option: OptionType, value: OptionType): boolean =>
+  option.id === value.id;
+
+/**
+ * PersonAutocomplete component with focused performance optimizations.
  * Provides search functionality and requires explicit selection confirmation.
- * Uses memo and strict typing for composability and performance.
+ * Optimized without over-engineering for better maintainability.
  */
 const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   peopleList,
@@ -79,6 +81,8 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   onChangePerson,
 }) => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+
+  // Memoized option list to prevent unnecessary recalculation
   const optionList = useMemo(
     () => mapPersonListToOptions(peopleList),
     [peopleList]
@@ -87,8 +91,6 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   /**
    * handleOptionSelect
    * Handles selection from the autocomplete dropdown (does not confirm selection).
-   * @param event - The change event
-   * @param value - The selected option or null
    */
   const handleOptionSelect = useCallback(
     (event: SyntheticEvent, value: OptionType | null) => {
@@ -111,17 +113,8 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   }, [selectedPerson, onSelectPerson]);
 
   /**
-   * isOptionEqualToValue
-   * Compares two options for equality by ID.
-   */
-  const isOptionEqualToValue = useCallback(
-    (option: OptionType, value: OptionType) => option.id === value.id,
-    []
-  );
-
-  /**
    * renderInput
-   * Renders the input field for the autocomplete.
+   * Simple render function for the autocomplete input.
    */
   const renderInput = useCallback(
     (params: any) => (
