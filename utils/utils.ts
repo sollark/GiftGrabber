@@ -6,6 +6,7 @@ import { tryAsync } from "../lib/fp-utils";
 /**
  * Converts a File to a base64 string using functional error handling.
  * Returns a Promise<Result<string, Error>>.
+ * Pure function: no side effects outside of FileReader API.
  */
 export const convertFileToBase64 = tryAsync<[File], string>(async function (
   file: File
@@ -26,23 +27,38 @@ export const convertFileToBase64 = tryAsync<[File], string>(async function (
   });
 });
 
+/**
+ * Generates a unique event ID using a custom alphabet.
+ * Pure function.
+ */
 export function generateEventId(): string {
   const nanoid = customAlphabet("1234567890event", 10);
-  const eventId = nanoid();
-  return eventId;
+  return nanoid();
 }
+
+/**
+ * Generates a unique owner ID using a custom alphabet.
+ * Pure function.
+ */
 export function generateOwnerId(): string {
   const nanoid = customAlphabet("1234567890owner", 5);
-  const ownerId = nanoid();
-  return ownerId;
+  return nanoid();
 }
 
+/**
+ * Generates a unique order ID using a custom alphabet.
+ * Pure function.
+ */
 export function generateOrderId(): string {
   const nanoid = customAlphabet("1234567890order", 15);
-  const ownerId = nanoid();
-  return ownerId;
+  return nanoid();
 }
 
+/**
+ * Converts an Excel file to a list of Person objects (without _id).
+ * Returns a Promise<Omit<Person, \"_id\">[]>.
+ * Pure function.
+ */
 export async function excelToPersonList(file: File) {
   const jsonList = await convertExcelToJson(file);
 
@@ -55,30 +71,18 @@ export async function excelToPersonList(file: File) {
   return personArray;
 }
 
+/**
+ * Extracts a QR code buffer from a React ref to a QR code element.
+ * Returns a Buffer or undefined.
+ * Impure: depends on DOM and React ref.
+ */
 export const getQRcodeBuffer = async (qrRef: any) => {
   if (qrRef.current) {
     const canvas = qrRef.current.querySelector("canvas");
     if (canvas) {
       const pngUrl = canvas.toDataURL("image/png");
       const buffer = Buffer.from(pngUrl.split(",")[1], "base64");
-
       return buffer;
     }
   }
-};
-
-/**
- * Debounced function using local implementation.
- */
-export const debounce = (
-  func: (...args: any[]) => void,
-  wait: number
-): ((...args: any[]) => void) => {
-  let timerId: NodeJS.Timeout | null = null;
-  return (...args: any[]): void => {
-    if (timerId) clearTimeout(timerId);
-    timerId = setTimeout(() => {
-      func(...args);
-    }, wait);
-  };
 };
