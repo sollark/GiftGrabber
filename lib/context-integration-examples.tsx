@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { failure } from "@/lib/fp-utils";
+import { failure } from "@/utils/fp";
 
 // Enhanced context imports
 import {
@@ -12,7 +12,7 @@ import {
   useApplicantSelection,
 } from "@/app/contexts/ApplicantContext";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
-import { getMaybeOrElse } from "@/lib/fp-utils";
+import { getMaybeOrElse } from "@/utils/fp";
 
 import {
   OrderProvider,

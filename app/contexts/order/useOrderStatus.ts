@@ -8,7 +8,7 @@
 import { Person } from "@/database/models/person.model";
 import { useOrderActions, useOrderSelector } from "./OrderContext";
 import { getPersonName } from "./orderUtils";
-import { failure } from "@/lib/fp-utils";
+import { failure } from "@/utils/fp";
 
 /**
  * Hook for order status management

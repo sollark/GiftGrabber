@@ -8,7 +8,7 @@
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { FunctionalState, FunctionalAction } from "@/lib/fp-contexts";
-import { Maybe } from "@/lib/fp-utils";
+import { Maybe } from "@/utils/fp";
 
 // Local order status for internal operations
 export type LocalOrderStatus =

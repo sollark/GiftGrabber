@@ -1,7 +1,7 @@
 import { Person } from "@/database/models/person.model";
 import { customAlphabet } from "nanoid";
 import { convertExcelToJson } from "./excelToJson";
-import { tryAsync } from "../lib/fp-utils";
+import { tryAsync } from "./fp";
 
 /**
  * Converts a File to a base64 string using functional error handling.
@@ -56,19 +56,18 @@ export function generateOrderId(): string {
 
 /**
  * Converts an Excel file to a list of Person objects (without _id).
- * Returns a Promise<Omit<Person, \"_id\">[]>.
+ * Returns a Promise<Omit<Person, "_id">[]>.
  * Pure function.
  */
-export async function excelToPersonList(file: File) {
-  const jsonList = await convertExcelToJson(file);
-
-  // Convert json list to array of Person objects
-  const personArray: Omit<Person, "_id">[] = jsonList.map((record) => ({
-    firstName: record["firstName"],
-    lastName: record["lastName"],
-  }));
-
-  return personArray;
+export async function excelFileToPersonList(
+  file: File
+): Promise<Omit<Person, "_id">[]> {
+  const json = await convertExcelToJson(file);
+  // Remove _id if present
+  return json.map((row) => {
+    const { _id, ...rest } = row;
+    return rest as Omit<Person, "_id">;
+  });
 }
 
 /**

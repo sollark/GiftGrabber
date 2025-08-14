@@ -6,7 +6,7 @@
  */
 // ...existing code...
 import { validationMiddleware, optimisticMiddleware } from "@/lib/fp-contexts";
-import { success, failure } from "@/lib/fp-utils";
+import { success, failure } from "@/utils/fp";
 import { OrderState, OrderAction } from "./types";
 
 /**

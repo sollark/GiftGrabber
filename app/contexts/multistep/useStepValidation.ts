@@ -6,7 +6,7 @@
  */
 // ...existing code...
 import React from "react";
-import { Result, success, failure } from "@/lib/fp-utils";
+import { Result, success, failure } from "@/utils/fp";
 import MultistepContext from "./MultistepContext";
 import {
   selectValidationResults,

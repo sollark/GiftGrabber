@@ -13,7 +13,7 @@ import {
   trySync,
   tryAsync,
   memoize,
-} from "../utils/fp";
+} from "./fp";
 
 /**
  * Enhanced functional hooks with Result/Maybe types and functional composition
@@ -24,11 +24,6 @@ import {
 // SAFE STATE MANAGEMENT HOOKS
 // ============================================================================
 
-/**
- * Enhanced useState with Result-based state updates
- * @param initialValue - Initial state value
- * @returns [state, setState with Result handling, resetState]
- */
 export function useResultState<T>(
   initialValue: T
 ): [T, (updater: (prev: T) => Result<T, Error>) => void, () => void] {
@@ -51,11 +46,6 @@ export function useResultState<T>(
   return [state, setResultState, resetState];
 }
 
-/**
- * Safe state hook with Maybe type for nullable values
- * @param initialValue - Initial Maybe value
- * @returns [maybe state, safe setter, reset function]
- */
 export function useMaybeState<T>(
   initialValue: Maybe<T> = none
 ): [Maybe<T>, (value: T | null | undefined) => void, () => void] {
@@ -72,11 +62,6 @@ export function useMaybeState<T>(
   return [state, setSafeState, resetState];
 }
 
-/**
- * Immutable state hook that prevents direct mutations
- * @param initialValue - Initial state value
- * @returns [readonly state, immutable setter, reset function]
- */
 export function useImmutableState<T>(
   initialValue: T
 ): [Readonly<T>, (updater: (prev: Readonly<T>) => T) => void, () => void] {
@@ -100,12 +85,6 @@ export function useImmutableState<T>(
 // ASYNC STATE HOOKS
 // ============================================================================
 
-/**
- * Enhanced async state with Result-based error handling
- * @param asyncFn - Async function to execute
- * @param deps - Dependencies array
- * @returns Loading state, Result data, retry function
- */
 export function useAsyncResult<T>(
   asyncFn: () => Promise<T>,
   deps: React.DependencyList = []
@@ -142,12 +121,6 @@ export function useAsyncResult<T>(
   return { loading, result, retry };
 }
 
-/**
- * Safe async operation hook with automatic retries
- * @param operation - Async operation function
- * @param options - Configuration options
- * @returns Async state management object
- */
 export function useSafeAsync<T>(
   operation: () => Promise<T>,
   options: {
@@ -208,12 +181,6 @@ export function useSafeAsync<T>(
 // COMPOSITION HOOKS
 // ============================================================================
 
-/**
- * Hook for composing multiple async operations in sequence
- * @param operations - Array of async operations
- * @param deps - Dependencies array
- * @returns Composition result state
- */
 export function useAsyncComposition<T>(
   operations: (() => Promise<T>)[],
   deps: React.DependencyList = []
@@ -252,12 +219,6 @@ export function useAsyncComposition<T>(
   return { results, loading, error, execute };
 }
 
-/**
- * Hook for functional pipeline operations on state
- * @param initialValue - Initial state value
- * @param pipeline - Array of transformation functions
- * @returns [state, apply pipeline, reset]
- */
 export function usePipeline<T>(
   initialValue: T,
   pipeline: ((value: T) => T)[]
@@ -285,12 +246,6 @@ export function usePipeline<T>(
 // MEMOIZATION HOOKS
 // ============================================================================
 
-/**
- * Enhanced useMemo with Result-based computation
- * @param computeFn - Computation function that may fail
- * @param deps - Dependencies array
- * @returns Maybe<T> result
- */
 export function useSafeMemo<T>(
   computeFn: () => T,
   deps: React.DependencyList
@@ -301,12 +256,6 @@ export function useSafeMemo<T>(
   }, deps);
 }
 
-/**
- * Memoized computation with Result error handling
- * @param computeFn - Computation function
- * @param deps - Dependencies array
- * @returns Result<T, Error>
- */
 export function useResultMemo<T>(
   computeFn: () => T,
   deps: React.DependencyList
@@ -314,12 +263,6 @@ export function useResultMemo<T>(
   return useMemo(() => trySync(computeFn)(), deps);
 }
 
-/**
- * Cached callback with memoization
- * @param fn - Callback function
- * @param deps - Dependencies array
- * @returns Memoized callback
- */
 export function useMemoizedCallback<T extends any[], R>(
   fn: (...args: T) => R,
   deps: React.DependencyList
@@ -332,12 +275,6 @@ export function useMemoizedCallback<T extends any[], R>(
 // VALIDATION HOOKS
 // ============================================================================
 
-/**
- * Form validation hook with functional composition
- * @param initialState - Initial form state
- * @param validators - Object of validator functions
- * @returns Form state management object
- */
 export function useFormValidation<T extends Record<string, any>>(
   initialState: T,
   validators: Partial<Record<keyof T, (value: any) => Result<any, string>>>
@@ -397,11 +334,6 @@ export function useFormValidation<T extends Record<string, any>>(
 // EFFECT HOOKS
 // ============================================================================
 
-/**
- * Safe effect hook with cleanup and error handling
- * @param effect - Effect function
- * @param deps - Dependencies array
- */
 export function useSafeEffect(
   effect: () => (() => void) | void,
   deps: React.DependencyList
@@ -415,11 +347,6 @@ export function useSafeEffect(
   }, deps);
 }
 
-/**
- * Async effect hook with cancellation
- * @param asyncEffect - Async effect function
- * @param deps - Dependencies array
- */
 export function useAsyncEffect(
   asyncEffect: (signal: AbortSignal) => Promise<void>,
   deps: React.DependencyList
@@ -441,11 +368,6 @@ export function useAsyncEffect(
 // BACKWARD COMPATIBILITY
 // ============================================================================
 
-/**
- * Adapter for existing hooks to use Maybe types
- * @param hook - Original hook function
- * @returns Enhanced hook with Maybe support
- */
 export function adaptHookToMaybe<T extends any[], R>(
   hook: (...args: T) => R
 ): (...args: T) => Maybe<R> {
@@ -459,11 +381,6 @@ export function adaptHookToMaybe<T extends any[], R>(
   };
 }
 
-/**
- * Migration helper for legacy state hooks
- * @param useState - React useState hook
- * @returns Enhanced state hook with functional patterns
- */
 export const useEnhancedState = <T>(
   initialValue: T
 ): [T, (updater: (prev: T) => T) => void, () => void] => {
@@ -485,23 +402,3 @@ export const useEnhancedState = <T>(
 
   return [state, enhancedSetState, resetState];
 };
-
-const EnhancedHooksExports = {
-  useResultState,
-  useMaybeState,
-  useImmutableState,
-  useAsyncResult,
-  useSafeAsync,
-  useAsyncComposition,
-  usePipeline,
-  useSafeMemo,
-  useResultMemo,
-  useMemoizedCallback,
-  useFormValidation,
-  useSafeEffect,
-  useAsyncEffect,
-  adaptHookToMaybe,
-  useEnhancedState,
-};
-
-export default EnhancedHooksExports;

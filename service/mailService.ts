@@ -6,7 +6,7 @@
 
 import { sendQRCodesToOwner } from "@/app/actions/email.action";
 import { EmailAttachment } from "./createEventFormService";
-import { Result, success, failure } from "@/lib/fp-utils";
+import { Result, success, failure } from "@/utils/fp";
 
 export type SendMailInput = {
   to: string;

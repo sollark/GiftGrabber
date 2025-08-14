@@ -6,7 +6,7 @@
  */
 // ...existing code...
 import { useOrderActions, useOrderSelector } from "./OrderContext";
-import { failure } from "@/lib/fp-utils";
+import { failure } from "@/utils/fp";
 import { OrderNotification, OrderHistoryEntry } from "./types";
 
 /**

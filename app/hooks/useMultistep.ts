@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { Maybe, some, none, Result, success, failure } from "@/lib/fp-utils";
-import { useImmutableState, useResultState } from "@/lib/fp-hooks";
+import { useCallback, useMemo } from "react";
+import { Maybe, some, none, Result, success, failure } from "@/utils/fp";
+import { useImmutableState } from "@/utils/fp-hooks";
 
 /**
  * Enhanced multi-step form navigation with functional patterns

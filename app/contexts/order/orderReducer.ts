@@ -4,7 +4,7 @@
  * Responsibilities: Handles all order-related actions and updates state accordingly.
  * Architecture: Used by OrderContext to manage state changes in a functional, predictable way.
  */
-import { Result, success, failure, some, none } from "@/lib/fp-utils";
+import { Result, success, failure, some, none } from "@/utils/fp";
 import { Order } from "@/database/models/order.model";
 import type { Person } from "@/database/models/person.model";
 import {

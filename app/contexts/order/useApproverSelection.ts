@@ -7,7 +7,7 @@
 // ...existing code...
 import { Person } from "@/database/models/person.model";
 import { useOrderActions, useOrderSelector } from "./OrderContext";
-import { failure } from "@/lib/fp-utils";
+import { failure } from "@/utils/fp";
 
 /**
  * Hook for approver selection

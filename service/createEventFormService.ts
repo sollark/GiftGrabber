@@ -1,10 +1,10 @@
-import { excelToPersonList, getQRcodeBuffer } from "@/utils/utils";
+import { excelFileToPersonList, getQRcodeBuffer } from "@/utils/utils";
 import {
   PersonWithoutId,
   ProcessFormDataInput,
   ProcessFormDataOutput,
 } from "@/types/event.types";
-import { Result, success, failure } from "@/lib/fp-utils";
+import { Result, success, failure } from "@/utils/fp";
 
 /**
  * Processes form data and returns structured event information.
@@ -21,14 +21,14 @@ export const processFormData = async (
     approversFile,
   } = data;
 
-  const applicantList = (await excelToPersonList(applicantsFile)) as
+  const applicantList = (await excelFileToPersonList(applicantsFile)) as
     | PersonWithoutId[]
     | null;
   if (!applicantList) {
     return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
 
-  const approverList = (await excelToPersonList(approversFile)) as
+  const approverList = (await excelFileToPersonList(approversFile)) as
     | PersonWithoutId[]
     | null;
   if (!approverList) {

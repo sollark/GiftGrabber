@@ -17,7 +17,7 @@ import type {
   NavigationHistoryEntry,
   MultistepData,
 } from "./types";
-import { Result, success, failure, none } from "@/lib/fp-utils";
+import { Result, success, failure, none } from "@/utils/fp";
 import {
   canNavigateToStep,
   findStepIndex,

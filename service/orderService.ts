@@ -2,7 +2,7 @@ import { OrderStatus } from "@/components/order/OrderStatus";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
-import { Result, success, failure } from "@/lib/fp-utils";
+import { Result, success, failure } from "@/utils/fp";
 import { Types } from "mongoose";
 
 export interface OrderCreationData {

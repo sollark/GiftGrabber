@@ -10,7 +10,7 @@
  * Pure, functional helpers for step navigation and validation
  */
 import { StepDefinition, StepValidationResult } from "./types";
-import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
+import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 
 /**
  * Finds the index of a step by ID

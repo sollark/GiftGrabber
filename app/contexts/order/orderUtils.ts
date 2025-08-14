@@ -8,7 +8,7 @@
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { OrderStatus as ImportedOrderStatus } from "@/components/order/OrderStatus";
-import { some, none } from "@/lib/fp-utils";
+import { some, none } from "@/utils/fp";
 import { EnhancedOrder, LocalOrderStatus, OrderState } from "./types";
 
 /**

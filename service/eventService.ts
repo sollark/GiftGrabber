@@ -1,4 +1,4 @@
-import { failure, success, Result } from "@/lib/fp-utils";
+import { failure, success, Result } from "@/utils/fp";
 
 /**
  * Validates that an event exists.
@@ -21,7 +21,7 @@ export const validateEventExists = (
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
-import { handleError } from "@/lib/fp-utils";
+import { handleError } from "@/utils/fp";
 
 type PersonWithoutId = Omit<Person, "_id">;
 type EventForm = Omit<

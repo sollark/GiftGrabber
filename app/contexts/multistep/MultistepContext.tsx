@@ -13,7 +13,7 @@ import {
   createFunctionalContext,
 } from "@/lib/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
-import { success } from "@/lib/fp-utils";
+import { success } from "@/utils/fp";
 import { useStepData } from "./useStepData";
 import { useStepValidation } from "./useStepValidation";
 import { useStepNavigation } from "./useStepNavigation";
