@@ -132,7 +132,6 @@ export function useSafeAsync<T>(
   reset: () => void;
 } {
   const { maxRetries = 3, retryDelay = 1000, deps = [] } = options;
-
   const [data, setData] = useState<Maybe<T>>(none);
   const [error, setError] = useState<Maybe<Error>>(none);
   const [loading, setLoading] = useState(false);
@@ -140,8 +139,8 @@ export function useSafeAsync<T>(
   const execute = useCallback(async () => {
     setLoading(true);
     setError(none);
-
     let retries = 0;
+
     while (retries <= maxRetries) {
       try {
         const result = await operation();
@@ -285,23 +284,37 @@ export function useFormValidation<T extends Record<string, any>>(
   const [values, setValues] = useState<T>(initialState);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
-  const validate = useCallback(
-    (key?: keyof T) => {
-      const fieldsToValidate = key
-        ? [key]
-        : (Object.keys(validators) as (keyof T)[]);
-      const newErrors: Partial<Record<keyof T, string>> = { ...errors };
-      let isValid = true;
+  const setValue = useCallback((key: keyof T, value: any) => {
+    setValues((prev) => ({ ...prev, [key]: value }));
+    // Clear error when value changes
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  }, []);
 
-      for (const field of fieldsToValidate) {
-        const validator = validators[field];
+  const validate = useCallback(
+    (key?: keyof T): boolean => {
+      if (key) {
+        const validator = validators[key];
         if (validator) {
-          const result = validator(values[field]);
+          const result = validator(values[key]);
           if (result._tag === "Failure") {
-            newErrors[field] = result.error;
+            setErrors((prev) => ({ ...prev, [key]: result.error }));
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Validate all fields
+      let isValid = true;
+      const newErrors: Partial<Record<keyof T, string>> = {};
+
+      for (const fieldKey of Object.keys(values) as Array<keyof T>) {
+        const validator = validators[fieldKey];
+        if (validator) {
+          const result = validator(values[fieldKey]);
+          if (result._tag === "Failure") {
+            newErrors[fieldKey] = result.error;
             isValid = false;
-          } else {
-            delete newErrors[field];
           }
         }
       }
@@ -309,19 +322,15 @@ export function useFormValidation<T extends Record<string, any>>(
       setErrors(newErrors);
       return isValid;
     },
-    [values, validators, errors]
+    [values, validators]
   );
-
-  const setValue = useCallback((key: keyof T, value: any) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
-  }, []);
 
   const reset = useCallback(() => {
     setValues(initialState);
     setErrors({});
   }, [initialState]);
 
-  const isValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
+  const isValid = Object.keys(errors).length === 0;
 
   return { values, errors, isValid, setValue, validate, reset };
 }
@@ -367,10 +376,10 @@ export function useAsyncEffect(
 export function adaptHookToMaybe<T extends any[], R>(
   hook: (...args: T) => R
 ): (...args: T) => Maybe<R> {
-  return (...args: T): Maybe<R> => {
+  return (...args: T) => {
     try {
       const result = hook(...args);
-      return result != null ? some(result) : none;
+      return some(result);
     } catch {
       return none;
     }

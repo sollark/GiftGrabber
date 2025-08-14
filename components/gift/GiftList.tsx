@@ -37,10 +37,12 @@ import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
+import { useSafeAsync } from "@/utils/fp-hooks";
 
 import GiftComponent from "./GiftComponent";
 import QRcode from "@/ui/data-display/QRcode";
 import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
+import ErrorMessage from "@/ui/form/ErrorMessage";
 
 // Component constants
 const GIFT_LIST_STYLES = {
@@ -116,25 +118,15 @@ const GiftList: FC = () => {
   );
 
   /**
-   * Handles removal of a gift from the applicant's gift list
-   *
-   * @param gift - The gift object to remove from the list
-   */
-  const handleRemoveGift = useCallback(
-    (gift: Gift) => removeGiftAction(gift._id.toString()),
-    [removeGiftAction]
-  );
-
-  /**
    * Generates a base64-encoded QR code string from the QR code DOM reference
    *
-   * @returns Promise<string | null> - Base64 QR code string or null if generation fails
+   * @returns Promise<string> - Base64 QR code string
+   * @throws Error if QR code generation fails
    */
-  const generateQRCodeData = useCallback(async (): Promise<string | null> => {
+  const generateQRCodeData = useCallback(async (): Promise<string> => {
     const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef);
     if (!orderQRCodeBuffer) {
-      console.error(MESSAGES.QR_CODE_ERROR);
-      return null;
+      throw new Error(MESSAGES.QR_CODE_ERROR);
     }
     return orderQRCodeBuffer.toString("base64");
   }, []);
@@ -143,49 +135,85 @@ const GiftList: FC = () => {
    * Submits the order with applicant data, gifts, and QR code
    *
    * @param qrCodeData - Base64-encoded QR code string for the order
-   * @returns Promise<boolean> - True if order creation succeeds, false otherwise
+   * @returns Promise<boolean> - True if order creation succeeds
+   * @throws Error if order creation fails
    */
   const submitOrder = useCallback(
     async (qrCodeData: string): Promise<boolean> => {
       if (!applicant) {
-        console.error(MESSAGES.NO_APPLICANT_ERROR);
-        return false;
+        throw new Error(MESSAGES.NO_APPLICANT_ERROR);
       }
 
-      try {
-        const response = await makeOrder(
-          approverList._tag === "Some" ? approverList.value : [],
-          applicant,
-          applicantGifts,
-          orderId,
-          qrCodeData
-        );
-        return !!response;
-      } catch (error) {
-        console.error(MESSAGES.ORDER_ERROR, error);
-        return false;
+      const response = await makeOrder(
+        approverList._tag === "Some" ? approverList.value : [],
+        applicant,
+        applicantGifts,
+        orderId,
+        qrCodeData
+      );
+
+      if (!response) {
+        throw new Error("Order creation failed");
       }
+
+      return true;
     },
     [approverList, applicant, applicantGifts, orderId]
   );
 
   /**
-   * Orchestrates the complete order processing workflow:
-   * 1. Generates QR code data
-   * 2. Submits the order
-   * 3. Navigates to order confirmation page on success
+   * Orchestrates the complete order processing workflow using safe async patterns
+   * Provides loading states and error handling
    */
-  const processOrder = useCallback(async () => {
-    if (!applicant) return;
+  const {
+    data: orderResult,
+    error: orderError,
+    loading: isProcessingOrder,
+    execute: executeOrderProcess,
+    reset: resetOrderProcess,
+  } = useSafeAsync(
+    async () => {
+      if (!applicant) {
+        throw new Error(MESSAGES.NO_APPLICANT_ERROR);
+      }
 
-    const qrCodeData = await generateQRCodeData();
-    if (!qrCodeData) return;
+      // Step 1: Generate QR code
+      const qrCodeData = await generateQRCodeData();
 
-    const isSuccess = await submitOrder(qrCodeData);
-    if (isSuccess) {
+      // Step 2: Submit order
+      const success = await submitOrder(qrCodeData);
+      if (!success) {
+        throw new Error("Order submission failed");
+      }
+
+      // Step 3: Navigate to order page
       router.push(`/events/${eventId}/orders/${orderId}`);
+
+      return true;
+    },
+    {
+      deps: [applicant, eventId, orderId],
+      maxRetries: 1,
     }
-  }, [applicant, eventId, orderId, router, generateQRCodeData, submitOrder]);
+  );
+
+  /**
+   * Initiates the order processing workflow
+   */
+  const processOrder = useCallback(() => {
+    if (!applicant || isProcessingOrder) return;
+    executeOrderProcess();
+  }, [applicant, isProcessingOrder, executeOrderProcess]);
+
+  /**
+   * Handles removal of a gift from the applicant's gift list
+   *
+   * @param gift - The gift object to remove from the list
+   */
+  const handleRemoveGift = useCallback(
+    (gift: Gift) => removeGiftAction(gift._id.toString()),
+    [removeGiftAction]
+  );
 
   /**
    * Renders a single gift item with its component and remove button
@@ -223,7 +251,15 @@ const GiftList: FC = () => {
     <Box sx={GIFT_LIST_STYLES.container}>
       <h3>{applicantDisplayName} gifts:</h3>
       {renderGiftsList()}
-      <StyledButton onClick={processOrder}>Take</StyledButton>
+      <StyledButton
+        onClick={processOrder}
+        disabled={!applicant || isProcessingOrder}
+      >
+        {isProcessingOrder ? "Processing..." : "Take"}
+      </StyledButton>
+      {orderError._tag === "Some" && (
+        <ErrorMessage message={orderError.value.message} />
+      )}
       <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
     </Box>
   );
