@@ -22,27 +22,11 @@ import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import { handleError } from "@/utils/fp";
-
-type PersonWithoutId = Omit<Person, "_id">;
-type EventForm = Omit<
-  Event,
-  "_id" | "giftList" | "applicantList" | "approverList"
-> & {
-  applicantList: PersonWithoutId[];
-  approverList: PersonWithoutId[];
-};
-
-interface CreateEventData {
-  name: string;
-  email: string;
-  eventId: string;
-  ownerId: string;
-  eventQRCodeBase64: string;
-  ownerIdQRCodeBase64: string;
-  applicantIds: string[];
-  giftIds: string[];
-  approverIds: string[];
-}
+import {
+  PersonWithoutId,
+  CreateEventData,
+  EventFormData,
+} from "@/types/common.types";
 
 /**
  * Helper: Creates person records for a list of person data (applicants or approvers).
@@ -137,7 +121,7 @@ export const createApplicantsAndApprovers = async (
  * Main entry point for event creation. Handles all related entity creation and error handling.
  */
 export const createEventInternal = async (
-  event: EventForm
+  event: EventFormData
 ): Promise<boolean | undefined> => {
   const {
     name,

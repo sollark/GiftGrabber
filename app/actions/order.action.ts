@@ -16,8 +16,8 @@ import {
   validateOrderExists,
   validateOrderForConfirmation,
   serializeOrder,
-  OrderCreationData,
 } from "@/service/orderService";
+import { OrderCreationData } from "@/types/common.types";
 import { saveObject } from "@/lib/castToDocument";
 import { failure, handleError, Result, success } from "@/utils/fp";
 

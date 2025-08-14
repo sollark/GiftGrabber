@@ -1,14 +1,16 @@
-import { Event } from "@/database/models/event.model";
-import { Person } from "@/database/models/person.model";
+import {
+  PersonWithoutId,
+  CreateEventData,
+  EventFormData,
+} from "./common.types";
 
-// --- Utility Types ---
-// Utility type: removes _id from Person for form usage
-export type PersonWithoutId = Omit<Person, "_id">;
+// ============================================================================
+// FORM DATA TYPES - Event Form Processing
+// ============================================================================
 
-// --- Form Data Types ---
 /**
  * Input type for processing event form data
- * Contains event name, email, and applicant/approver files
+ * Contains event name, email, and applicant/approver files from user input
  */
 export interface ProcessFormDataInput {
   eventName: string;
@@ -28,21 +30,17 @@ export interface ProcessFormDataOutput {
   approverList: PersonWithoutId[];
 }
 
-// --- Event Types ---
-export interface EventForm
-  extends Omit<Event, "_id" | "giftList" | "applicantList" | "approverList"> {
-  applicantList: PersonWithoutId[];
-  approverList: PersonWithoutId[];
-}
+// ============================================================================
+// RE-EXPORTS - For backwards compatibility
+// ============================================================================
 
-export interface CreateEventData {
-  name: string;
-  email: string;
-  eventId: string;
-  ownerId: string;
-  eventQRCodeBase64: string;
-  ownerIdQRCodeBase64: string;
-  applicantIds: string[];
-  giftIds: string[];
-  approverIds: string[];
-}
+/**
+ * Re-export commonly used types from common module
+ */
+export type { PersonWithoutId, CreateEventData, EventFormData };
+
+/**
+ * Legacy alias for EventFormData - for backwards compatibility
+ * @deprecated Use EventFormData instead
+ */
+export type EventForm = EventFormData;

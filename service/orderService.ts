@@ -3,31 +3,11 @@ import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import { Result, success, failure } from "@/utils/fp";
-import { Types } from "mongoose";
-
-/**
- * Data required to create an order.
- */
-export interface OrderCreationData {
-  createdAt: Date;
-  approverList: Types.ObjectId[];
-  applicant: Types.ObjectId;
-  gifts: Types.ObjectId[];
-  orderId: string;
-  confirmationRQCode: string;
-}
-
-/**
- * Type guard to check if an object is a Mongoose document.
- * @param obj - The object to check.
- * @returns True if the object is a Mongoose document, false otherwise.
- */
-export const isMongooseDocument = (
-  obj: unknown
-): obj is { toObject: () => object } =>
-  !!obj &&
-  typeof obj === "object" &&
-  typeof (obj as any).toObject === "function";
+import {
+  ObjectId,
+  OrderCreationData,
+  isMongooseDocument,
+} from "@/types/common.types";
 
 /**
  * Pure helper to serialize any Mongoose document or plain object.
