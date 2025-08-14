@@ -6,15 +6,16 @@
 
 import React from "react";
 import { Person } from "@/database/models/person.model";
+
 import {
   createFunctionalContext,
   FunctionalAction,
   FunctionalState,
+  loggingMiddleware,
+  validationMiddleware,
 } from "@/lib/fp-contexts";
-import { loggingMiddleware } from "@/lib/fp-contexts";
-import { validationMiddleware } from "@/lib/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
-import { Result, Maybe, some, none, success, failure } from "@/lib/fp-utils";
+import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 
 // ============================================================================
 // TYPES AND INTERFACES
