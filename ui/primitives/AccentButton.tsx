@@ -1,6 +1,6 @@
 import { tokens } from "@/ui/colorTokens";
 import { Button, ButtonProps } from "@mui/material";
-import { FC, memo } from "react";
+import { FC } from "react";
 
 const palette = tokens("light");
 

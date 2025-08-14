@@ -16,7 +16,7 @@
  */
 
 "use client";
-import React, { FC, memo, useCallback } from "react";
+import React, { FC, useCallback } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
 import { Maybe, some, none } from "@/utils/fp";

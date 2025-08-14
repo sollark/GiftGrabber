@@ -1,4 +1,4 @@
-import { FC, ReactNode, memo } from "react";
+import { FC, ReactNode } from "react";
 
 type MainProps = {
   children: ReactNode;

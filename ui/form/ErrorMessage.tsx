@@ -1,12 +1,13 @@
-import { FC, memo } from "react";
+import { FC } from "react";
 
 type ErrorMessageProps = {
-  message: string;
+  message: string | string[];
+  color?: string;
 };
 
 /**
  * Functional ErrorMessage component.
- * Renders an error message with strict typing and composable props.
+ * Displays error messages with strict typing and composable error handling.
  * Uses memo for performance.
  */
 const ErrorMessage: FC<ErrorMessageProps> = ({ message }) => (
