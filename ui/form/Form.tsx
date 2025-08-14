@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, ReactElement, ReactNode, memo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { AccentButton as StyledButton } from "../../ui/primitives";
+import { AccentButton as StyledButton } from "../primitives";
 
 /**
  * Props for the Form component

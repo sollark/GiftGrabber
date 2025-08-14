@@ -5,8 +5,8 @@ import { generateEventId, generateOwnerId } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useCallback, useMemo, FC } from "react";
-import ErrorMessage from "../form/ErrorMessage";
-import Form from "../form/Form";
+import ErrorMessage from "../../ui/form/ErrorMessage";
+import Form from "../../ui/form/Form";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import FormInputSection from "./FormInputSection";
@@ -23,7 +23,7 @@ import {
   BASE_URL,
   ERROR_MESSAGES,
   EMAIL_CONFIG,
-} from "@/config/createEventFormConfig";
+} from "@/components/event/createEventFormConfig";
 import { sendMail } from "@/service/mailService";
 
 /**

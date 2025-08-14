@@ -1,4 +1,4 @@
-import ControlledFileInput from "../form/ControlledFileInput";
+import ControlledFileInput from "../../ui/form/ControlledFileInput";
 import QRcode from "@/ui/data-display/QRcode";
 
 const FORM_CONFIG = {

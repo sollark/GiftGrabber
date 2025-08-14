@@ -1,6 +1,6 @@
 "use server";
 
-import { OrderStatus } from "@/components/types/OrderStatus";
+import { OrderStatus } from "@/components/order/OrderStatus";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
 import PersonModel, { Person } from "@/database/models/person.model";
