@@ -1,5 +1,5 @@
 import React, { useContext, Context } from "react";
-import { Maybe, some, none, Result, success, failure } from "@/lib/fp-utils";
+import { Maybe, some, none, Result, success, failure } from "@/utils/fp";
 
 /**
  * Enhanced safe context hook with functional error handling

@@ -1,6 +1,6 @@
 import { useGiftActions, useGiftSelector } from "@/app/contexts/GiftContext";
 import { Gift } from "@/database/models/gift.model";
-import { failure } from "@/lib/fp-utils";
+import { failure } from "@/utils/fp";
 import React from "react";
 
 /**

@@ -34,7 +34,7 @@ import {
   withDatabaseNullable,
   withDatabaseArray,
 } from "@/lib/withDatabase";
-import { failure, handleError, Result, success } from "@/lib/fp-utils";
+import { failure, handleError, Result, success } from "@/utils/fp";
 
 /**
  * Configuration constants for event operations

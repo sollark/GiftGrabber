@@ -19,7 +19,7 @@
 import React, { FC, memo, useCallback } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
-import { Maybe, some, none } from "@/lib/fp-utils";
+import { Maybe, some, none } from "@/utils/fp";
 import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 import { Person } from "@/database/models/person.model";

@@ -1,5 +1,5 @@
 import { connectToDatabase } from "@/database/connect";
-import { Result, success, failure, tryAsync } from "./fp-utils";
+import { Result, success, failure, tryAsync } from "@/utils/fp";
 
 /**
  * Enhanced database middleware with functional error handling

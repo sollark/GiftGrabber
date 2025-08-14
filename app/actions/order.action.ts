@@ -19,7 +19,7 @@ import {
   OrderCreationData,
 } from "@/service/orderService";
 import { saveObject } from "@/lib/castToDocument";
-import { failure, handleError, Result, success } from "@/lib/fp-utils";
+import { failure, handleError, Result, success } from "@/utils/fp";
 
 /**
  * Configuration constants for order operations

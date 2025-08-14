@@ -15,10 +15,8 @@
  */
 
 import { FC, useState } from "react";
-import { none } from "@/lib/fp-utils";
+import { none, Maybe, getMaybeOrElse } from "@/utils/fp";
 import { useGiftSelector } from "@/app/contexts/GiftContext";
-import { getMaybeOrElse } from "@/lib/fp-utils";
-import type { Maybe } from "@/lib/fp-utils";
 import GiftComponent from "./GiftComponent";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";

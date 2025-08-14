@@ -17,14 +17,14 @@ import {
   tryAsync,
   arrayUtils,
   objectUtils,
-} from "./fp-utils";
+} from "@/utils/fp";
 import {
   useResultState,
   useMaybeState,
   useAsyncResult,
   useSafeAsync,
   useFormValidation,
-} from "./fp-hooks";
+} from "@/utils/fp-hooks";
 import {
   withDatabaseResult,
   executeWithDatabase,
