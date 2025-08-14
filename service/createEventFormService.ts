@@ -1,4 +1,4 @@
-import { excelFileToPersonList, getQRcodeBuffer } from "@/utils/utils";
+import { excelFileToPersonList } from "@/utils/utils";
 import {
   PersonWithoutId,
   ProcessFormDataInput,
@@ -38,43 +38,24 @@ export const processFormData = async (
   return success({ name, email, applicantList, approverList });
 };
 
+/**
+ * Output type for generated QR codes.
+ */
 export type GenerateQRCodesOutput = {
   eventQRCodeBase64: string;
   ownerIdQRCodeBase64: string;
 };
 
 /**
- * Generates QR codes as base64 strings from refs.
- * Returns Result for FP error handling.
+ * Creates email attachments for QR codes.
+ * Pure function.
  */
-export const generateQRCodes = async (
-  eventQRCodeRef: React.RefObject<HTMLDivElement>,
-  ownerQRCodeRef: React.RefObject<HTMLDivElement>,
-  errorMessages: { QR_CODE_ERROR: string }
-): Promise<Result<GenerateQRCodesOutput, string>> => {
-  const eventQRCodeBuffer = await getQRcodeBuffer(eventQRCodeRef);
-  const ownerIdQRCodeBuffer = await getQRcodeBuffer(ownerQRCodeRef);
-
-  if (!eventQRCodeBuffer || !ownerIdQRCodeBuffer) {
-    return failure(errorMessages.QR_CODE_ERROR);
-  }
-
-  return success({
-    eventQRCodeBase64: eventQRCodeBuffer.toString("base64"),
-    ownerIdQRCodeBase64: ownerIdQRCodeBuffer.toString("base64"),
-  });
-};
-
 export type EmailAttachment = {
   filename: string;
   content: string;
   encoding: string;
 };
 
-/**
- * Creates email attachments for QR codes.
- * Pure function.
- */
 export const createEmailAttachments = (
   eventQRCodeBase64: string,
   ownerIdQRCodeBase64: string,

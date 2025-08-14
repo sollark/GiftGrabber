@@ -19,7 +19,7 @@ export default function ApplicantPageClient({
   return (
     <Section>
       <Section.Title>{event.name}</Section.Title>
-      <OrderGifts event={event} />
+      <OrderGifts />
     </Section>
   );
 }

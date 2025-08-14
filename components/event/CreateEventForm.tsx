@@ -12,10 +12,8 @@ import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import FormInputSection from "./FormInputSection";
 import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
-import {
-  processFormData,
-  generateQRCodes,
-} from "@/service/createEventFormService";
+import { processFormData } from "@/service/createEventFormService";
+import { generateQRCodes } from "@/service/qrcodeService";
 import { PersonWithoutId } from "@/types/event.types";
 import {
   FORM_CONFIG,
