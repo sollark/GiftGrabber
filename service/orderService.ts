@@ -5,6 +5,9 @@ import { Gift } from "@/database/models/gift.model";
 import { Result, success, failure } from "@/utils/fp";
 import { Types } from "mongoose";
 
+/**
+ * Data required to create an order.
+ */
 export interface OrderCreationData {
   createdAt: Date;
   approverList: Types.ObjectId[];

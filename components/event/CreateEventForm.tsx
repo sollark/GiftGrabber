@@ -15,16 +15,14 @@ import QRCodeSection from "./QRCodeSection";
 import {
   processFormData,
   generateQRCodes,
-  createEmailAttachments,
 } from "@/service/createEventFormService";
 import { PersonWithoutId } from "@/types/event.types";
 import {
   FORM_CONFIG,
   BASE_URL,
   ERROR_MESSAGES,
-  EMAIL_CONFIG,
 } from "@/components/event/createEventFormConfig";
-import { sendMail } from "@/service/mailService";
+import { sendMailToClient } from "@/service/mailService";
 
 /**
  * Main CreateEventForm component
@@ -82,15 +80,12 @@ const CreateEventForm: FC = () => {
       }
       const qrCodes = qrResult.value;
 
-      const mailResult = await sendMail({
-        to: processedData.email,
-        html: EMAIL_CONFIG.HTML_CONTENT,
-        attachments: createEmailAttachments(
-          qrCodes.eventQRCodeBase64,
-          qrCodes.ownerIdQRCodeBase64,
-          EMAIL_CONFIG.ATTACHMENTS
-        ),
-      });
+      // Use the new encapsulated mail service
+      const mailResult = await sendMailToClient(
+        processedData.email,
+        qrCodes.eventQRCodeBase64,
+        qrCodes.ownerIdQRCodeBase64
+      );
       if (mailResult._tag === "Failure") {
         setErrorMessage(mailResult.error);
         return;
