@@ -218,7 +218,7 @@ import {
   populateEventApplicants,
   populateEventApprovers,
   populateEvent,
-} from "@/service/eventPopulationService";
+} from "@/service/mongoPopulationService";
 
 // Helper Functions
 
