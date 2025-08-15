@@ -1,6 +1,17 @@
 /**
- * Context Integration Examples
- * Demonstrates how to use multiple enhanced functional contexts together
+ * @file Context Integration Examples
+ *
+ * Purpose: Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Approver, Multistep) in a single provider tree.
+ *
+ * Main Responsibilities:
+ * - Defines a combined provider for orchestrating context setup and data flow across the app's main business workflows (order creation, approval, etc.)
+ * - Implements composite hooks that encapsulate multi-context business logic for order creation and approval.
+ * - Provides example UI components and utilities for context composition and cross-context state synchronization.
+ *
+ * Architectural Role:
+ * - Sits at the integration layer, bridging domain contexts and UI workflows.
+ * - Encapsulates business process logic that spans multiple contexts.
+ * - Promotes separation of concerns by keeping context setup and workflow logic out of UI components.
  */
 
 import React from "react";
@@ -42,6 +53,15 @@ const getPersonName = (person: Person): string => {
 // COMBINED CONTEXT PROVIDER
 // ============================================================================
 
+/**
+ * Props for CombinedContextProvider
+ * @property children - React children to render within the composed providers
+ * @property order - The order object for the workflow
+ * @property applicants - List of applicant Person objects
+ * @property approverList - List of approver Person objects
+ * @property gifts - List of Gift objects
+ * @property multistepSteps - Step definitions for the multistep workflow
+ */
 interface CombinedProviderProps {
   children: React.ReactNode;
   order: Order;
@@ -52,7 +72,15 @@ interface CombinedProviderProps {
 }
 
 /**
- * Combined provider that sets up all functional contexts
+ * CombinedContextProvider (Public API)
+ *
+ * Sets up all major functional contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
+ * Ensures correct data flow and separation of concerns for business workflows.
+ *
+ * @param props CombinedProviderProps
+ * @returns React element wrapping children in all required providers
+ * @sideEffects Instantiates multiple context providers; may trigger context initialization logic
+ * @notes Avoid duplicating data between context and props in children
  */
 export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
   children,
@@ -62,17 +90,12 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
   gifts,
   multistepSteps,
 }) => {
-  // Import GiftProvider from GiftContext
   const { GiftProvider } = require("@/app/contexts/GiftContext");
   return (
     <ApplicantProvider
       eventId={order._id?.toString() || ""}
       applicantList={applicants}
     >
-      {/* 
-        NOTE: Pass giftList as prop to GiftProvider.
-        Do not duplicate data via both context and props in children.
-      */}
       <GiftProvider giftList={gifts}>
         <OrderProvider order={order} approverList={approverList}>
           <BaseMultistepProvider steps={multistepSteps}>
@@ -89,7 +112,14 @@ export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
 // ============================================================================
 
 /**
- * Composite hook for managing order creation workflow
+ * useOrderCreationWorkflow (Public API)
+ *
+ * Composite hook that orchestrates the order creation process across multiple contexts.
+ * Encapsulates business logic for applicant selection, gift selection, and order submission.
+ *
+ * @returns Object containing state and action handlers for the order creation workflow
+ * @sideEffects Triggers context state changes, notifications, and step navigation
+ * @notes Handles validation and error notification for each step
  */
 export const useOrderCreationWorkflow = () => {
   // Context hooks
@@ -102,6 +132,13 @@ export const useOrderCreationWorkflow = () => {
    * addGift - Adds a gift using context actions. Returns Result.
    * @param gift - Gift object to add
    * @returns Result<void, Error>
+   */
+  /**
+   * addGift (Internal Helper)
+   * Adds a gift using context actions.
+   * @param gift Gift - Gift object to add
+   * @returns Result<void, Error> - Success or failure of the add operation
+   * @sideEffects Dispatches context action, may update state
    */
   const addGift = React.useCallback(
     (gift: Gift) => {
@@ -116,10 +153,22 @@ export const useOrderCreationWorkflow = () => {
   const navigation = useStepNavigation();
   const currentStep = navigation.currentStep;
 
+  /**
+   * goToNextStep (Internal Helper)
+   * Advances to the next step in the multistep workflow.
+   * @returns Result of navigation.goToNextStep()
+   * @sideEffects Updates navigation state
+   */
   const goToNextStep = React.useCallback(() => {
     return navigation.goToNextStep();
   }, [navigation]);
 
+  /**
+   * goToPreviousStep (Internal Helper)
+   * Moves to the previous step in the multistep workflow.
+   * @returns Result of navigation.goToPreviousStep()
+   * @sideEffects Updates navigation state
+   */
   const goToPreviousStep = React.useCallback(() => {
     return navigation.goToPreviousStep();
   }, [navigation]);
@@ -130,6 +179,14 @@ export const useOrderCreationWorkflow = () => {
 
   /**
    * Proceeds to next step with basic data check
+   */
+
+  /**
+   * proceedToNext (Internal Helper)
+   * Proceeds to the next step, validating required data for the current step.
+   * @returns Result<void, Error> - Success or failure of step transition
+   * @sideEffects May trigger notifications and navigation state changes
+   * @notes Enforces required step completion before advancing
    */
   const proceedToNext = React.useCallback(async () => {
     if (!currentStep) return failure(new Error("No current step"));
@@ -150,6 +207,14 @@ export const useOrderCreationWorkflow = () => {
 
   /**
    * Completes applicant selection step
+   */
+
+  /**
+   * completeApplicantSelection (Public API)
+   * Completes the applicant selection step, updates context, and advances workflow.
+   * @param applicant Person - The selected applicant
+   * @returns Result<void, Error> - Success or failure of the operation
+   * @sideEffects Updates context, triggers notifications, advances step
    */
   const completeApplicantSelection = React.useCallback(
     async (applicant: Person) => {
@@ -181,6 +246,15 @@ export const useOrderCreationWorkflow = () => {
   );
   /**
    * Completes gift selection step
+   */
+
+  /**
+   * completeGiftSelection (Public API)
+   * Completes the gift selection step, adds gifts, and advances workflow.
+   * @param gifts Gift[] - Array of selected gifts
+   * @returns Result<void, Error> - Success or failure of the operation
+   * @sideEffects Updates context, triggers notifications, advances step
+   * @notes Handles batch add and error aggregation
    */
   const completeGiftSelection = React.useCallback(
     async (gifts: Gift[]) => {
@@ -216,6 +290,15 @@ export const useOrderCreationWorkflow = () => {
 
   /**
    * Submits the complete order
+   */
+
+  /**
+   * submitOrder (Public API)
+   * Submits the completed order for approval, validating all required data.
+   * @param approver Person - The approver to submit to
+   * @returns Result<void, Error> - Success or failure of the submission
+   * @sideEffects Updates context, triggers notifications, saves step data
+   * @notes Aggregates all workflow data for final submission
    */
   const submitOrder = React.useCallback(
     async (approver: Person) => {
@@ -280,7 +363,14 @@ export const useOrderCreationWorkflow = () => {
 };
 
 /**
- * Composite hook for order approval workflow
+ * useOrderApprovalWorkflow (Public API)
+ *
+ * Composite hook that orchestrates the order approval process across multiple contexts.
+ * Encapsulates business logic for order approval, rejection, and approver selection.
+ *
+ * @returns Object containing state and action handlers for the order approval workflow
+ * @sideEffects Triggers context state changes, notifications, and history updates
+ * @notes Handles validation and error notification for each approval action
  */
 export const useOrderApprovalWorkflow = () => {
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
@@ -290,6 +380,15 @@ export const useOrderApprovalWorkflow = () => {
 
   /**
    * Approves an order with validation
+   */
+
+  /**
+   * approveOrder (Public API)
+   * Approves an order, updating context and history, and triggering notifications.
+   * @param approver Person - The approver
+   * @param notes string (optional) - Approval notes
+   * @returns Result<void, Error> - Success or failure of the approval
+   * @sideEffects Updates context, adds history entry, triggers notifications
    */
   const approveOrder = React.useCallback(
     async (approver: Person, notes?: string) => {
@@ -329,6 +428,16 @@ export const useOrderApprovalWorkflow = () => {
 
   /**
    * Rejects an order with validation
+   */
+
+  /**
+   * rejectOrderWithReason (Public API)
+   * Rejects an order, updating context and history, and triggering notifications.
+   * @param approver Person - The approver
+   * @param reason string - Reason for rejection
+   * @param notes string (optional) - Additional notes
+   * @returns Result<void, Error> - Success or failure of the rejection
+   * @sideEffects Updates context, adds history entry, triggers notifications
    */
   const rejectOrderWithReason = React.useCallback(
     async (approver: Person, reason: string, notes?: string) => {
@@ -587,7 +696,14 @@ export const OrderApprovalDashboard: React.FC = () => {
 // ============================================================================
 
 /**
- * Higher-order component for context composition
+ * withFunctionalContexts (Public API)
+ * Higher-order component for composing all functional contexts around a component.
+ *
+ * @param Component React.ComponentType<P> - The component to wrap
+ * @param contextConfig Object - Configuration for context providers
+ * @returns Wrapped component with all contexts applied
+ * @sideEffects Instantiates context providers
+ * @notes Useful for testing or storybook setups
  */
 export function withFunctionalContexts<P extends object>(
   Component: React.ComponentType<P>,
@@ -615,7 +731,14 @@ export function withFunctionalContexts<P extends object>(
 }
 
 /**
- * Hook for managing cross-context state synchronization
+ * useContextSynchronization (Public API)
+ *
+ * Hook for managing and synchronizing state across multiple contexts.
+ * Useful for keeping related context data in sync (e.g., applicant selection and order context).
+ *
+ * @returns Object with synchronization utilities
+ * @sideEffects May trigger context updates or server syncs
+ * @notes Example only; extend for real cross-context sync logic
  */
 export const useContextSynchronization = () => {
   const { selectedApplicant } = useApplicantSelection();

@@ -1,6 +1,16 @@
 /**
- * Enhanced Context Providers with Functional Operations
- * Provides immutable state management, action-based updates, and composable contexts
+ * @file fp-contexts.tsx
+ *
+ * Purpose: Provides a functional programming abstraction layer for React context providers, enabling immutable state management, action-based updates, and composable context patterns.
+ *
+ * Main Responsibilities:
+ * - Defines generic context factories for robust, type-safe, and composable state management.
+ * - Implements middleware, persistence, and advanced reducer patterns for business and UI state.
+ * - Supplies utilities for context composition, multi-context access, and common state patterns (async, collections).
+ *
+ * Architectural Role:
+ * - Sits at the core utility/infrastructure layer, supporting all domain and UI contexts.
+ * - Promotes separation of concerns, testability, and maintainability for stateful logic across the app.
  */
 "use client";
 /**
@@ -15,10 +25,6 @@ import {
   none,
   success,
   failure,
-  isSuccess,
-  isFailure,
-  getMaybeOrElse,
-  trySync,
   objectUtils,
 } from "@/utils/fp";
 import { useSafeContext } from "../app/hooks/useSafeContext";
@@ -85,7 +91,14 @@ export type ContextMiddleware<S, A> = (
 // ============================================================================
 
 /**
- * Creates a functional context with immutable state and action-based updates
+ * createFunctionalContext (Public API)
+ *
+ * Factory for creating a functional React context with immutable state, action-based updates, and optional middleware/persistence.
+ *
+ * @param config ContextConfig<S, A> - Configuration for the context (name, initialState, reducer, middleware, etc.)
+ * @returns Object with Context, Provider, hooks, and utilities for the context
+ * @sideEffects Instantiates React context, may persist state to localStorage
+ * @notes Handles error boundaries, middleware, and debug logging internally
  */
 export function createFunctionalContext<S, A extends FunctionalAction>(
   config: ContextConfig<S, A>
@@ -112,6 +125,14 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   StateContext.displayName = `${name}Context`;
 
   // Enhanced reducer with middleware and error handling
+  /**
+   * enhancedReducer (Internal Helper)
+   * Reducer wrapper that applies middleware, error handling, persistence, and debug logging.
+   * @param state S - Current state
+   * @param action A - Action to process
+   * @returns S - New state (or previous state on error)
+   * @sideEffects May persist state, log to console, or trigger middleware
+   */
   const enhancedReducer = (state: S, action: A): S => {
     if (debugMode) {
       console.group(`🔄 ${name} Action: ${action.type}`);
@@ -176,6 +197,14 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   };
 
   // Provider component
+  /**
+   * Provider (Public API)
+   * React context provider component for the functional context.
+   * @param children ReactNode - Children to render
+   * @param initialState Partial<S> (optional) - Initial state override
+   * @returns React element providing context value
+   * @sideEffects Loads/persists state from localStorage if configured
+   */
   const Provider: React.FC<{
     children: React.ReactNode;
     initialState?: Partial<S>;
@@ -220,6 +249,12 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   };
 
   // Hook to use the context
+  /**
+   * useContext (Public API)
+   * Hook to access the functional context value (state, dispatch, getState).
+   * @returns MaybeContext<{ state, dispatch, getState }>
+   * @sideEffects None
+   */
   const useContext = (): MaybeContext<{
     state: S;
     dispatch: (action: A) => void;
@@ -233,6 +268,12 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   };
 
   // Hook with Result error handling
+  /**
+   * useContextResult (Public API)
+   * Hook to access the context value as a Result (Success/Failure).
+   * @returns Result<{ state, dispatch, getState }, Error>
+   * @sideEffects None
+   */
   const useContextResult = () => {
     const context = useContext();
     return context._tag === "Some"
@@ -241,6 +282,13 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   };
 
   // Selector hook for specific state slices
+  /**
+   * useSelector (Public API)
+   * Hook to select a slice of state from the context.
+   * @param selector (state: S) => R - Selector function
+   * @returns Maybe<R> - Selected value or none
+   * @sideEffects None (logs on selector error)
+   */
   const useSelector = <R extends any>(selector: (state: S) => R): Maybe<R> => {
     const context = useContext();
     if (context._tag === "Some") {
@@ -255,6 +303,12 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   };
 
   // Action creators with Result handling
+  /**
+   * useActions (Public API)
+   * Hook to access action creators and safe/async dispatchers for the context.
+   * @returns Maybe<{ dispatch, dispatchSafe, dispatchAsync, createAction, getState }>
+   * @sideEffects May dispatch actions, update state, or throw errors
+   */
   const useActions = () => {
     const context = useContext();
 
@@ -329,7 +383,12 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
 // ============================================================================
 
 /**
- * Logging middleware for debugging
+ * loggingMiddleware (Public API)
+ * Middleware for logging actions and state transitions in development mode.
+ * @param action A - Action being dispatched
+ * @param state S - Current state
+ * @returns void
+ * @sideEffects Logs to console in development
  */
 export const loggingMiddleware = <S extends any, A extends FunctionalAction>(
   action: A,
@@ -344,7 +403,11 @@ export const loggingMiddleware = <S extends any, A extends FunctionalAction>(
 };
 
 /**
- * Validation middleware
+ * validationMiddleware (Public API)
+ * Middleware for validating actions before they reach the reducer.
+ * @param validator (action, state) => Result<boolean, string> - Validation function
+ * @returns Middleware function (A, S) => A | void
+ * @sideEffects Logs warnings on validation failure
  */
 export const validationMiddleware =
   <S extends any, A extends FunctionalAction>(
@@ -360,7 +423,12 @@ export const validationMiddleware =
   };
 
 /**
- * Optimistic updates middleware
+ * optimisticMiddleware (Public API)
+ * Middleware for handling optimistic UI updates with rollback support.
+ * @param rollbackActions Record<string, (S) => A> - Map of rollback action creators
+ * @returns Middleware function (A, S, dispatch) => A
+ * @sideEffects Schedules rollback actions with setTimeout
+ * @notes Rollback occurs after 5 seconds if optimistic meta is set
  */
 export const optimisticMiddleware =
   <S extends any, A extends FunctionalAction>(
@@ -381,7 +449,13 @@ export const optimisticMiddleware =
   };
 
 /**
- * Persistence middleware
+ * persistenceMiddleware (Public API)
+ * Middleware for persisting state to localStorage with optional include/exclude and debounce.
+ * @param key string - Storage key
+ * @param options { include, exclude, debounceMs } - Persistence options
+ * @returns Middleware function (A, S) => void
+ * @sideEffects Persists state to localStorage (browser only)
+ * @notes Uses debounce to avoid excessive writes
  */
 export const persistenceMiddleware = <
   S extends any,
@@ -430,7 +504,11 @@ export const persistenceMiddleware = <
 // ============================================================================
 
 /**
- * Combines multiple contexts into a single provider
+ * combineContexts (Public API)
+ * Utility to combine multiple context providers into a single provider component.
+ * @param contexts Record<string, Provider> - Map of context providers
+ * @returns React.FC - Combined provider component
+ * @sideEffects Instantiates all providers in order
  */
 export function combineContexts<T extends Record<string, any>>(
   contexts: T
@@ -444,7 +522,11 @@ export function combineContexts<T extends Record<string, any>>(
 }
 
 /**
- * Creates a higher-order component that provides multiple contexts
+ * withContexts (Public API)
+ * Higher-order component for wrapping a component with multiple context providers.
+ * @param providers ...Provider[] - List of provider components
+ * @returns HOC that wraps the input component with all providers
+ * @sideEffects Instantiates all providers
  */
 export function withContexts<P extends object>(
   ...providers: React.ComponentType<{ children: React.ReactNode }>[]
@@ -462,7 +544,12 @@ export function withContexts<P extends object>(
 }
 
 /**
- * Hook to access multiple contexts safely
+ * useMultipleContexts (Public API)
+ * Hook to access multiple functional contexts safely, returning all or none.
+ * @param contextHooks Record<string, () => Maybe<any>> - Map of context hook functions
+ * @returns Maybe<{ ... }> - All context values or none if any are missing
+ * @sideEffects None
+ * @notes Useful for cross-context logic
  */
 export function useMultipleContexts<T extends Record<string, () => Maybe<any>>>(
   contextHooks: T
@@ -485,7 +572,11 @@ export function useMultipleContexts<T extends Record<string, () => Maybe<any>>>(
 // ============================================================================
 
 /**
- * Creates a standard async state reducer
+ * createAsyncReducer (Public API)
+ * Factory for a standard async state reducer (loading, success, error, reset) using Maybe and Result types.
+ * @returns { initialState, reducer } for use in functional contexts
+ * @sideEffects None
+ * @notes Handles async state patterns for data fetching
  */
 export function createAsyncReducer<T extends any>() {
   type AsyncState = FunctionalState<Maybe<T>>;
@@ -544,7 +635,11 @@ export function createAsyncReducer<T extends any>() {
 }
 
 /**
- * Creates a collection state reducer (for lists)
+ * createCollectionReducer (Public API)
+ * Factory for a collection/list state reducer with add, update, remove, and clear actions.
+ * @returns { initialState, reducer } for use in functional contexts
+ * @sideEffects None
+ * @notes Assumes items have unique string IDs
  */
 export function createCollectionReducer<T extends { id: string }>() {
   type CollectionState = FunctionalState<T[]>;
