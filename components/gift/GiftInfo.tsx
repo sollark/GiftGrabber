@@ -16,7 +16,7 @@
 
 import { FC, useState } from "react";
 import { none, Maybe, getMaybeOrElse } from "@/utils/fp";
-import { useGiftSelector } from "@/app/contexts/GiftContext";
+import { useGiftSelector } from "@/app/contexts/gift/GiftContext";
 import GiftComponent from "./GiftComponent";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";

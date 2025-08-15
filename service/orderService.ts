@@ -2,11 +2,7 @@ import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import { Result, success, failure } from "@/utils/fp";
-import {
-  ObjectId,
-  OrderCreationData,
-  isMongooseDocument,
-} from "@/types/common.types";
+import { OrderCreationData, isMongooseDocument } from "@/types/common.types";
 
 /**
  * Pure helper to serialize any Mongoose document or plain object.

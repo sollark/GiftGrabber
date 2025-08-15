@@ -1,6 +1,9 @@
 import React, { FC, useCallback, useMemo, memo } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
-import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
+import {
+  useGiftSelector,
+  useGiftActions,
+} from "@/app/contexts/gift/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import PersonAutocomplete from "../PersonAutocomplete";

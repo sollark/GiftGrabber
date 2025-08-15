@@ -20,7 +20,7 @@
 "use client";
 import React, { FC } from "react";
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
-import { GiftProvider } from "@/app/contexts/GiftContext";
+import { GiftProvider } from "@/app/contexts/gift/GiftContext";
 import { ApproverProvider } from "@/app/contexts/ApproverContext";
 import MultistepNavigator from "../../ui/navigation/MultistepNavigator";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";

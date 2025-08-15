@@ -33,7 +33,10 @@ import {
   useApplicantSelector,
 } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
+import {
+  useGiftSelector,
+  useGiftActions,
+} from "@/app/contexts/gift/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";

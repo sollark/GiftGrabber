@@ -1,5 +1,5 @@
 "use client";
-import { FC, ReactNode, useMemo, memo } from "react";
+import { FC, ReactNode, useMemo } from "react";
 import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 

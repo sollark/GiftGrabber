@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import parse, { HTMLReactParserOptions } from "html-react-parser";
+import parse from "html-react-parser";
 import { ReactNode } from "react";
 
 /**

@@ -20,7 +20,10 @@ import React, { FC, useCallback } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
 import { Maybe, some, none } from "@/utils/fp";
-import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
+import {
+  useGiftSelector,
+  useGiftActions,
+} from "@/app/contexts/gift/GiftContext";
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";

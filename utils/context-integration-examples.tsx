@@ -22,7 +22,10 @@ import {
   ApplicantProvider,
   useApplicantSelection,
 } from "@/app/contexts/ApplicantContext";
-import { useGiftSelector, useGiftActions } from "@/app/contexts/GiftContext";
+import {
+  useGiftSelector,
+  useGiftActions,
+} from "@/app/contexts/gift/GiftContext";
 import { getMaybeOrElse } from "@/utils/fp";
 
 import {

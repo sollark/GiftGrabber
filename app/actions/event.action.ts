@@ -20,7 +20,6 @@ const logEventRetrieval = (): void => {
  * Exports functions for use in API routes and server components.
  */
 
-import { parseEventData } from "@/utils/parseEventData";
 import EventModel, { Event } from "@/database/models/event.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import GiftModel from "@/database/models/gift.model";
@@ -267,4 +266,11 @@ const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
       return giftDoc._id.toString();
     })
   );
+};
+
+/**
+ * Helper
+ */
+const parseEventData = <T>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
 };
