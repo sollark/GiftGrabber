@@ -20,13 +20,6 @@ import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 // TYPES AND INTERFACES
 // ============================================================================
 
-type ApplicantDataState = FunctionalState<
-  Omit<
-    ApplicantState["data"],
-    "giftList" | "applicantGifts" | "searchQuery" | "filters"
-  >
->;
-
 export interface ApplicantState
   extends FunctionalState<{
     eventId: string;

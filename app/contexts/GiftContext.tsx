@@ -19,8 +19,6 @@ import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 // TYPES AND INTERFACES
 // ============================================================================
 
-type GiftDataState = FunctionalState<GiftState["data"]>;
-
 export interface GiftState
   extends FunctionalState<{
     giftList: Gift[];
@@ -202,18 +200,18 @@ const contextResult = createFunctionalContext<GiftState, GiftAction>({
   debugMode: process.env.NODE_ENV === "development",
 });
 
-export const GiftContext = (contextResult as any).Context;
-export const BaseGiftProvider = (contextResult as any).Provider;
-export const useGiftContext = (contextResult as any).useContext;
-export const useGiftContextResult = (contextResult as any).useContextResult;
+export const GiftContext = contextResult.Context;
+export const BaseGiftProvider = contextResult.Provider;
+export const useGiftContext = contextResult.useContext;
+export const useGiftContextResult = contextResult.useContextResult;
 
 export const useGiftSelector = contextResult.useSelector as <
   TSelected = unknown
 >(
-  selector: (state: GiftDataState) => TSelected
+  selector: (state: GiftState) => TSelected
 ) => Maybe<TSelected>;
 
-export const useGiftActions = (contextResult as any).useActions;
+export const useGiftActions = contextResult.useActions;
 
 interface GiftProviderProps {
   giftList: Gift[];

@@ -28,12 +28,7 @@ import {
   createEventInternal,
   validateEventExists,
 } from "@/service/eventService";
-import {
-  withDatabase,
-  withDatabaseBoolean,
-  withDatabaseNullable,
-  withDatabaseArray,
-} from "@/lib/withDatabase";
+import { withDatabase } from "@/lib/withDatabase";
 import { failure, handleError, Result, success } from "@/utils/fp";
 
 /**
@@ -88,13 +83,19 @@ import {
 } from "@/types/event.types";
 
 /**
- * Creates a new event with associated applicants, approvers, and gifts.
- * Orchestrates creation of persons, gifts, and event record in the database.
- * @param event - The event form data containing all necessary information
- * @returns Promise<boolean | undefined> - True if event was created successfully, undefined on error
+ * createEvent (Public API)
+ *
+ * Server action for creating new events with applicants and gifts.
+ * @param event EventCreationData - Event data from form
+ * @returns boolean - Success status
+ * @sideEffects Creates database records, sends confirmation emails
  */
-export const createEvent = withDatabaseBoolean(createEventInternal);
-
+export const createEvent = withDatabase(
+  async (event: any): Promise<boolean> => {
+    const result = await createEventInternal(event);
+    return result === true;
+  }
+);
 /**
  * Fetches event applicants with populated applicant data.
  * @param eventId - The unique identifier for the event
@@ -164,7 +165,11 @@ const getEventApproversInternal = async (
 /**
  * Action: Gets event approvers list for use in API/server components.
  */
-export const getEventApprovers = withDatabaseArray(getEventApproversInternal);
+export const getEventApprovers = withDatabase(
+  async (eventId: string): Promise<Person[]> => {
+    return await getEventApproversInternal(eventId);
+  }
+);
 
 /**
  * Fetches complete event details with all populated relationships (applicants, gifts, approvers).
@@ -193,7 +198,11 @@ const getEventDetailsInternal = async (
 /**
  * Action: Gets complete event details for use in API/server components.
  */
-export const getEventDetails = withDatabaseNullable(getEventDetailsInternal);
+export const getEventDetails = withDatabase(
+  async (eventId: string): Promise<Event | null> => {
+    return await getEventDetailsInternal(eventId);
+  }
+);
 
 /**
  * Fetches all events from the database.

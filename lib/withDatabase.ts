@@ -82,39 +82,6 @@ export function withDatabase<T extends any[], R>(
   };
 }
 
-/**
- * Type-safe wrapper for server actions that return boolean results
- * @param fn - Server action function returning boolean or undefined
- * @returns Wrapped function with database connection handling
- */
-export function withDatabaseBoolean<T extends any[]>(
-  fn: (...args: T) => Promise<boolean | undefined>
-): (...args: T) => Promise<boolean | undefined> {
-  return withDatabase(fn);
-}
-
-/**
- * Type-safe wrapper for server actions that return nullable results
- * @param fn - Server action function returning T or null
- * @returns Wrapped function with database connection handling
- */
-export function withDatabaseNullable<T extends any[], R>(
-  fn: (...args: T) => Promise<R | null>
-): (...args: T) => Promise<R | null> {
-  return withDatabase(fn);
-}
-
-/**
- * Type-safe wrapper for server actions that return array results
- * @param fn - Server action function returning array
- * @returns Wrapped function with database connection handling
- */
-export function withDatabaseArray<T extends any[], R>(
-  fn: (...args: T) => Promise<R[]>
-): (...args: T) => Promise<R[]> {
-  return withDatabase(fn);
-}
-
 // ============================================================================
 // FUNCTIONAL DATABASE UTILITIES
 // ============================================================================
@@ -282,7 +249,4 @@ export default {
 
   // Legacy compatibility
   withDatabase,
-  withDatabaseBoolean,
-  withDatabaseNullable,
-  withDatabaseArray,
 };

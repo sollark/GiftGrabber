@@ -1,14 +1,39 @@
 /**
- * Context-aware logging middleware for functional contexts
- * Logs actions and state transitions in development mode
- * @param contextName - Optional name for context (for log prefix)
+ * @file loggingMiddleware.ts
+ *
+ * Purpose: Provides development-mode logging middleware for functional contexts.
+ *
+ * Main Responsibilities:
+ * - Logs context actions and state changes in development
+ * - Provides optional context naming for log clarity
+ * - Follows established middleware pattern
+ *
+ * Architectural Role:
+ * - Debug middleware for context state management
+ * - Development tooling for state flow visibility
  */
-export const loggingMiddleware =
-  <A, S>(contextName?: string) =>
-  (action: A, state: S): S => {
+
+import { FunctionalAction, ContextMiddleware } from "@/lib/fp-contexts";
+
+/**
+ * loggingMiddleware (Public API)
+ *
+ * Creates middleware that logs context actions and state changes in development mode.
+ * @param contextName string | undefined - Optional name for context identification in logs
+ * @returns ContextMiddleware function
+ * @sideEffects Logs to console (development only)
+ * @notes Only active in development environment; silent in production
+ */
+export const loggingMiddleware = <S, A extends FunctionalAction>(
+  contextName?: string
+): ContextMiddleware<S, A> => {
+  return (action: A, state: S): A => {
     if (process.env.NODE_ENV === "development") {
-      console.log(`[${contextName || "Context"}] Action:`, action);
-      console.log(`[${contextName || "Context"}] State:`, state);
+      const prefix = `[${contextName || "Context"}]`;
+      console.log(`${prefix} Action:`, action);
+      console.log(`${prefix} State:`, state);
     }
-    return state;
+
+    return action;
   };
+};

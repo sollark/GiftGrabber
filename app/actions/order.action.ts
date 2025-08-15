@@ -4,11 +4,7 @@ import { OrderStatus } from "@/components/order/OrderStatus";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
 import PersonModel, { Person } from "@/database/models/person.model";
-import {
-  withDatabase,
-  withDatabaseBoolean,
-  withDatabaseNullable,
-} from "@/lib/withDatabase";
+import { withDatabase } from "@/lib/withDatabase";
 import { Types } from "mongoose";
 import {
   createOrderData,
@@ -215,7 +211,24 @@ const makeOrderInternal = async (
   }
 };
 
-export const makeOrder = withDatabaseBoolean(makeOrderInternal);
+export const makeOrder = withDatabase(
+  async (
+    approverList: Person[],
+    applicant: Person,
+    gifts: Gift[],
+    orderId: string,
+    confirmationRQCode: string
+  ): Promise<boolean> => {
+    const result = await makeOrderInternal(
+      approverList,
+      applicant,
+      gifts,
+      orderId,
+      confirmationRQCode
+    );
+    return result === true;
+  }
+);
 
 /**
  * Retrieves an order by its ID with populated fields (orchestration + error handling)
@@ -267,7 +280,10 @@ export const getOrderInternal = async (
   }
 };
 
-export const getOrder = withDatabaseNullable(getOrderInternal);
+export const getOrder = withDatabase(async (orderId: string): Promise<any> => {
+  const result = await getOrderInternal(orderId);
+  return result._tag === "Success" ? result.value : null;
+});
 
 /**
  * Confirms an order and updates associated gifts (orchestration + error handling)

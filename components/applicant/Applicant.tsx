@@ -43,11 +43,12 @@ const Applicant: FC = () => {
     [giftListMaybe]
   );
   const actions = useGiftActions();
-  const addGift = React.useMemo(
-    () =>
-      actions._tag === "Some"
-        ? actions.value.dispatchSafe.bind(null, { type: "ADD_GIFT" })
-        : () => {},
+  const addGift = React.useCallback(
+    (gift: Gift) => {
+      if (actions._tag === "Some") {
+        actions.value.dispatchSafe({ type: "ADD_GIFT", payload: gift });
+      }
+    },
     [actions]
   );
   // Local state for selected person

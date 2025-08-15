@@ -36,8 +36,23 @@ export const failure = <E>(error: E): Failure<E> => ({
 });
 
 /**
- * Upgraded functional error handler
- * Returns a Result type for composable error handling
+ * Creates a failure result (pure function)
+ */
+export const createFailure = <E = Error>(error: E): Result<never, E> =>
+  failure(error);
+
+/**
+ * Logs error to console (side effect)
+ */
+export const logError = <E = Error>(error: E): void => {
+  if (typeof window !== "undefined") {
+    console.error("Functional Error:", error);
+  }
+};
+
+/**
+ * @deprecated Use createFailure and logError separately for better separation of concerns
+ * Legacy error handler that mixes logging with error creation
  */
 export function handleError<E = Error>(error: E): Result<never, E> {
   if (typeof window !== "undefined") {
@@ -150,46 +165,10 @@ export const getMaybeOrElse =
     isSome(maybe) ? maybe.value : defaultValue;
 
 // ============================================================================
-// FUNCTION COMPOSITION AND UTILITIES
+// FUNCTION UTILITIES
 // ============================================================================
 
-export const compose =
-  <A, B, C>(f: (b: B) => C, g: (a: A) => B) =>
-  (a: A): C =>
-    f(g(a));
-
-export const pipe = <T>(value: T) => ({
-  to: <U>(fn: (value: T) => U) => pipe(fn(value)),
-  value,
-});
-
-export const curry =
-  <A, B, C>(fn: (a: A, b: B) => C) =>
-  (a: A) =>
-  (b: B) =>
-    fn(a, b);
-
-export const partial =
-  <A extends any[], B extends any[], C>(
-    fn: (...args: [...A, ...B]) => C,
-    ...partialArgs: A
-  ) =>
-  (...restArgs: B): C =>
-    fn(...partialArgs, ...restArgs);
-
 export const identity = <T>(value: T): T => value;
-
-export const constant =
-  <T>(value: T) =>
-  (): T =>
-    value;
-
-export const tap =
-  <T>(fn: (value: T) => void) =>
-  (value: T): T => {
-    fn(value);
-    return value;
-  };
 
 // ============================================================================
 // ARRAY UTILITIES
@@ -383,14 +362,37 @@ export const validators = {
 
 export const memoize = <Args extends any[], Return>(
   fn: (...args: Args) => Return,
-  getKey = (...args: Args) => JSON.stringify(args)
+  options: {
+    getKey?: (...args: Args) => string;
+    maxSize?: number;
+  } = {}
 ): ((...args: Args) => Return) => {
+  const {
+    getKey = (...args: Args) =>
+      args
+        .map((arg) =>
+          typeof arg === "object" ? JSON.stringify(arg) : String(arg)
+        )
+        .join("|"),
+    maxSize = 100,
+  } = options;
+
   const cache = new Map<string, Return>();
+
   return (...args: Args): Return => {
     const key = getKey(...args);
     if (cache.has(key)) {
       return cache.get(key)!;
     }
+
+    // LRU eviction when cache is full
+    if (cache.size >= maxSize) {
+      const firstKey = cache.keys().next().value;
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
+      }
+    }
+
     const result = fn(...args);
     cache.set(key, result);
     return result;

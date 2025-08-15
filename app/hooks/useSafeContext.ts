@@ -240,52 +240,56 @@ export function useMultipleContextResults<T extends any[]>(
 }
 
 // ============================================================================
-// CONTEXT DEBUGGING UTILITIES
+// CONTEXT DEBUGGING UTILITIES - DEV ONLY
 // ============================================================================
 
 /**
- * Debug hook that logs context access and values
- * @param context - React context to debug
+ * Debug wrapper for context hooks (development only)
+ * @param contextHook - Context hook to wrap with debug logging
  * @param contextName - Name for logging
- * @returns Context value with debug logging
+ * @returns Wrapped hook with debug logging
  */
-export function useDebugContext<T>(
-  context: Context<T | undefined>,
+export function withContextDebug<T>(
+  contextHook: () => Maybe<T>,
   contextName: string
-): Maybe<T> {
-  const result = useSafeContext(context, contextName);
+): () => Maybe<T> {
+  return () => {
+    const result = contextHook();
 
-  if (process.env.NODE_ENV === "development") {
-    console.debug(`Context "${contextName}":`, {
-      available: result._tag === "Some",
-      value: result._tag === "Some" ? result.value : undefined,
-    });
-  }
+    if (process.env.NODE_ENV === "development") {
+      console.debug(`Context "${contextName}":`, {
+        available: result._tag === "Some",
+        value: result._tag === "Some" ? result.value : undefined,
+      });
+    }
 
-  return result;
+    return result;
+  };
 }
 
 /**
- * Performance monitoring hook for context access
- * @param context - React context to monitor
+ * Performance monitoring wrapper for context hooks (development only)
+ * @param contextHook - Context hook to wrap with performance monitoring
  * @param contextName - Name for monitoring
- * @returns Context value with performance tracking
+ * @returns Wrapped hook with performance tracking
  */
-export function useMonitoredContext<T>(
-  context: Context<T | undefined>,
+export function withContextMonitoring<T>(
+  contextHook: () => Maybe<T>,
   contextName: string
-): Maybe<T> {
-  const startTime = performance.now();
-  const result = useSafeContext(context, contextName);
-  const endTime = performance.now();
+): () => Maybe<T> {
+  return () => {
+    const startTime = performance.now();
+    const result = contextHook();
+    const endTime = performance.now();
 
-  if (process.env.NODE_ENV === "development") {
-    console.debug(
-      `Context "${contextName}" access took ${endTime - startTime}ms`
-    );
-  }
+    if (process.env.NODE_ENV === "development") {
+      console.debug(
+        `Context "${contextName}" access took ${endTime - startTime}ms`
+      );
+    }
 
-  return result;
+    return result;
+  };
 }
 
 // ============================================================================
