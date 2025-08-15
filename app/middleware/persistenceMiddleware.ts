@@ -13,7 +13,7 @@
  * - Bridges context state management and browser storage
  */
 
-import { FunctionalAction, ContextMiddleware } from "@/lib/fp-contexts";
+import { FunctionalAction, ContextMiddleware } from "@/utils/fp-contexts";
 
 /**
  * persistenceMiddleware (Public API)

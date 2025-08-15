@@ -13,7 +13,7 @@
  * - Development tooling for state flow visibility
  */
 
-import { FunctionalAction, ContextMiddleware } from "@/lib/fp-contexts";
+import { FunctionalAction, ContextMiddleware } from "@/utils/fp-contexts";
 
 /**
  * loggingMiddleware (Public API)

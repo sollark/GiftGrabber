@@ -5,7 +5,10 @@
  * Architecture: Pluggable middleware for OrderContext, enhancing reducer logic.
  */
 // ...existing code...
-import { validationMiddleware, optimisticMiddleware } from "@/lib/fp-contexts";
+import {
+  validationMiddleware,
+  optimisticMiddleware,
+} from "@/utils/fp-contexts";
 import { success, failure } from "@/utils/fp";
 import { OrderState, OrderAction } from "./types";
 

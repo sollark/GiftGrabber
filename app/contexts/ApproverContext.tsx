@@ -13,7 +13,7 @@ import {
   FunctionalState,
   loggingMiddleware,
   validationMiddleware,
-} from "@/lib/fp-contexts";
+} from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 

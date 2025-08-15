@@ -16,7 +16,7 @@ import {
   loggingMiddleware,
   validationMiddleware,
   createFunctionalContext,
-} from "@/lib/fp-contexts";
+} from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { success } from "@/utils/fp";
 import { useStepData } from "./useStepData";

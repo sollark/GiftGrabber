@@ -6,7 +6,7 @@
  */
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
-import { FunctionalState, FunctionalAction } from "@/lib/fp-contexts";
+import { FunctionalState, FunctionalAction } from "@/utils/fp-contexts";
 import { Maybe } from "@/utils/fp";
 
 // Local order status for internal operations

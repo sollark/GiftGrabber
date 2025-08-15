@@ -15,7 +15,7 @@
  */
 
 import { Result, success, failure } from "./fp";
-import { FunctionalAction } from "@/lib/fp-contexts";
+import { FunctionalAction } from "@/utils/fp-contexts";
 
 /**
  * createRequiredPayloadValidator (Public API)

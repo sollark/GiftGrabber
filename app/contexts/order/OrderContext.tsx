@@ -13,7 +13,7 @@ import {
   loggingMiddleware,
   optimisticMiddleware,
   persistenceMiddleware,
-} from "@/lib/fp-contexts";
+} from "@/utils/fp-contexts";
 import { OrderState, OrderAction } from "./types";
 import { createInitialState } from "./orderUtils";
 import { orderReducer } from "./orderReducer";

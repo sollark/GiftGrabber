@@ -5,7 +5,7 @@
  * Architecture: Shared by reducer, context, selectors, and hooks for type safety.
  */
 // ...existing code...
-import type { FunctionalAction, FunctionalState } from "@/lib/fp-contexts";
+import type { FunctionalAction, FunctionalState } from "@/utils/fp-contexts";
 
 /**
  * MultistepAction - Action type for multistep context reducer.

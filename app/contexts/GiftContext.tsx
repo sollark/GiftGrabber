@@ -9,9 +9,9 @@ import {
   createFunctionalContext,
   FunctionalAction,
   FunctionalState,
-} from "@/lib/fp-contexts";
-import { loggingMiddleware } from "@/lib/fp-contexts";
-import { validationMiddleware } from "@/lib/fp-contexts";
+} from "@/utils/fp-contexts";
+import { loggingMiddleware } from "@/utils/fp-contexts";
+import { validationMiddleware } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 
