@@ -28,6 +28,7 @@ import {
   createEventInternal,
   validateEventExists,
 } from "@/service/eventService";
+import { isSuccess } from "@/utils/fp";
 import { withDatabase } from "@/lib/withDatabase";
 import { failure, handleError, Result, success } from "@/utils/fp";
 
@@ -93,7 +94,7 @@ import {
 export const createEvent = withDatabase(
   async (event: any): Promise<boolean> => {
     const result = await createEventInternal(event);
-    return result === true;
+    return isSuccess(result) && result.value === true;
   }
 );
 /**

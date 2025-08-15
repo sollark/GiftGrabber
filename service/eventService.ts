@@ -1,23 +1,4 @@
 import { failure, success, Result } from "@/utils/fp";
-
-/**
- * Validates that an event exists.
- * Returns Result<Event, string>.
- * @param event - The Event object or null.
- * @returns Result indicating success or failure.
- */
-export const validateEventExists = (
-  event: Event | null
-): Result<Event, string> => {
-  return event ? success(event) : failure("Event not found");
-};
-
-/**
- * @file eventService.ts
- * @description Service layer for event creation logic in GiftGrabber.
- * Contains helpers and orchestration functions for creating persons, gifts, and event records.
- * Used by server actions to modularize business logic and database operations.
- */
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
@@ -29,11 +10,20 @@ import {
 } from "@/types/common.types";
 
 /**
- * Helper: Creates person records for a list of person data (applicants or approvers).
- * @param personList - Array of person objects without _id
- * @returns Promise resolving to array of created person IDs (as strings)
- * @remarks
- * Used for batch creation of applicants/approvers. Pure function: only creates and returns IDs.
+ * Validates that an event exists.
+ * @param event - The Event object or null.
+ * @returns Result<Event, string> - Success if event exists, failure otherwise.
+ */
+export const validateEventExists = (
+  event: Event | null
+): Result<Event, string> => {
+  return event ? success(event) : failure("Event not found");
+};
+
+/**
+ * Creates person records for a list of person data (applicants or approvers).
+ * @param personList - Array of person objects without _id.
+ * @returns Promise<string[]> - Array of created person IDs as strings.
  */
 const createPersonList = async (
   personList: PersonWithoutId[]
@@ -47,11 +37,9 @@ const createPersonList = async (
 };
 
 /**
- * Helper: Creates gift records for a list of applicant IDs.
- * @param applicantIds - Array of applicant IDs
- * @returns Promise resolving to array of created gift IDs (as strings)
- * @remarks
- * Used for batch creation of gifts for each applicant. Pure function: only creates and returns IDs.
+ * Creates gift records for a list of applicant IDs.
+ * @param applicantIds - Array of applicant IDs.
+ * @returns Promise<string[]> - Array of created gift IDs as strings.
  */
 const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
   return Promise.all(
@@ -63,11 +51,9 @@ const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
 };
 
 /**
- * Helper: Creates the actual event record in the database.
- * @param eventData - Object containing all event creation fields and related IDs
- * @returns Promise resolving to the created Event document
- * @remarks
- * Used after all related persons and gifts are created. Pure function: only creates and returns the event document.
+ * Creates the actual event record in the database.
+ * @param eventData - Object containing all event creation fields and related IDs.
+ * @returns Promise<Event> - The created Event document.
  */
 const createEventRecord = async (
   eventData: CreateEventData
@@ -97,12 +83,10 @@ const createEventRecord = async (
 };
 
 /**
- * Orchestrator: Creates applicants and approvers, returning their IDs.
- * @param applicantList - Array of applicant objects
- * @param approverList - Array of approver objects
- * @returns Promise resolving to object with applicantIds and approverIds
- * @remarks
- * Used by event creation workflow to batch-create related persons.
+ * Creates applicants and approvers, returning their IDs.
+ * @param applicantList - Array of applicant objects.
+ * @param approverList - Array of approver objects.
+ * @returns Promise<{ applicantIds: string[]; approverIds: string[] }>
  */
 export const createApplicantsAndApprovers = async (
   applicantList: PersonWithoutId[],
@@ -114,15 +98,13 @@ export const createApplicantsAndApprovers = async (
 };
 
 /**
- * Orchestrator: Creates a new event with all related applicants, approvers, and gifts.
- * @param event - The event form data containing all necessary information
- * @returns Promise<boolean | undefined> - True if event was created successfully, undefined on error
- * @remarks
- * Main entry point for event creation. Handles all related entity creation and error handling.
+ * Orchestrates creation of a new event with all related applicants, approvers, and gifts.
+ * @param event - The event form data containing all necessary information.
+ * @returns Promise<Result<boolean, string>> - Success if event was created, failure with error message otherwise.
  */
 export const createEventInternal = async (
   event: EventFormData
-): Promise<boolean | undefined> => {
+): Promise<Result<boolean, string>> => {
   const {
     name,
     email,
@@ -133,26 +115,47 @@ export const createEventInternal = async (
     applicantList,
     approverList,
   } = event;
+
+  let applicantIds: string[] = [];
+  let approverIds: string[] = [];
+  let giftIds: string[] = [];
+
   try {
-    const { applicantIds, approverIds } = await createApplicantsAndApprovers(
+    const result = await createApplicantsAndApprovers(
       applicantList,
       approverList
     );
-    const giftIds = await createGiftList(applicantIds);
-    const eventData: CreateEventData = {
-      name,
-      email,
-      eventId,
-      ownerId,
-      eventQRCodeBase64,
-      ownerIdQRCodeBase64,
-      applicantIds,
-      giftIds,
-      approverIds,
-    };
-    const newEvent = await createEventRecord(eventData);
-    return Boolean(newEvent);
+    applicantIds = result.applicantIds;
+    approverIds = result.approverIds;
   } catch (error) {
     handleError(error);
+    return failure("Failed to create applicants or approvers");
+  }
+
+  try {
+    giftIds = await createGiftList(applicantIds);
+  } catch (error) {
+    handleError(error);
+    return failure("Failed to create gifts");
+  }
+
+  const eventData: CreateEventData = {
+    name,
+    email,
+    eventId,
+    ownerId,
+    eventQRCodeBase64,
+    ownerIdQRCodeBase64,
+    applicantIds,
+    giftIds,
+    approverIds,
+  };
+
+  try {
+    const newEvent = await createEventRecord(eventData);
+    return success(Boolean(newEvent));
+  } catch (error) {
+    handleError(error);
+    return failure("Failed to create event record");
   }
 };
