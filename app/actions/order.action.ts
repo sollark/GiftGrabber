@@ -15,7 +15,7 @@ import {
 } from "@/service/orderService";
 import { OrderCreationData } from "@/types/common.types";
 import { saveObject } from "@/lib/castToDocument";
-import { failure, handleError, Result, success } from "@/utils/fp";
+import { failure, Result, success, fromPromise } from "@/utils/fp";
 
 /**
  * Configuration constants for order operations
@@ -263,21 +263,21 @@ export const makeOrder = withDatabase(
 export const getOrderInternal = async (
   orderId: string
 ): Promise<Result<Record<string, unknown>, Error>> => {
-  try {
-    const order = await findOrderWithPopulation(orderId);
-    const validationResult = validateOrderExists(order);
-
-    if (validationResult._tag === "Failure") {
-      const err = new Error(validationResult.error);
-      logOrderError(err.message);
-      return failure(err);
-    }
-
-    return success(serializeOrder(validationResult.value));
-  } catch (error) {
+  // Use fromPromise to wrap async DB call in Result
+  const orderResult = await fromPromise<Order | null, Error>(
+    findOrderWithPopulation(orderId)
+  );
+  if (orderResult._tag === "Failure") {
     logOrderError(LOG_MESSAGES.GET_ORDER_ERROR);
-    return handleError(error as Error);
+    return failure(orderResult.error);
   }
+  const validationResult = validateOrderExists(orderResult.value);
+  if (validationResult._tag === "Failure") {
+    const err = new Error(validationResult.error);
+    logOrderError(err.message);
+    return failure(err);
+  }
+  return success(serializeOrder(validationResult.value));
 };
 
 export const getOrder = withDatabase(async (orderId: string): Promise<any> => {

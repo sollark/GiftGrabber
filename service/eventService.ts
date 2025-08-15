@@ -2,7 +2,7 @@ import { failure, success, Result } from "@/utils/fp";
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
 import PersonModel, { Person } from "@/database/models/person.model";
-import { handleError } from "@/utils/fp";
+
 import {
   PersonWithoutId,
   CreateEventData,
@@ -128,14 +128,14 @@ export const createEventInternal = async (
     applicantIds = result.applicantIds;
     approverIds = result.approverIds;
   } catch (error) {
-    handleError(error);
+    console.error(error);
     return failure("Failed to create applicants or approvers");
   }
 
   try {
     giftIds = await createGiftList(applicantIds);
   } catch (error) {
-    handleError(error);
+    console.error(error);
     return failure("Failed to create gifts");
   }
 
@@ -155,7 +155,7 @@ export const createEventInternal = async (
     const newEvent = await createEventRecord(eventData);
     return success(Boolean(newEvent));
   } catch (error) {
-    handleError(error);
+    console.error(error);
     return failure("Failed to create event record");
   }
 };

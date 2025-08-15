@@ -28,9 +28,9 @@ import {
   createEventInternal,
   validateEventExists,
 } from "@/service/eventService";
-import { isSuccess } from "@/utils/fp";
+// ...existing code...
 import { withDatabase } from "@/lib/withDatabase";
-import { failure, handleError, Result, success } from "@/utils/fp";
+import { failure, Result, success, isSuccess, fromPromise } from "@/utils/fp";
 
 /**
  * Configuration constants for event operations
@@ -105,34 +105,38 @@ export const createEvent = withDatabase(
  * How to use it:
  * const result = await getEventApplicantsInternal("abc123");
  * if (result.isFailure()) {
- * console.error("Failed to fetch applicants:", result.error);
- * // decide: show error to user, retry, etc.
+ *   console.error("Failed to fetch applicants:", result.error);
+ *   // decide: show error to user, retry, etc.
  * } else {
- * const event = result.value;
- * console.log("Got event:", event);}
+ *   const event = result.value;
+ *   console.log("Got event:", event);}
  */
-
 export const getEventApplicantsInternal = async (
   eventId: string
 ): Promise<Result<Event, Error>> => {
-  try {
-    const event = await populateEventApplicants(
+  // Use fromPromise to wrap async DB call in Result
+  const eventResult = await fromPromise<Event | null, Error>(
+    populateEventApplicants(
       EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPLICANTS)
-    );
-
-    // Use a validation function for existence
-    const validationResult = validateEventExists(event);
-    if (validationResult._tag === "Failure") {
-      const err = new Error(validationResult.error);
-      logEventError(err.message);
-      return failure(err);
-    }
-
-    return success(parseEventData(validationResult.value));
-  } catch (error) {
+    )
+  );
+  if (eventResult._tag === "Failure") {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
-    return handleError(error as Error);
+    logEventError(
+      eventResult.error instanceof Error
+        ? eventResult.error.message
+        : String(eventResult.error)
+    );
+    return failure(eventResult.error);
   }
+  // Use a validation function for existence
+  const validationResult = validateEventExists(eventResult.value);
+  if (validationResult._tag === "Failure") {
+    const err = new Error(validationResult.error);
+    logEventError(err.message);
+    return failure(err);
+  }
+  return success(parseEventData(validationResult.value));
 };
 
 /**
@@ -158,7 +162,7 @@ const getEventApproversInternal = async (
     return parseEventData(event.approverList);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_EVENT_APPROVERS);
-    handleError(error);
+    logEventError(error instanceof Error ? error.message : String(error));
     return [];
   }
 };
@@ -191,7 +195,7 @@ const getEventDetailsInternal = async (
     return parseEventData(event);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_EVENT_DETAILS);
-    handleError(error);
+    logEventError(error instanceof Error ? error.message : String(error));
     return null;
   }
 };
@@ -215,7 +219,7 @@ const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
     return parseEventData(events);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_ALL_EVENTS);
-    handleError(error);
+    logEventError(error instanceof Error ? error.message : String(error));
   }
 };
 

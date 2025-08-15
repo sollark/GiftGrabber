@@ -1,3 +1,27 @@
+import { fromPromise } from "@/utils/fp";
+/**
+ * Async safe context hook that returns a Promise<Result<T, Error>>
+ * Useful if context value is fetched asynchronously (e.g., from storage or API)
+ * @param fetchContext - Async function to fetch context value
+ * @param contextName - Name for error messages
+ * @returns Promise<Result<T, Error>>
+ */
+export async function useAsyncContextResult<T>(
+  fetchContext: () => Promise<T>,
+  contextName: string
+): Promise<Result<T, Error>> {
+  return fromPromise(
+    fetchContext().catch((error) =>
+      Promise.reject(
+        error instanceof Error
+          ? error
+          : new Error(
+              `Failed to fetch ${contextName} context: ${String(error)}`
+            )
+      )
+    )
+  );
+}
 import React, { useContext, Context } from "react";
 import { Maybe, some, none, Result, success, failure } from "@/utils/fp";
 

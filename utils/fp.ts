@@ -1,4 +1,25 @@
 /**
+ * Example usage of fromPromise in a React hook:
+ *
+ *   const result = await fromPromise(fetchDataAsync());
+ *   if (isSuccess(result)) { ... } else { ... }
+ */
+/**
+ * Converts a Promise<T> to a Promise<Result<T, E>>
+ * @param promise - The promise to convert
+ * @returns Promise<Result<T, E>>
+ */
+export async function fromPromise<T, E = Error>(
+  promise: Promise<T>
+): Promise<Result<T, E>> {
+  try {
+    const value = await promise;
+    return success(value);
+  } catch (error) {
+    return failure(error as E);
+  }
+}
+/**
  * Functional Programming Utilities
  * Core functional programming primitives and patterns for the GiftGrabber application
  */
@@ -49,18 +70,6 @@ export const logError = <E = Error>(error: E): void => {
     console.error("Functional Error:", error);
   }
 };
-
-/**
- * @deprecated Use createFailure and logError separately for better separation of concerns
- * Legacy error handler that mixes logging with error creation
- */
-export function handleError<E = Error>(error: E): Result<never, E> {
-  if (typeof window !== "undefined") {
-    // Log error in browser
-    console.error("Functional Error:", error);
-  }
-  return failure(error);
-}
 
 /**
  * Type guard for Success results
