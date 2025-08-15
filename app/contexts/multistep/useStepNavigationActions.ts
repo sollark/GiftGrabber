@@ -2,60 +2,59 @@
  * useStepNavigationActions.ts
  * Purpose: Custom hook for dispatching navigation actions in multistep context.
  * Responsibilities: Exposes action dispatchers for step navigation.
- * Architecture: Public API for multistep-related components.
+ * Architecture: Wrapper around business management hook for component simplicity.
  */
-// ...existing code...
+
+import { Result } from "@/utils/fp";
+import { useStepNavigation } from "./useStepNavigation";
+
 /**
- * useStepNavigationActions - Encapsulates navigation logic for multistep context
- * Not intended for reuse outside MultistepContext consumers
- * Returns navigation actions and error handling for current step
+ * useStepNavigationActions - Simplified navigation actions hook.
+ * Uses the business navigation hook for cleaner architecture.
+ * Returns navigation actions with Result pattern for consistency.
  */
-import EnhancedMultistepContextExports from "./MultistepContext";
-
 export function useStepNavigationActions() {
-  const navResult = EnhancedMultistepContextExports.useStepNavigation();
+  const navigation = useStepNavigation();
 
   /**
-   * Go to next step, returns error string if navigation fails
+   * Go to next step using Result pattern.
+   * @returns Result indicating success or failure
    */
-  function goToNextStep(): string | null {
-    if (navResult._tag === "Success") {
-      const result = navResult.value.goToNextStep();
-      if (result._tag === "Success") {
-        return null;
-      } else {
-        return result.error;
-      }
-    }
-    return "Navigation context unavailable";
+  function goToNextStep(): Result<void, string> {
+    return navigation.goToNextStep();
   }
 
   /**
-   * Jump to a specific step by ID, returns error string if navigation fails
+   * Jump to a specific step by ID using Result pattern.
+   * @param stepId - Target step identifier
+   * @returns Result indicating success or failure
    */
-  function jumpToStep(stepId: string): string | null {
-    if (navResult._tag === "Success") {
-      const result = navResult.value.jumpToStep(stepId);
-      if (result._tag === "Success") {
-        return null;
-      } else {
-        return result.error;
-      }
-    }
-    return "Navigation context unavailable";
+  function jumpToStep(stepId: string): Result<void, string> {
+    return navigation.jumpToStep(stepId);
   }
 
   /**
-   * Go to previous step, returns error string if navigation fails
+   * Go to previous step using Result pattern.
+   * @returns Result indicating success or failure
    */
-  function goToPreviousStep(): string | null {
-    if (navResult._tag === "Success") {
-      const result = navResult.value.goToPreviousStep();
-      // goToPreviousStep always returns an object, not Result, so no error
-      return null;
-    }
-    return "Navigation context unavailable";
+  function goToPreviousStep(): Result<void, string> {
+    return navigation.goToPreviousStep();
   }
+
+  // For backward compatibility, provide navResult-like structure
+  const navResult = {
+    _tag: "Success" as const,
+    value: {
+      currentStepIndex: navigation.currentStepIndex,
+      currentStepId: navigation.currentStepId,
+      currentStep: navigation.currentStep,
+      canGoBack: navigation.canGoBack,
+      canGoNext: navigation.canGoNext,
+      canComplete: navigation.canComplete,
+      totalSteps: navigation.totalSteps,
+      progress: navigation.progress,
+    },
+  };
 
   return {
     goToNextStep,

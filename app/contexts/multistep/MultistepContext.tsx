@@ -5,7 +5,12 @@
  * Architecture: Centralizes multistep state, connects reducer and middleware, enables modular access to step logic.
  */
 
-import { MultistepState, MultistepAction } from "./types";
+import React from "react";
+import {
+  MultistepState,
+  MultistepAction,
+  MultistepProviderProps,
+} from "./types";
 import { createInitialState, multistepReducer } from "./multistepReducer";
 import {
   loggingMiddleware,
@@ -61,28 +66,58 @@ const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
 export const MultistepContext: React.Context<MultistepState> = (
   contextResult as any
 ).Context;
-/** BaseMultistepProvider - Provider for multistep context */
+
+/** BaseMultistepProvider - Low-level provider for advanced usage */
 export const BaseMultistepProvider = (contextResult as any).Provider;
+
+/**
+ * MultistepProvider - Convenience provider component for easy setup.
+ * Automatically initializes context with provided steps and optional starting index.
+ * @param steps - Array of step definitions
+ * @param children - React children to render within provider
+ * @param initialStepIndex - Optional starting step index (defaults to 0)
+ */
+export const MultistepProvider: React.FC<MultistepProviderProps> = ({
+  steps,
+  children,
+  initialStepIndex = 0,
+}) => {
+  const initialState = React.useMemo(() => createInitialState(steps), [steps]);
+
+  return (
+    <BaseMultistepProvider initialState={initialState}>
+      {children}
+    </BaseMultistepProvider>
+  );
+};
+
 /** useMultistepContext - Hook to access multistep context */
 export const useMultistepContext = (contextResult as any).useContext;
+
 /** useMultistepContextResult - Hook to access context result */
 export const useMultistepContextResult = (contextResult as any)
   .useContextResult;
+
 /** useMultistepSelector - Hook to select state from context */
 export const useMultistepSelector = (contextResult as any).useSelector;
+
 /** useMultistepActions - Hook to access context actions */
 export const useMultistepActions = (contextResult as any).useActions;
 
-/**
- * EnhancedMultistepContextExports - Encapsulated export object for core context APIs.
- * Simplified to core navigation and data management only.
- */
+// Export all hooks and components with consistent named exports
+export { useStepNavigation, useStepData };
+
+// For backward compatibility, maintain default export
 const MultistepContextAPI = {
+  // Foundation components and hooks
+  MultistepProvider,
   BaseMultistepProvider,
   useMultistepContext,
   useMultistepContextResult,
   useMultistepSelector,
   useMultistepActions,
+
+  // Business logic hooks
   useStepNavigation,
   useStepData,
 };

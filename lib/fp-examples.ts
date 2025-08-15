@@ -30,7 +30,7 @@ import {
   useSafeContext,
   useCombinedContexts,
 } from "../app/hooks/useSafeContext";
-import { useMultistep } from "../app/hooks/useMultistep";
+import { useStepNavigation } from "../app/contexts/multistep/useStepNavigation";
 
 // ============================================================================
 // DATABASE OPERATIONS WITH FUNCTIONAL PATTERNS
@@ -244,19 +244,22 @@ export function useOrderCreationFlow(eventId: string) {
     },
   ];
 
-  const navigation = useMultistep(steps, {
-    onComplete: async (data: any) => {
-      const result = await createEventSafely({ ...data, eventId });
-      if (result._tag === "Success") {
-        // Clear draft
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("orderDraft");
-        }
-        // Would redirect to success page in real app
-        console.log(`Order created: ${result.value._id}`);
+  // NOTE: This example now uses the new context-based multistep management
+  // Instead of the old useMultistep hook, we use the MultistepContext with useStepNavigation
+  const navigation = useStepNavigation();
+
+  // Handle order completion
+  const handleComplete = async (data: any) => {
+    const result = await createEventSafely({ ...data, eventId });
+    if (result._tag === "Success") {
+      // Clear draft
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("orderDraft");
       }
-    },
-  });
+      // Would redirect to success page in real app
+      console.log(`Order created: ${result.value._id}`);
+    }
+  };
 
   // Enhanced data management
   const updateStepData = useCallback(
@@ -265,15 +268,24 @@ export function useOrderCreationFlow(eventId: string) {
         ...prev.value,
         [stepId]: data,
       }));
-      navigation.setStepData(stepId, data);
+      // Use navigation for step data updates
+      navigation.completeStep(stepId);
     },
     [setOrderData, navigation]
   );
 
   return {
-    ...navigation,
+    // Expose navigation state and actions
+    currentStep: navigation.currentStep,
+    currentStepIndex: navigation.currentStepIndex,
+    canGoNext: navigation.canGoNext,
+    canGoBack: navigation.canGoBack,
+    goToNextStep: navigation.goToNextStep,
+    goToPreviousStep: navigation.goToPreviousStep,
+    jumpToStep: navigation.jumpToStep,
     orderData,
     updateStepData,
+    handleComplete,
   };
 }
 

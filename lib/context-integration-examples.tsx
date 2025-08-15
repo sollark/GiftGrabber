@@ -113,23 +113,18 @@ export const useOrderCreationWorkflow = () => {
     [actions]
   );
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
-  const navResult = useStepNavigation();
-  const currentStep =
-    navResult._tag === "Success" ? navResult.value.currentStep : null;
+  const navigation = useStepNavigation();
+  const currentStep = navigation.currentStep;
+
   const goToNextStep = React.useCallback(() => {
-    if (navResult._tag === "Success") {
-      return navResult.value.goToNextStep();
-    }
-    return failure(new Error("Navigation unavailable"));
-  }, [navResult]);
+    return navigation.goToNextStep();
+  }, [navigation]);
+
   const goToPreviousStep = React.useCallback(() => {
-    if (navResult._tag === "Success") {
-      return navResult.value.goToPreviousStep();
-    }
-    return { type: "GO_TO_PREVIOUS_STEP" };
-  }, [navResult]);
-  const canGoNext =
-    navResult._tag === "Success" ? navResult.value.canGoNext : false;
+    return navigation.goToPreviousStep();
+  }, [navigation]);
+
+  const canGoNext = navigation.canGoNext;
   const { setStepData, getCurrentStepData } = useStepData();
   const { addNotification } = useOrderTracking();
 
