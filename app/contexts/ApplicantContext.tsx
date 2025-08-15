@@ -10,9 +10,9 @@ import {
   createFunctionalContext,
   FunctionalAction,
   FunctionalState,
+  loggingMiddleware,
+  validationMiddleware,
 } from "@/utils/fp-contexts";
-import { loggingMiddleware } from "@/utils/fp-contexts";
-import { validationMiddleware } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 
@@ -20,6 +20,12 @@ import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 // TYPES AND INTERFACES
 // ============================================================================
 
+/**
+ * ApplicantState: State structure for the applicant context.
+ * - eventId: string identifier for the event
+ * - applicantList: list of Person objects
+ * - selectedApplicant: Maybe<Person> for safe selection
+ */
 export interface ApplicantState
   extends FunctionalState<{
     eventId: string;
@@ -27,6 +33,9 @@ export interface ApplicantState
     selectedApplicant: Maybe<Person>;
   }> {}
 
+/**
+ * ApplicantAction: Action types for the applicant reducer.
+ */
 export interface ApplicantAction extends FunctionalAction {
   type: "SET_EVENT_DATA" | "SELECT_APPLICANT" | "CLEAR_APPLICANT";
   payload?: unknown;
@@ -36,6 +45,12 @@ export interface ApplicantAction extends FunctionalAction {
 // INITIAL STATE AND REDUCER
 // ============================================================================
 
+/**
+ * createInitialState
+ * @param eventId - Event identifier
+ * @param applicantList - List of Person objects
+ * @returns ApplicantState
+ */
 const createInitialState = (
   eventId: string,
   applicantList: Person[] = []
@@ -51,6 +66,13 @@ const createInitialState = (
   version: 0,
 });
 
+/**
+ * applicantReducer
+ * Pure reducer for applicant state.
+ * @param state - Current ApplicantState
+ * @param action - ApplicantAction to process
+ * @returns Result<ApplicantState, Error>
+ */
 const applicantReducer = (
   state: ApplicantState,
   action: ApplicantAction
@@ -108,6 +130,10 @@ const applicantReducer = (
 // VALIDATION MIDDLEWARE
 // ============================================================================
 
+/**
+ * applicantValidation
+ * Middleware to validate applicant actions.
+ */
 const applicantValidation = validationMiddleware<
   ApplicantState,
   ApplicantAction
@@ -155,15 +181,9 @@ export const useApplicantContextResult = contextResult.useContextResult;
 
 /**
  * useApplicantSelector
- *
  * A typed selector hook for accessing specific slices of the ApplicantContext state.
- *
- * Usage:
- *   - Pass a selector function that receives the context state and returns the value you want.
- *   - The return value is always wrapped in a Maybe (Some/None) for safe functional access.
- *   - Example: const selectedPersonMaybe = useApplicantSelector(state => state.data.selectedPerson)
- *
- * This enables robust, type-safe, and composable state selection from the ApplicantContext.
+ * @param selector - Function to select part of the state
+ * @returns Maybe<TSelected>
  */
 export const useApplicantSelector = contextResult.useSelector as <
   TSelected = unknown
@@ -177,6 +197,13 @@ export const useApplicantActions = contextResult.useActions;
 // ENHANCED PROVIDER WITH PROPS
 // ============================================================================
 
+/**
+ * ApplicantProvider
+ * Provider component for ApplicantContext.
+ * @param eventId - Event identifier
+ * @param applicantList - List of Person objects
+ * @param children - React children
+ */
 interface ApplicantProviderProps {
   eventId: string;
   applicantList: Person[];
@@ -205,7 +232,9 @@ export const ApplicantProvider: React.FC<ApplicantProviderProps> = ({
 // ============================================================================
 
 /**
- * Hook for applicant selection operations
+ * useApplicantSelection
+ * Hook for applicant selection operations.
+ * @returns Object with selection state and actions
  */
 export const useApplicantSelection = () => {
   const actions = useApplicantActions();
