@@ -1,9 +1,8 @@
 /**
- * Integration tests for MultistepContext navigation and validation logic
+ * Integration tests for MultistepContext navigation logic
  *
  * These tests verify the correct behavior of the multistep form context, including:
  * - Step navigation (next, previous, jump)
- * - Validation logic and blocking navigation on errors
  * - Handling of optional steps and step dependencies
  * - State updates and context safety
  *
@@ -23,32 +22,16 @@ const steps = [
   {
     id: "step1",
     title: "Step 1",
-    validationRules: [
-      {
-        id: "required",
-        message: "Step 1 is required",
-        validator: (data: unknown) => Boolean(data),
-      },
-    ],
   },
   {
     id: "step2",
     title: "Step 2",
     isOptional: true,
-    validationRules: [
-      {
-        id: "minLength",
-        message: "Step 2 must be at least 3 chars",
-        validator: (data: unknown) =>
-          typeof data === "string" && data.length >= 3,
-      },
-    ],
     dependencies: ["step1"],
   },
   {
     id: "step3",
     title: "Step 3",
-    validationRules: [],
     dependencies: ["step2"],
   },
 ];
@@ -57,7 +40,6 @@ describe("MultistepContext integration", () => {
   // Helper test harness to run hooks and trigger assertions after context is ready
   interface ContextHooks {
     nav: ReturnType<typeof MultistepContextAPI.useStepNavigation>;
-    val: ReturnType<typeof MultistepContextAPI.useStepValidation>;
     data: ReturnType<typeof MultistepContextAPI.useStepData>;
   }
 
@@ -67,11 +49,10 @@ describe("MultistepContext integration", () => {
    */
   function TestHarness({ onReady }: { onReady: (ctx: ContextHooks) => void }) {
     const navResult = MultistepContextAPI.useStepNavigation();
-    const val = MultistepContextAPI.useStepValidation();
     const data = MultistepContextAPI.useStepData();
     React.useEffect(() => {
-      onReady({ nav: navResult, val, data });
-    }, [navResult, val, data, onReady]);
+      onReady({ nav: navResult, data });
+    }, [navResult, data, onReady]);
     return null;
   }
 
@@ -88,11 +69,11 @@ describe("MultistepContext integration", () => {
   }
 
   /**
-   * Verifies that navigation actions (next, previous, jump) update the current step as expected.
-   * Uses waitFor to ensure state updates are reflected before assertions.
+   * Tests step navigation and data management functionality.
+   * Verifies basic navigation between steps works correctly.
    */
-  it("navigates between steps correctly", async () => {
-    await renderWithContext(async ({ nav }) => {
+  it("navigates between steps and manages step data correctly", async () => {
+    await renderWithContext(async ({ nav, data }) => {
       expect(nav._tag).toBe("Success");
       if (nav._tag === "Success") {
         // Wait for initial step to be set
@@ -100,6 +81,13 @@ describe("MultistepContext integration", () => {
           expect(nav.value.currentStepId).not.toBe("");
         });
         expect(nav.value.currentStepId).toBe("step1");
+
+        // Test setting step data
+        act(() => {
+          data.setStepData("step1", { name: "test" });
+        });
+
+        // Navigate to next step
         act(() => {
           const result = nav.value.goToNextStep();
           if (result._tag === "Success") {
@@ -111,12 +99,16 @@ describe("MultistepContext integration", () => {
         await waitFor(() => {
           expect(nav.value.currentStepId).toBe("step2");
         });
+
+        // Navigate back
         act(() => {
           nav.value.goToPreviousStep();
         });
         await waitFor(() => {
           expect(nav.value.currentStepId).toBe("step1");
         });
+
+        // Jump to step 3
         act(() => {
           const result = nav.value.jumpToStep("step3");
           if (result._tag === "Success") {
@@ -127,57 +119,6 @@ describe("MultistepContext integration", () => {
         });
         await waitFor(() => {
           expect(nav.value.currentStepId).toBe("step3");
-        });
-      }
-    });
-  });
-
-  /**
-   * Ensures that validation errors block navigation, and that fixing errors allows navigation.
-   * Triggers validation, checks for errors, updates data, and verifies navigation proceeds.
-   */
-  it("validates steps and blocks navigation on error", async () => {
-    await renderWithContext(async ({ nav, val, data }) => {
-      expect(nav._tag).toBe("Success");
-      if (nav._tag === "Success") {
-        act(() => val.validateStep("step1"));
-        await waitFor(() => {
-          const validationResult1 = val.getStepValidation("step1");
-          expect(validationResult1).not.toBeNull();
-          if (validationResult1) {
-            expect(validationResult1.isValid).toBe(false);
-          }
-        });
-        act(() => {
-          const result = nav.value.goToNextStep();
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        expect(nav.value.currentStepId).toBe("step1");
-        act(() => {
-          data.setStepData("step1", "valid");
-          val.validateStep("step1");
-        });
-        await waitFor(() => {
-          const validationResult2 = val.getStepValidation("step1");
-          expect(validationResult2).not.toBeNull();
-          if (validationResult2) {
-            expect(validationResult2.isValid).toBe(true);
-          }
-        });
-        act(() => {
-          const result = nav.value.goToNextStep();
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        await waitFor(() => {
-          expect(nav.value.currentStepId).toBe("step2");
         });
       }
     });

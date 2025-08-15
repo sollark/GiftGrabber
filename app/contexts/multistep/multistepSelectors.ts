@@ -1,108 +1,81 @@
 /**
  * multistepSelectors.ts
  * Purpose: Provides selector functions for extracting data from multistep state.
- * Responsibilities: Encapsulates logic for querying step state, progress, and validation.
+ * Responsibilities: Encapsulates logic for querying step state and progress.
  * Architecture: Used by context, hooks, and components for modular state access.
  */
-// ...existing code...
+
 /**
  * Selector functions for MultistepContext state.
  * Encapsulate state access for improved modularity and testability.
+ * Simplified to core navigation and step data only.
  */
 import { MultistepState } from "./types";
 
 /**
  * Selects step data from multistep state.
  * @param state MultistepState
- * @returns stepData or undefined
+ * @returns stepData object
  */
-export const selectStepData = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.stepData : undefined;
+export const selectStepData = (state: MultistepState) => state.data.stepData;
 
 /**
  * Selects current step ID from multistep state.
  * @param state MultistepState
- * @returns currentStepId or undefined
+ * @returns currentStepId string
  */
 export const selectCurrentStepId = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.currentStepId : undefined;
-
-/**
- * Selects validation results from multistep state.
- * @param state MultistepState
- * @returns validationResults or undefined
- */
-export const selectValidationResults = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.validationResults : undefined;
+  state.data.currentStepId;
 
 /**
  * Selects steps array from multistep state.
  * @param state MultistepState
- * @returns steps array or empty array
+ * @returns steps array
  */
-export const selectSteps = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.steps : [];
+export const selectSteps = (state: MultistepState) => state.data.steps;
 
 /**
  * Selects completed steps set from multistep state.
  * @param state MultistepState
- * @returns completedSteps or empty set
+ * @returns completedSteps set
  */
 export const selectCompletedSteps = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.completedSteps : new Set();
+  state.data.completedSteps;
 
 /**
  * Selects skipped steps set from multistep state.
  * @param state MultistepState
- * @returns skippedSteps or empty set
+ * @returns skippedSteps set
  */
 export const selectSkippedSteps = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.skippedSteps : new Set();
-
-/**
- * Selects navigation history from multistep state.
- * @param state MultistepState
- * @returns navigationHistory or empty array
- */
-export const selectNavigationHistory = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.navigationHistory : [];
-
-/**
- * Selects form context from multistep state.
- * @param state MultistepState
- * @returns formContext or empty object
- */
-export const selectFormContext = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.formContext : {};
+  state.data.skippedSteps;
 
 /**
  * Selects current step index from multistep state.
  * @param state MultistepState
- * @returns currentStepIndex or -1
+ * @returns currentStepIndex number
  */
 export const selectCurrentStepIndex = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.currentStepIndex : -1;
+  state.data.currentStepIndex;
 
 /**
  * Selects canGoBack flag from multistep state.
  * @param state MultistepState
- * @returns canGoBack or false
+ * @returns canGoBack boolean
  */
-export const selectCanGoBack = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.canGoBack : false;
+export const selectCanGoBack = (state: MultistepState) => state.data.canGoBack;
 
 /**
  * Selects canGoNext flag from multistep state.
  * @param state MultistepState
- * @returns canGoNext or false
+ * @returns canGoNext boolean
  */
-export const selectCanGoNext = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.canGoNext : false;
+export const selectCanGoNext = (state: MultistepState) => state.data.canGoNext;
 
 /**
  * Selects canComplete flag from multistep state.
  * @param state MultistepState
- * @returns canComplete or false
+ * @returns canComplete boolean
  */
 export const selectCanComplete = (state: MultistepState) =>
-  state !== "RESET_FORM" ? state.data.canComplete : false;
+  state.data.canComplete;

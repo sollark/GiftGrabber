@@ -1,10 +1,10 @@
 /**
  * MultistepContext.tsx
  * Purpose: Provides the main React context for multistep workflows (e.g., forms, wizards).
- * Responsibilities: Sets up context, provider, and exposes hooks/selectors/actions for step navigation and validation.
+ * Responsibilities: Sets up context, provider, and exposes hooks/selectors/actions for step navigation.
  * Architecture: Centralizes multistep state, connects reducer and middleware, enables modular access to step logic.
  */
-// ...existing code...
+
 import { MultistepState, MultistepAction } from "./types";
 import { createInitialState, multistepReducer } from "./multistepReducer";
 import {
@@ -15,7 +15,6 @@ import {
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { success } from "@/utils/fp";
 import { useStepData } from "./useStepData";
-import { useStepValidation } from "./useStepValidation";
 import { useStepNavigation } from "./useStepNavigation";
 
 /**
@@ -42,6 +41,7 @@ const multistepValidation = validationMiddleware<
 
 /**
  * Create context and provider for multistep state.
+ * Configured with logging and persistence middleware for core navigation data.
  */
 const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
   name: "Multistep",
@@ -51,13 +51,7 @@ const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
     loggingMiddleware,
     multistepValidation,
     persistenceMiddleware("multistep-context", {
-      exclude: [
-        "loading",
-        "error",
-        "lastUpdated",
-        "version",
-        "navigationHistory",
-      ],
+      exclude: ["loading", "error", "lastUpdated", "version"],
     }),
   ],
   debugMode: process.env.NODE_ENV === "development",
@@ -80,7 +74,8 @@ export const useMultistepSelector = (contextResult as any).useSelector;
 export const useMultistepActions = (contextResult as any).useActions;
 
 /**
- * EnhancedMultistepContextExports - Encapsulated export object for all context APIs.
+ * EnhancedMultistepContextExports - Encapsulated export object for core context APIs.
+ * Simplified to core navigation and data management only.
  */
 const MultistepContextAPI = {
   BaseMultistepProvider,
@@ -90,7 +85,6 @@ const MultistepContextAPI = {
   useMultistepActions,
   useStepNavigation,
   useStepData,
-  useStepValidation,
 };
 
 export default MultistepContextAPI;

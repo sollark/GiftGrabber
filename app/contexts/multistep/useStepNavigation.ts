@@ -49,13 +49,9 @@ export function useStepNavigation(): Result<
     completedSteps: new Set(),
     skippedSteps: new Set(),
     stepData: {},
-    validationResults: {},
     canGoBack: false,
     canGoNext: false,
     canComplete: false,
-    progress: 0,
-    navigationHistory: [],
-    formContext: {},
   };
   let valid = false;
   if (
@@ -115,8 +111,8 @@ export function useStepNavigation(): Result<
         data.completedSteps
       );
       if (navResult._tag === "Failure") return failure(navResult.error);
-      safeActions.dispatchSafe({ type: "JUMP_TO_STEP", payload: stepId });
-      return success({ type: "JUMP_TO_STEP", payload: stepId });
+      safeActions.dispatchSafe({ type: "GO_TO_STEP", payload: stepId });
+      return success({ type: "GO_TO_STEP", payload: stepId });
     },
     [actions, steps, data.completedSteps]
   );

@@ -23,12 +23,8 @@ import {
 import { useApproverSelector } from "@/app/contexts/ApproverContext";
 
 import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
-const {
-  BaseMultistepProvider,
-  useStepNavigation,
-  useStepData,
-  useStepValidation,
-} = MultistepContextAPI;
+const { BaseMultistepProvider, useStepNavigation, useStepData } =
+  MultistepContextAPI;
 import { StepDefinition } from "@/app/contexts/multistep/types";
 
 // Model imports
@@ -135,36 +131,27 @@ export const useOrderCreationWorkflow = () => {
   const canGoNext =
     navResult._tag === "Success" ? navResult.value.canGoNext : false;
   const { setStepData, getCurrentStepData } = useStepData();
-  const { validateStep } = useStepValidation();
   const { addNotification } = useOrderTracking();
 
   /**
-   * Validates current step and proceeds to next if valid
+   * Proceeds to next step with basic data check
    */
-  const validateAndProceed = React.useCallback(async () => {
+  const proceedToNext = React.useCallback(async () => {
     if (!currentStep) return failure(new Error("No current step"));
 
-    // Validate current step data
+    // Basic data check - ensure current step has data if required
     const currentData = getCurrentStepData();
-    const validationResult = await validateStep(currentStep.id, currentData);
-
-    if (validationResult._tag === "Failure") {
+    if (!currentStep.isOptional && !currentData) {
       addNotification({
         type: "error",
-        message: `Validation failed: ${validationResult.error}`,
+        message: `Please complete ${currentStep.title}`,
       });
-      return validationResult;
+      return failure(new Error(`${currentStep.title} is required`));
     }
 
     // Proceed to next step
     return goToNextStep();
-  }, [
-    currentStep,
-    getCurrentStepData,
-    validateStep,
-    goToNextStep,
-    addNotification,
-  ]);
+  }, [currentStep, getCurrentStepData, goToNextStep, addNotification]);
 
   /**
    * Completes applicant selection step
@@ -193,9 +180,9 @@ export const useOrderCreationWorkflow = () => {
         message: `Applicant ${getPersonName(applicant)} selected`,
       });
 
-      return validateAndProceed();
+      return proceedToNext();
     },
-    [selectApplicant, setStepData, addNotification, validateAndProceed]
+    [selectApplicant, setStepData, addNotification, proceedToNext]
   );
   /**
    * Completes gift selection step
@@ -227,9 +214,9 @@ export const useOrderCreationWorkflow = () => {
         message: `${gifts.length} gifts selected`,
       });
 
-      return validateAndProceed();
+      return proceedToNext();
     },
-    [addGift, setStepData, addNotification, validateAndProceed]
+    [addGift, setStepData, addNotification, proceedToNext]
   );
 
   /**
@@ -289,7 +276,7 @@ export const useOrderCreationWorkflow = () => {
     canGoNext,
 
     // Actions
-    validateAndProceed,
+    proceedToNext,
     completeApplicantSelection,
     completeGiftSelection,
     submitOrder,
@@ -410,7 +397,7 @@ export const OrderCreationWizard: React.FC = () => {
     selectedApplicant,
     applicantGifts,
     canGoNext,
-    validateAndProceed,
+    proceedToNext,
     completeApplicantSelection,
     completeGiftSelection,
     submitOrder,
@@ -503,7 +490,7 @@ export const OrderCreationWizard: React.FC = () => {
           Previous
         </button>
 
-        <button onClick={() => validateAndProceed()} disabled={!canGoNext}>
+        <button onClick={() => proceedToNext()} disabled={!canGoNext}>
           Next
         </button>
       </div>

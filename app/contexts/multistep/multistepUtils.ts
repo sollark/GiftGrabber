@@ -1,19 +1,22 @@
 /**
  * multistepUtils.ts
- * Purpose: Utility functions for multistep context (step validation, navigation helpers, etc.).
+ * Purpose: Utility functions for multistep context (navigation helpers, step management).
  * Responsibilities: Encapsulates reusable logic for step workflows.
  * Architecture: Used by reducer, context, and hooks.
  */
-// ...existing code...
+
 /**
  * Utility functions for MultistepContext
- * Pure, functional helpers for step navigation and validation
+ * Pure, functional helpers for step navigation and management
  */
-import { StepDefinition, StepValidationResult } from "./types";
+import { StepDefinition } from "./types";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 
 /**
  * Finds the index of a step by ID
+ * @param steps Array of step definitions
+ * @param stepId Step ID to find
+ * @returns Index of the step or -1 if not found
  */
 export const findStepIndex = (
   steps: StepDefinition[],
@@ -22,6 +25,9 @@ export const findStepIndex = (
 
 /**
  * Gets the current step by index
+ * @param steps Array of step definitions
+ * @param currentStepIndex Current step index
+ * @returns Maybe containing the current step or none
  */
 export const getCurrentStep = (
   steps: StepDefinition[],
@@ -32,30 +38,11 @@ export const getCurrentStep = (
     : none;
 
 /**
- * Validates a step using its rules
- */
-export const validateStep = (
-  step: StepDefinition | undefined,
-  stepData: unknown
-): StepValidationResult => {
-  const errors: string[] = [];
-  if (!step || !step.validationRules) return { isValid: true, errors };
-  for (const rule of step.validationRules) {
-    try {
-      if (!rule.validator(stepData)) errors.push(rule.message);
-    } catch (error) {
-      errors.push(
-        `Validation error: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
-  }
-  return { isValid: errors.length === 0, errors };
-};
-
-/**
  * Checks if step dependencies are met
+ * @param step Step to check dependencies for
+ * @param completedSteps Set of completed step IDs
+ * @param steps Array of all steps for reference
+ * @returns Result indicating if dependencies are satisfied
  */
 export const areStepDependenciesMet = (
   step: StepDefinition,
@@ -78,12 +65,18 @@ export const areStepDependenciesMet = (
 
 /**
  * Checks if a step is optional
+ * @param step Step definition to check
+ * @returns True if the step is optional
  */
 export const isStepOptional = (step: StepDefinition): boolean =>
   Boolean(step.isOptional);
 
 /**
  * Checks if navigation to a step is allowed
+ * @param steps Array of step definitions
+ * @param targetStepIndex Index of the target step
+ * @param completedSteps Set of completed step IDs
+ * @returns Result indicating if navigation is allowed
  */
 export const canNavigateToStep = (
   steps: StepDefinition[],

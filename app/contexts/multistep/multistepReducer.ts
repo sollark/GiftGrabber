@@ -4,31 +4,29 @@
  * Responsibilities: Handles all step-related actions and updates state accordingly.
  * Architecture: Used by MultistepContext to manage step changes in a functional, predictable way.
  */
-// ...existing code...
+
 /**
  * Multistep reducer and initial state for multistep form navigation.
  * All logic is pure, functional, and type-safe.
+ * Simplified to core navigation and step data management only.
  */
 import type {
   MultistepState,
   MultistepAction,
   StepDefinition,
-  StepValidationResult,
-  NavigationHistoryEntry,
   MultistepData,
 } from "./types";
-import { Result, success, failure, none } from "@/utils/fp";
+import { Result, success, failure } from "@/utils/fp";
 import {
   canNavigateToStep,
   findStepIndex,
   isStepOptional,
-  validateStep,
 } from "./multistepUtils";
 
 /**
  * Creates the initial state for the multistep context.
  * @param steps Array of step definitions
- * @returns MultistepState
+ * @returns MultistepState with core navigation data
  */
 export const createInitialState = (
   steps: StepDefinition[] = []
@@ -42,15 +40,12 @@ export const createInitialState = (
       completedSteps: new Set(),
       skippedSteps: new Set(),
       stepData: {},
-      validationResults: {},
       canGoBack: false,
       canGoNext: steps.length > 1,
       canComplete: false,
-      navigationHistory: [],
-      formContext: {},
     },
     loading: false,
-    error: none,
+    error: { _tag: "None" },
     lastUpdated: Date.now(),
     version: 0,
   };
@@ -67,17 +62,6 @@ export const multistepReducer = (
   state: MultistepState,
   action: MultistepAction
 ): Result<MultistepState, Error> => {
-  // Defensive: Only allow RESET_FORM if state is RESET_FORM
-  if (state === "RESET_FORM") {
-    if (action.type === "RESET_FORM") {
-      const resetSteps = (action.payload as StepDefinition[]) || [];
-      return success(createInitialState(resetSteps));
-    }
-    return failure(
-      new Error("State is RESET_FORM. Only RESET_FORM action is allowed.")
-    );
-  }
-
   // Destructure data for readability
   const { data } = state;
 
@@ -102,7 +86,24 @@ export const multistepReducer = (
     }
 
     case "GO_TO_STEP": {
-      const targetIndex = action.payload as number;
+      // Handle both index (number) and stepId (string) payloads
+      const payload = action.payload;
+      let targetIndex: number;
+
+      if (typeof payload === "string") {
+        // JUMP_TO_STEP functionality - find by stepId
+        targetIndex = findStepIndex(data.steps, payload);
+        if (targetIndex === -1)
+          return failure(new Error(`Step with id "${payload}" not found`));
+      } else if (typeof payload === "number") {
+        // GO_TO_STEP functionality - use index directly
+        targetIndex = payload;
+      } else {
+        return failure(
+          new Error("Payload must be step index (number) or step ID (string)")
+        );
+      }
+
       const navigationCheck = canNavigateToStep(
         data.steps,
         targetIndex,
@@ -110,6 +111,7 @@ export const multistepReducer = (
       );
       if (navigationCheck._tag === "Failure")
         return failure(new Error(navigationCheck.error));
+
       const targetStep = data.steps[targetIndex];
       return success({
         ...state,
@@ -120,15 +122,6 @@ export const multistepReducer = (
           canGoBack: targetIndex > 0,
           canGoNext: targetIndex < data.steps.length - 1,
           canComplete: data.completedSteps.size === data.steps.length - 1,
-          navigationHistory: [
-            ...data.navigationHistory,
-            {
-              fromStepId: data.currentStepId,
-              toStepId: targetStep.id,
-              timestamp: Date.now(),
-              action: "jump",
-            },
-          ],
         },
       });
     }
@@ -154,15 +147,6 @@ export const multistepReducer = (
           canGoBack: true,
           canGoNext: nextIndex < data.steps.length - 1,
           canComplete: data.completedSteps.size === data.steps.length - 1,
-          navigationHistory: [
-            ...data.navigationHistory,
-            {
-              fromStepId: data.currentStepId,
-              toStepId: nextStep.id,
-              timestamp: Date.now(),
-              action: "next",
-            },
-          ],
         },
       });
     }
@@ -180,49 +164,6 @@ export const multistepReducer = (
           canGoBack: prevIndex > 0,
           canGoNext: true,
           canComplete: false,
-          navigationHistory: [
-            ...data.navigationHistory,
-            {
-              fromStepId: data.currentStepId,
-              toStepId: prevStep.id,
-              timestamp: Date.now(),
-              action: "back",
-            },
-          ],
-        },
-      });
-    }
-
-    case "JUMP_TO_STEP": {
-      const jumpStepId = action.payload as string;
-      const jumpIndex = findStepIndex(data.steps, jumpStepId);
-      if (jumpIndex === -1)
-        return failure(new Error(`Step with id "${jumpStepId}" not found`));
-      const jumpNavigationCheck = canNavigateToStep(
-        data.steps,
-        jumpIndex,
-        data.completedSteps
-      );
-      if (jumpNavigationCheck._tag === "Failure")
-        return failure(new Error(jumpNavigationCheck.error));
-      return success({
-        ...state,
-        data: {
-          ...data,
-          currentStepIndex: jumpIndex,
-          currentStepId: jumpStepId,
-          canGoBack: jumpIndex > 0,
-          canGoNext: jumpIndex < data.steps.length - 1,
-          canComplete: data.completedSteps.size === data.steps.length - 1,
-          navigationHistory: [
-            ...data.navigationHistory,
-            {
-              fromStepId: data.currentStepId,
-              toStepId: jumpStepId,
-              timestamp: Date.now(),
-              action: "jump",
-            },
-          ],
         },
       });
     }
@@ -255,15 +196,6 @@ export const multistepReducer = (
         data: {
           ...data,
           skippedSteps: newSkippedSteps,
-          navigationHistory: [
-            ...data.navigationHistory,
-            {
-              fromStepId: skipStepId,
-              toStepId: skipStepId,
-              timestamp: Date.now(),
-              action: "skip",
-            },
-          ],
         },
       });
     }
@@ -338,100 +270,7 @@ export const multistepReducer = (
       });
     }
 
-    case "VALIDATE_STEP": {
-      const { stepId: validateStepId, data: validateData } = action.payload as {
-        stepId: string;
-        data?: unknown;
-      };
-      const stepToValidate = data.steps.find(
-        (s: StepDefinition) => s.id === validateStepId
-      );
-      if (!stepToValidate)
-        return failure(new Error(`Step with id "${validateStepId}" not found`));
-      const validationResult = validateStep(
-        stepToValidate,
-        validateData ?? data.stepData[validateStepId]
-      );
-      return success({
-        ...state,
-        data: {
-          ...data,
-          validationResults: {
-            ...data.validationResults,
-            [validateStepId]: validationResult,
-          },
-        },
-      });
-    }
-
-    case "VALIDATE_ALL_STEPS": {
-      const allValidationResults: Record<string, StepValidationResult> = {};
-      for (const step of data.steps) {
-        allValidationResults[step.id] = validateStep(
-          step,
-          data.stepData[step.id]
-        );
-      }
-      return success({
-        ...state,
-        data: {
-          ...data,
-          validationResults: allValidationResults,
-        },
-      });
-    }
-
-    case "SET_FORM_CONTEXT": {
-      if (!action.payload || typeof action.payload !== "object")
-        return failure(new Error("Form context must be an object"));
-      return success({
-        ...state,
-        data: {
-          ...data,
-          formContext: action.payload as Record<string, unknown>,
-        },
-      });
-    }
-
-    case "UPDATE_FORM_CONTEXT": {
-      if (!action.payload || typeof action.payload !== "object")
-        return failure(new Error("Form context update must be an object"));
-      return success({
-        ...state,
-        data: {
-          ...data,
-          formContext: {
-            ...data.formContext,
-            ...(action.payload as Record<string, unknown>),
-          },
-        },
-      });
-    }
-
-    case "RESET_FORM": {
-      const resetSteps = (action.payload as StepDefinition[]) || data.steps;
-      return success(createInitialState(resetSteps));
-    }
-
-    case "ADD_NAVIGATION_ENTRY": {
-      if (!action.payload || typeof action.payload !== "object")
-        return failure(new Error("Navigation entry must be an object"));
-      return success({
-        ...state,
-        data: {
-          ...data,
-          navigationHistory: [
-            ...data.navigationHistory,
-            {
-              ...(action.payload as NavigationHistoryEntry),
-              timestamp: Date.now(),
-            },
-          ],
-        },
-      });
-    }
-
     default:
-      return failure(new Error(`Unknown action type: ${action.type}`));
+      return failure(new Error(`Unknown action type: ${(action as any).type}`));
   }
 };
