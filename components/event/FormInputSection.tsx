@@ -1,4 +1,4 @@
-import ControlledTextInput from "../../ui/form/ControlledTextInput";
+import ControlledTextInput from "@/ui/form/ControlledTextInput";
 
 const FORM_CONFIG = {
   INPUT_STYLES: { style: { fontSize: 24 } },

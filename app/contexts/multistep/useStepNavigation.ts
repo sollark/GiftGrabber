@@ -8,15 +8,6 @@
 import React from "react";
 import { Result, success, failure } from "@/utils/fp";
 import { useMultistepActions, useMultistepSelector } from "./MultistepContext";
-import {
-  selectCurrentStepIndex,
-  selectCurrentStepId,
-  selectSteps,
-  selectCanGoBack,
-  selectCanGoNext,
-  selectCompletedSteps,
-  selectSkippedSteps,
-} from "./multistepSelectors";
 import { canNavigateToStep, findStepIndex } from "./multistepUtils";
 import { StepDefinition, MultistepState } from "./types";
 

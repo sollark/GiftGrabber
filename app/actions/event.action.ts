@@ -28,7 +28,6 @@ import {
   createEventInternal,
   validateEventExists,
 } from "@/service/eventService";
-// ...existing code...
 import { withDatabase } from "@/lib/withDatabase";
 import { failure, Result, success, isSuccess, fromPromise } from "@/utils/fp";
 

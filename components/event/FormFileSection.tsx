@@ -1,5 +1,4 @@
-import ControlledFileInput from "../../ui/form/ControlledFileInput";
-import QRcode from "@/ui/data-display/QRcode";
+import ControlledFileInput from "@/ui/form/ControlledFileInput";
 
 const FORM_CONFIG = {
   INPUT_STYLES: { style: { fontSize: 24 } },

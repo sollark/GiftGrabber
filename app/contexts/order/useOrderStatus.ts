@@ -4,7 +4,6 @@
  * Responsibilities: Provides status info and helpers for components.
  * Architecture: Public API for consumers of OrderContext.
  */
-// ...existing code...
 import { Person } from "@/database/models/person.model";
 import { useOrderActions, useOrderSelector } from "./OrderContext";
 import { getPersonName } from "./orderUtils";

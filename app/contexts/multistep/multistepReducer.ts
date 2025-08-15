@@ -10,12 +10,7 @@
  * All logic is pure, functional, and type-safe.
  * Simplified to core navigation and step data management only.
  */
-import type {
-  MultistepState,
-  MultistepAction,
-  StepDefinition,
-  MultistepData,
-} from "./types";
+import type { MultistepState, MultistepAction, StepDefinition } from "./types";
 import { Result, success, failure } from "@/utils/fp";
 import {
   canNavigateToStep,

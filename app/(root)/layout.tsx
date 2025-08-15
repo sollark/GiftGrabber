@@ -1,4 +1,4 @@
-import { Footer, Header, Main } from "../../ui/layout";
+import { Footer, Header, Main } from "@/ui/layout";
 import { FC, ReactNode } from "react";
 
 type AppLayoutProps = {

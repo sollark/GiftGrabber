@@ -1,4 +1,3 @@
-import { OrderStatus } from "@/components/order/OrderStatus";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";

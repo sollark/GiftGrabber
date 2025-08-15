@@ -1,7 +1,7 @@
 import { failure, success, Result } from "@/utils/fp";
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
-import PersonModel, { Person } from "@/database/models/person.model";
+import PersonModel from "@/database/models/person.model";
 
 import {
   PersonWithoutId,

@@ -2,7 +2,6 @@
 
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
-import { OrderStatus } from "@/components/order/OrderStatus";
 import { Person } from "@/database/models/person.model";
 import React, { FC, useLayoutEffect } from "react";
 import { ConditionalRender } from "../../ui/primitives";

@@ -4,7 +4,6 @@
  * Responsibilities: Exposes tracking state and helpers for order lifecycle.
  * Architecture: Public API for order-related components.
  */
-// ...existing code...
 import { useOrderActions, useOrderSelector } from "./OrderContext";
 import { failure } from "@/utils/fp";
 import { OrderNotification, OrderHistoryEntry } from "./types";

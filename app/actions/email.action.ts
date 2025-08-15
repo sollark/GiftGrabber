@@ -1,6 +1,6 @@
 "use server";
 
-import { sendEmail } from "../../lib/email";
+import { sendEmail } from "@/lib/email";
 
 /**
  * Configuration constants for email actions

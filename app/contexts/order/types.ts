@@ -4,7 +4,6 @@
  * Responsibilities: Defines shape of state, actions, and related entities.
  * Architecture: Shared by reducer, middleware, context, and hooks for type safety.
  */
-// ...existing code...
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { FunctionalState, FunctionalAction } from "@/lib/fp-contexts";

@@ -26,7 +26,7 @@ import { FC, useMemo } from "react";
 import useSWR from "swr";
 import Approver from "../approver/Approver";
 import { ConfirmOrderButton } from "@/ui/primitives";
-import MultistepNavigator from "../../ui/navigation/MultistepNavigator";
+import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
 import OrderDetails from "./OrderDetails";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";

@@ -19,7 +19,7 @@
 import { FC, useState, useCallback, useMemo, SyntheticEvent } from "react";
 import { Person } from "@/database/models/person.model";
 import { Autocomplete, TextField } from "@mui/material";
-import { SecondaryButton } from "../ui/primitives";
+import { SecondaryButton } from "@/ui/primitives";
 
 /**
  * Option structure for the autocomplete component

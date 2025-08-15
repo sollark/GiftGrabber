@@ -10,7 +10,6 @@ import type { Person } from "@/database/models/person.model";
 import {
   OrderAction,
   OrderState,
-  EnhancedOrder,
   LocalOrderStatus,
   OrderHistoryEntry,
   OrderNotification,
