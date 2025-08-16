@@ -21,6 +21,7 @@ import { orderValidation, optimisticRollbacks } from "./orderMiddleware";
 import { useOrderStatus } from "./useOrderStatus";
 import { useApproverSelection } from "./useApproverSelection";
 import { useOrderTracking } from "./useOrderTracking";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 // =======================
 // Custom Hook Exports
@@ -91,7 +92,7 @@ interface OrderProviderProps {
  * Side effects: Initializes context state.
  * Public API.
  */
-export const OrderProvider: React.FC<OrderProviderProps> = ({
+const OrderProviderComponent: React.FC<OrderProviderProps> = ({
   order,
   approverList,
   children,
@@ -105,6 +106,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     <BaseOrderProvider initialState={initialData}>{children}</BaseOrderProvider>
   );
 };
+
+// Apply error boundary to the provider
+export const OrderProvider = withErrorBoundary(
+  OrderProviderComponent,
+  "OrderContext",
+  <div>Failed to load Order context. Please refresh the page.</div>
+);
 
 // =======================
 // File Purpose

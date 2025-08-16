@@ -284,22 +284,30 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   // Selector hook for specific state slices
   /**
    * useSelector (Public API)
-   * Hook to select a slice of state from the context.
+   * Hook to select a slice of state from the context with automatic memoization.
    * @param selector (state: S) => R - Selector function
    * @returns Maybe<R> - Selected value or none
    * @sideEffects None (logs on selector error)
    */
   const useSelector = <R extends any>(selector: (state: S) => R): Maybe<R> => {
     const context = useContext();
-    if (context._tag === "Some") {
-      try {
-        return some(selector(context.value.state));
-      } catch (error) {
-        console.warn(`Selector error in ${name}:`, error);
-        return none;
+
+    // Memoize selector to prevent unnecessary re-computations
+    const memoizedSelector = React.useCallback(selector, []);
+
+    return React.useMemo(() => {
+      if (context._tag === "Some") {
+        try {
+          return some(memoizedSelector(context.value.state));
+        } catch (error) {
+          if (debugMode) {
+            console.warn(`Selector error in ${name}:`, error);
+          }
+          return none;
+        }
       }
-    }
-    return none;
+      return none;
+    }, [context, memoizedSelector]);
   };
 
   // Action creators with Result handling

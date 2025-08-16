@@ -23,6 +23,7 @@ import {
   useApplicantSelection,
 } from "@/app/contexts/ApplicantContext";
 import {
+  GiftProvider,
   useGiftSelector,
   useGiftActions,
 } from "@/app/contexts/gift/GiftContext";
@@ -57,15 +58,79 @@ const getPersonName = (person: Person): string => {
 // ============================================================================
 
 /**
- * Props for CombinedContextProvider
- * @property children - React children to render within the composed providers
- * @property order - The order object for the workflow
- * @property applicants - List of applicant Person objects
- * @property approverList - List of approver Person objects
- * @property gifts - List of Gift objects
- * @property multistepSteps - Step definitions for the multistep workflow
+ * Props for flexible context provider composition
  */
-interface CombinedProviderProps {
+interface FlexibleProviderProps {
+  children: React.ReactNode;
+  contexts: {
+    applicant?: { eventId: string; applicantList: Person[] };
+    gift?: { giftList: Gift[] };
+    order?: { order: Order; approverList: Person[] };
+    multistep?: { steps: StepDefinition[] };
+  };
+}
+
+/**
+ * CombinedContextProvider (Public API) - Enhanced for flexibility
+ *
+ * Sets up only the required functional contexts based on provided configuration.
+ * Enables selective context provisioning for better performance and decoupling.
+ *
+ * @param props FlexibleProviderProps
+ * @returns React element wrapping children in required providers
+ * @sideEffects Instantiates only specified context providers
+ * @notes Avoids over-provisioning state for components that don't need all contexts
+ */
+export const CombinedContextProvider: React.FC<FlexibleProviderProps> = ({
+  children,
+  contexts,
+}) => {
+  let wrappedChildren = children;
+
+  // Apply contexts conditionally based on configuration
+  if (contexts.multistep) {
+    wrappedChildren = (
+      <BaseMultistepProvider steps={contexts.multistep.steps}>
+        {wrappedChildren}
+      </BaseMultistepProvider>
+    );
+  }
+
+  if (contexts.order) {
+    wrappedChildren = (
+      <OrderProvider
+        order={contexts.order.order}
+        approverList={contexts.order.approverList}
+      >
+        {wrappedChildren}
+      </OrderProvider>
+    );
+  }
+
+  if (contexts.gift) {
+    wrappedChildren = (
+      <GiftProvider giftList={contexts.gift.giftList}>
+        {wrappedChildren}
+      </GiftProvider>
+    );
+  }
+
+  if (contexts.applicant) {
+    wrappedChildren = (
+      <ApplicantProvider
+        eventId={contexts.applicant.eventId}
+        applicantList={contexts.applicant.applicantList}
+      >
+        {wrappedChildren}
+      </ApplicantProvider>
+    );
+  }
+
+  return <>{wrappedChildren}</>;
+};
+
+// Backward compatibility - Legacy interface (deprecated)
+interface LegacyCombinedProviderProps {
   children: React.ReactNode;
   order: Order;
   applicants: Person[];
@@ -75,38 +140,25 @@ interface CombinedProviderProps {
 }
 
 /**
- * CombinedContextProvider (Public API)
- *
- * Sets up all major functional contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
- * Ensures correct data flow and separation of concerns for business workflows.
- *
- * @param props CombinedProviderProps
- * @returns React element wrapping children in all required providers
- * @sideEffects Instantiates multiple context providers; may trigger context initialization logic
- * @notes Avoid duplicating data between context and props in children
+ * @deprecated Use CombinedContextProvider with contexts prop instead
  */
-export const CombinedContextProvider: React.FC<CombinedProviderProps> = ({
-  children,
-  order,
-  applicants,
-  approverList,
-  gifts,
-  multistepSteps,
-}) => {
-  const { GiftProvider } = require("@/app/contexts/GiftContext");
+export const LegacyCombinedContextProvider: React.FC<
+  LegacyCombinedProviderProps
+> = ({ children, order, applicants, approverList, gifts, multistepSteps }) => {
   return (
-    <ApplicantProvider
-      eventId={order._id?.toString() || ""}
-      applicantList={applicants}
+    <CombinedContextProvider
+      contexts={{
+        applicant: {
+          eventId: order._id?.toString() || "",
+          applicantList: applicants,
+        },
+        gift: { giftList: gifts },
+        order: { order, approverList },
+        multistep: { steps: multistepSteps },
+      }}
     >
-      <GiftProvider giftList={gifts}>
-        <OrderProvider order={order} approverList={approverList}>
-          <BaseMultistepProvider steps={multistepSteps}>
-            {children}
-          </BaseMultistepProvider>
-        </OrderProvider>
-      </GiftProvider>
-    </ApplicantProvider>
+      {children}
+    </CombinedContextProvider>
   );
 };
 
@@ -721,11 +773,27 @@ export function withFunctionalContexts<P extends object>(
   return function WrappedComponent(props: P) {
     return (
       <CombinedContextProvider
-        applicants={contextConfig.applicants || []}
-        gifts={contextConfig.gifts || []}
-        order={contextConfig.order || ({} as Order)}
-        approverList={contextConfig.approverList || []}
-        multistepSteps={contextConfig.multistepSteps || []}
+        contexts={{
+          applicant: contextConfig.applicants
+            ? {
+                eventId: (contextConfig.order?._id?.toString() as string) || "",
+                applicantList: contextConfig.applicants,
+              }
+            : undefined,
+          gift: contextConfig.gifts
+            ? { giftList: contextConfig.gifts }
+            : undefined,
+          order:
+            contextConfig.order && contextConfig.approverList
+              ? {
+                  order: contextConfig.order,
+                  approverList: contextConfig.approverList,
+                }
+              : undefined,
+          multistep: contextConfig.multistepSteps
+            ? { steps: contextConfig.multistepSteps }
+            : undefined,
+        }}
       >
         <Component {...props} />
       </CombinedContextProvider>

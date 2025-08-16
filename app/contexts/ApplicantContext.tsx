@@ -15,6 +15,7 @@ import {
 } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -40,6 +41,31 @@ export interface ApplicantAction extends FunctionalAction {
   type: "SET_EVENT_DATA" | "SELECT_APPLICANT" | "CLEAR_APPLICANT";
   payload?: unknown;
 }
+
+// ============================================================================
+// REDUCER HELPERS
+// ============================================================================
+
+/**
+ * Type guard for event data payload
+ */
+const isEventDataPayload = (
+  payload: unknown
+): payload is { eventId?: string; applicantList?: Person[] } => {
+  return typeof payload === "object" && payload !== null;
+};
+
+/**
+ * Type guard for person payload
+ */
+const isPersonPayload = (payload: unknown): payload is Person => {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    "firstName" in payload &&
+    "lastName" in payload
+  );
+};
 
 // ============================================================================
 // INITIAL STATE AND REDUCER
@@ -78,39 +104,34 @@ const applicantReducer = (
   action: ApplicantAction
 ): Result<ApplicantState, Error> => {
   switch (action.type) {
-    case "SET_EVENT_DATA":
+    case "SET_EVENT_DATA": {
+      if (!isEventDataPayload(action.payload)) {
+        return failure(new Error("Invalid event data payload"));
+      }
+
+      const { eventId, applicantList } = action.payload;
       return success({
         ...state,
         data: {
           ...state.data,
-          eventId:
-            typeof action.payload === "object" &&
-            action.payload !== null &&
-            "eventId" in action.payload
-              ? (action.payload as { eventId?: string }).eventId ??
-                state.data.eventId
-              : state.data.eventId,
-          applicantList:
-            typeof action.payload === "object" &&
-            action.payload !== null &&
-            "applicantList" in action.payload
-              ? (action.payload as { applicantList?: Person[] })
-                  .applicantList ?? state.data.applicantList
-              : state.data.applicantList,
+          eventId: eventId ?? state.data.eventId,
+          applicantList: applicantList ?? state.data.applicantList,
         },
       });
+    }
 
-    case "SELECT_APPLICANT":
-      if (!action.payload || typeof action.payload !== "object") {
+    case "SELECT_APPLICANT": {
+      if (!isPersonPayload(action.payload)) {
         return failure(new Error("Invalid applicant data"));
       }
       return success({
         ...state,
         data: {
           ...state.data,
-          selectedApplicant: some(action.payload as Person),
+          selectedApplicant: some(action.payload),
         },
       });
+    }
 
     case "CLEAR_APPLICANT":
       return success({
@@ -194,12 +215,12 @@ export const useApplicantSelector = contextResult.useSelector as <
 export const useApplicantActions = contextResult.useActions;
 
 // ============================================================================
-// ENHANCED PROVIDER WITH PROPS
+// ENHANCED PROVIDER WITH ERROR BOUNDARY
 // ============================================================================
 
 /**
  * ApplicantProvider
- * Provider component for ApplicantContext.
+ * Provider component for ApplicantContext with error boundary protection.
  * @param eventId - Event identifier
  * @param applicantList - List of Person objects
  * @param children - React children
@@ -210,7 +231,7 @@ interface ApplicantProviderProps {
   children: React.ReactNode;
 }
 
-export const ApplicantProvider: React.FC<ApplicantProviderProps> = ({
+const ApplicantProviderComponent: React.FC<ApplicantProviderProps> = ({
   eventId,
   applicantList,
   children,
@@ -226,6 +247,13 @@ export const ApplicantProvider: React.FC<ApplicantProviderProps> = ({
     </BaseApplicantProvider>
   );
 };
+
+// Apply error boundary to the provider
+export const ApplicantProvider = withErrorBoundary(
+  ApplicantProviderComponent,
+  "ApplicantContext",
+  <div>Failed to load Applicant context. Please refresh the page.</div>
+);
 
 // ============================================================================
 // ENHANCED HOOKS FOR COMMON OPERATIONS

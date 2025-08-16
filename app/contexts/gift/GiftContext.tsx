@@ -14,6 +14,7 @@ import { loggingMiddleware } from "@/utils/fp-contexts";
 import { validationMiddleware } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -225,7 +226,7 @@ interface GiftProviderProps {
  * either via context (using useGiftContext/useGiftSelector) or via props,
  * but not both. Do not duplicate data sources.
  */
-export const GiftProvider: React.FC<GiftProviderProps> = ({
+const GiftProviderComponent: React.FC<GiftProviderProps> = ({
   giftList,
   children,
 }) => {
@@ -237,6 +238,13 @@ export const GiftProvider: React.FC<GiftProviderProps> = ({
     <BaseGiftProvider initialState={initialData}>{children}</BaseGiftProvider>
   );
 };
+
+// Apply error boundary to the provider
+export const GiftProvider = withErrorBoundary(
+  GiftProviderComponent,
+  "GiftContext",
+  <div>Failed to load Gift context. Please refresh the page.</div>
+);
 
 const GiftContextExports = {
   GiftProvider,

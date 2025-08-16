@@ -16,6 +16,7 @@ import {
 } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -182,7 +183,7 @@ interface ApproverProviderProps {
   children: React.ReactNode;
 }
 
-export const ApproverProvider: React.FC<ApproverProviderProps> = ({
+const ApproverProviderComponent: React.FC<ApproverProviderProps> = ({
   eventId,
   approverList,
   children,
@@ -198,6 +199,13 @@ export const ApproverProvider: React.FC<ApproverProviderProps> = ({
     </BaseApproverProvider>
   );
 };
+
+// Apply error boundary to the provider
+export const ApproverProvider = withErrorBoundary(
+  ApproverProviderComponent,
+  "ApproverContext",
+  <div>Failed to load Approver context. Please refresh the page.</div>
+);
 
 // ============================================================================
 // ENHANCED HOOKS FOR COMMON OPERATIONS

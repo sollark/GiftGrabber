@@ -7,14 +7,11 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useCallback, useMemo, FC } from "react";
 import ErrorMessage from "../../ui/form/ErrorMessage";
 import Form from "../../ui/form/Form";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
-import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import FormInputSection from "./FormInputSection";
 import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/service/qrcodeService";
-import { PersonWithoutId } from "@/types/event.types";
 import {
   FORM_CONFIG,
   BASE_URL,
@@ -108,24 +105,6 @@ const CreateEventForm: FC = () => {
     },
     [eventId, ownerId, router]
   );
-
-  const { applicantList: contextApplicantList } = useApplicantSelection();
-  const { approverList: contextApproverList } = useApproverSelection();
-
-  // Prefer context values if available, else fallback to empty array
-  const applicants: PersonWithoutId[] =
-    contextApplicantList &&
-    contextApplicantList._tag === "Some" &&
-    Array.isArray(contextApplicantList.value)
-      ? contextApplicantList.value
-      : [];
-
-  const approvers: PersonWithoutId[] =
-    contextApproverList &&
-    contextApproverList._tag === "Some" &&
-    Array.isArray(contextApproverList.value)
-      ? contextApproverList.value
-      : [];
 
   return (
     <>

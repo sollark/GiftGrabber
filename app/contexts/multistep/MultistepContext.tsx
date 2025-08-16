@@ -21,6 +21,7 @@ import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { success } from "@/utils/fp";
 import { useStepData } from "./useStepData";
 import { useStepNavigation } from "./useStepNavigation";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * Validation middleware for multistep context.
@@ -77,7 +78,7 @@ export const BaseMultistepProvider = (contextResult as any).Provider;
  * @param children - React children to render within provider
  * @param initialStepIndex - Optional starting step index (defaults to 0)
  */
-export const MultistepProvider: React.FC<MultistepProviderProps> = ({
+const MultistepProviderComponent: React.FC<MultistepProviderProps> = ({
   steps,
   children,
   initialStepIndex = 0,
@@ -90,6 +91,13 @@ export const MultistepProvider: React.FC<MultistepProviderProps> = ({
     </BaseMultistepProvider>
   );
 };
+
+// Apply error boundary to the provider
+export const MultistepProvider = withErrorBoundary(
+  MultistepProviderComponent,
+  "MultistepContext",
+  <div>Failed to load Multistep context. Please refresh the page.</div>
+);
 
 /** useMultistepContext - Hook to access multistep context */
 export const useMultistepContext = (contextResult as any).useContext;

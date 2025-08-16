@@ -6,14 +6,20 @@ import { FormProvider, useForm } from "react-hook-form";
 import { AccentButton as StyledButton } from "../primitives";
 
 /**
- * Props for the Form component
+ * Form configuration object for better parameter management
  */
-interface FormProps {
-  children: ReactNode;
-  submit: (data: any) => void;
+interface FormConfig {
   schema: any;
   defaultValues?: any;
   submitButton?: ReactElement;
+}
+
+/**
+ * Props for the Form component
+ */
+interface FormProps extends FormConfig {
+  children: ReactNode;
+  submit: (data: any) => void;
   [key: string]: any; // Allow additional props to be passed through
 }
 
