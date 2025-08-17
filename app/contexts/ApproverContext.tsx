@@ -24,7 +24,6 @@ import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 export interface ApproverState
   extends FunctionalState<{
-    eventId: string;
     approverList: Person[];
     selectedApprover: Maybe<Person>;
   }> {}
@@ -38,12 +37,13 @@ export interface ApproverAction extends FunctionalAction {
 // INITIAL STATE AND REDUCER
 // ============================================================================
 
-const createInitialState = (
-  eventId: string,
-  approverList: Person[] = []
-): ApproverState => ({
+/**
+ * Creates the initial state for ApproverContext.
+ * @param approverList - List of approvers
+ * @returns ApproverState
+ */
+const createInitialState = (approverList: Person[] = []): ApproverState => ({
   data: {
-    eventId,
     approverList,
     selectedApprover: none,
   },
@@ -63,13 +63,6 @@ const approverReducer = (
         ...state,
         data: {
           ...state.data,
-          eventId:
-            typeof action.payload === "object" &&
-            action.payload !== null &&
-            "eventId" in action.payload
-              ? (action.payload as { eventId?: string }).eventId ??
-                state.data.eventId
-              : state.data.eventId,
           approverList:
             typeof action.payload === "object" &&
             action.payload !== null &&
@@ -140,7 +133,7 @@ const approverValidation = validationMiddleware<ApproverState, ApproverAction>(
 
 const contextResult = createFunctionalContext<ApproverState, ApproverAction>({
   name: "Approver",
-  initialState: createInitialState("", []),
+  initialState: createInitialState([]),
   reducer: approverReducer,
   middleware: [
     loggingMiddleware,
@@ -178,21 +171,18 @@ export const useApproverActions = contextResult.useActions;
 // ============================================================================
 
 interface ApproverProviderProps {
-  eventId: string;
   approverList: Person[];
   children: React.ReactNode;
 }
 
 const ApproverProviderComponent: React.FC<ApproverProviderProps> = ({
-  eventId,
   approverList,
   children,
 }) => {
   const initialData = React.useMemo(
-    () => createInitialState(eventId, approverList),
-    [eventId, approverList]
+    () => createInitialState(approverList),
+    [approverList]
   );
-
   return (
     <BaseApproverProvider initialState={initialData}>
       {children}

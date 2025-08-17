@@ -42,11 +42,8 @@ const OrderGifts: FC = () => {
   if (!order) return null;
 
   return (
-    <ApproverProvider approverList={order.approverList} eventId={order.eventId}>
-      <ApplicantProvider
-        eventId={order.eventId}
-        applicantList={order.applicantList}
-      >
+    <ApproverProvider approverList={order.approverList}>
+      <ApplicantProvider applicantList={order.applicantList}>
         <GiftProvider giftList={order.giftList}>
           <MultistepNavigator>
             <Applicant />

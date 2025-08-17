@@ -23,10 +23,9 @@ export default function EventDetailsClient({
   giftList,
   approverList,
 }: EventDetailsClientProps) {
-  // Use the first applicant's eventId as context (or pass a prop if available)
-  const eventId = applicantList[0]?._id?.toString() || "";
+  // No longer need eventId for ApproverProvider
   return (
-    <ApproverProvider eventId={eventId} approverList={approverList}>
+    <ApproverProvider approverList={approverList}>
       <div>
         <h1>Event Details</h1>
         <table>

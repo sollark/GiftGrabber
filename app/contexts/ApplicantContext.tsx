@@ -23,13 +23,11 @@ import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * ApplicantState: State structure for the applicant context.
- * - eventId: string identifier for the event
  * - applicantList: list of Person objects
  * - selectedApplicant: Maybe<Person> for safe selection
  */
 export interface ApplicantState
   extends FunctionalState<{
-    eventId: string;
     applicantList: Person[];
     selectedApplicant: Maybe<Person>;
   }> {}
@@ -51,7 +49,7 @@ export interface ApplicantAction extends FunctionalAction {
  */
 const isEventDataPayload = (
   payload: unknown
-): payload is { eventId?: string; applicantList?: Person[] } => {
+): payload is { applicantList?: Person[] } => {
   return typeof payload === "object" && payload !== null;
 };
 
@@ -77,12 +75,13 @@ const isPersonPayload = (payload: unknown): payload is Person => {
  * @param applicantList - List of Person objects
  * @returns ApplicantState
  */
-const createInitialState = (
-  eventId: string,
-  applicantList: Person[] = []
-): ApplicantState => ({
+/**
+ * Creates the initial state for ApplicantContext.
+ * @param applicantList - List of applicants
+ * @returns ApplicantState
+ */
+const createInitialState = (applicantList: Person[] = []): ApplicantState => ({
   data: {
-    eventId,
     applicantList,
     selectedApplicant: none,
   },
@@ -108,13 +107,11 @@ const applicantReducer = (
       if (!isEventDataPayload(action.payload)) {
         return failure(new Error("Invalid event data payload"));
       }
-
-      const { eventId, applicantList } = action.payload;
+      const { applicantList } = action.payload;
       return success({
         ...state,
         data: {
           ...state.data,
-          eventId: eventId ?? state.data.eventId,
           applicantList: applicantList ?? state.data.applicantList,
         },
       });
@@ -183,7 +180,7 @@ const applicantValidation = validationMiddleware<
 
 const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
   name: "Applicant",
-  initialState: createInitialState("", []),
+  initialState: createInitialState([]),
   reducer: applicantReducer,
   middleware: [
     loggingMiddleware,
@@ -225,22 +222,20 @@ export const useApplicantActions = contextResult.useActions;
  * @param applicantList - List of Person objects
  * @param children - React children
  */
+
 interface ApplicantProviderProps {
-  eventId: string;
   applicantList: Person[];
   children: React.ReactNode;
 }
 
 const ApplicantProviderComponent: React.FC<ApplicantProviderProps> = ({
-  eventId,
   applicantList,
   children,
 }) => {
   const initialData = React.useMemo(
-    () => createInitialState(eventId, applicantList),
-    [eventId, applicantList]
+    () => createInitialState(applicantList),
+    [applicantList]
   );
-
   return (
     <BaseApplicantProvider initialState={initialData}>
       {children}

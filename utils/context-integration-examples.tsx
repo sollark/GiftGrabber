@@ -63,7 +63,7 @@ const getPersonName = (person: Person): string => {
 interface FlexibleProviderProps {
   children: React.ReactNode;
   contexts: {
-    applicant?: { eventId: string; applicantList: Person[] };
+    applicant?: { applicantList: Person[] };
     gift?: { giftList: Gift[] };
     order?: { order: Order; approverList: Person[] };
     multistep?: { steps: StepDefinition[] };
@@ -117,10 +117,7 @@ export const CombinedContextProvider: React.FC<FlexibleProviderProps> = ({
 
   if (contexts.applicant) {
     wrappedChildren = (
-      <ApplicantProvider
-        eventId={contexts.applicant.eventId}
-        applicantList={contexts.applicant.applicantList}
-      >
+      <ApplicantProvider applicantList={contexts.applicant.applicantList}>
         {wrappedChildren}
       </ApplicantProvider>
     );
@@ -149,7 +146,6 @@ export const LegacyCombinedContextProvider: React.FC<
     <CombinedContextProvider
       contexts={{
         applicant: {
-          eventId: order._id?.toString() || "",
           applicantList: applicants,
         },
         gift: { giftList: gifts },
@@ -776,7 +772,6 @@ export function withFunctionalContexts<P extends object>(
         contexts={{
           applicant: contextConfig.applicants
             ? {
-                eventId: (contextConfig.order?._id?.toString() as string) || "",
                 applicantList: contextConfig.applicants,
               }
             : undefined,
