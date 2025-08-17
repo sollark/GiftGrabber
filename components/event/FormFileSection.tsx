@@ -18,10 +18,11 @@ const FormFileSection = () => (
     />
     <ControlledFileInput
       name="approversFile"
-      label="List of approvers"
+      label="List of approvers (optional)"
       type="file"
       variant="outlined"
       inputProps={FORM_CONFIG.INPUT_STYLES}
+      required={false}
     />
   </div>
 );

@@ -28,11 +28,15 @@ export const processFormData = async (
     return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
 
-  const approverList = (await excelFileToPersonList(approversFile)) as
-    | PersonWithoutId[]
-    | null;
-  if (!approverList) {
-    return failure(errorMessages.APPROVER_LIST_ERROR);
+  let approverList: PersonWithoutId[] = [];
+  if (approversFile) {
+    const parsed = (await excelFileToPersonList(approversFile)) as
+      | PersonWithoutId[]
+      | null;
+    if (!parsed) {
+      return failure(errorMessages.APPROVER_LIST_ERROR);
+    }
+    approverList = parsed;
   }
 
   return success({ name, email, applicantList, approverList });

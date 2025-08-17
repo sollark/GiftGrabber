@@ -16,7 +16,7 @@ export interface ProcessFormDataInput {
   eventName: string;
   eventEmail: string;
   applicantsFile: File;
-  approversFile: File;
+  approversFile?: File;
 }
 
 /**
