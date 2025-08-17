@@ -12,6 +12,7 @@ import { Result, success, failure, tryAsync } from "@/utils/fp";
 
 /**
  * Enhanced higher-order function that ensures database connection and returns Result
+ * with memoized connection optimization.
  * @param fn - The server action function to wrap with database connection
  * @returns Wrapped function that returns Result<T, Error>
  */
@@ -20,7 +21,7 @@ export function withDatabaseResult<T extends any[], R>(
 ): (...args: T) => Promise<Result<R, Error>> {
   return async (...args: T): Promise<Result<R, Error>> => {
     try {
-      await connectToDatabase();
+      await getMemoizedConnection();
       const result = await fn(...args);
       return success(result);
     } catch (error) {
@@ -31,6 +32,7 @@ export function withDatabaseResult<T extends any[], R>(
 
 /**
  * Database operation with automatic connection and Result handling
+ * using memoized connection.
  * @param operation - Database operation to execute
  * @returns Result<T, Error>
  */
@@ -41,7 +43,7 @@ export const executeWithDatabase = <T>(
 };
 
 /**
- * Composable database transaction wrapper
+ * Composable database transaction wrapper with memoized connection
  * @param operations - Array of database operations to execute in sequence
  * @returns Result<T[], Error> where T[] contains results of all operations
  */
@@ -51,7 +53,7 @@ export const executeTransaction = async <T>(
   const results: T[] = [];
 
   try {
-    await connectToDatabase();
+    await getMemoizedConnection();
 
     for (const operation of operations) {
       const result = await operation();
@@ -65,11 +67,37 @@ export const executeTransaction = async <T>(
 };
 
 // ============================================================================
+// CONNECTION MEMOIZATION
+// ============================================================================
+
+/**
+ * Memoized connection promise to avoid redundant database connections.
+ * Resets on connection failure for automatic retry.
+ */
+let connectionPromise: Promise<void> | null = null;
+
+/**
+ * Creates or reuses existing database connection promise.
+ * @returns Promise<void> - Resolves when connection is established
+ */
+const getMemoizedConnection = (): Promise<void> => {
+  if (!connectionPromise) {
+    connectionPromise = connectToDatabase().catch((error) => {
+      // Reset promise on failure to allow retry
+      connectionPromise = null;
+      throw error;
+    });
+  }
+  return connectionPromise;
+};
+
+// ============================================================================
 // BACKWARD COMPATIBILITY WRAPPERS
 // ============================================================================
 
 /**
  * Higher-order function that ensures database connection before executing server actions
+ * with memoized connection to reduce overhead.
  * @param fn - The server action function to wrap with database connection
  * @returns Wrapped function that automatically handles database connection
  */
@@ -77,7 +105,7 @@ export function withDatabase<T extends any[], R>(
   fn: (...args: T) => Promise<R>
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
-    await connectToDatabase();
+    await getMemoizedConnection();
     return fn(...args);
   };
 }
@@ -87,7 +115,7 @@ export function withDatabase<T extends any[], R>(
 // ============================================================================
 
 /**
- * Safely executes a database query with Result handling
+ * Safely executes a database query with Result handling and memoized connection
  * @param queryFn - Function that returns a database query promise
  * @returns Result<T, Error>
  */
@@ -95,7 +123,7 @@ export const safeQuery = <T>(
   queryFn: () => Promise<T>
 ): Promise<Result<T, Error>> => {
   return tryAsync(async () => {
-    await connectToDatabase();
+    await getMemoizedConnection();
     return await queryFn();
   })();
 };

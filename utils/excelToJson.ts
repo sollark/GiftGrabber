@@ -3,12 +3,15 @@
 /**
  * Configuration constants for Excel to JSON conversion
  */
-import * as XLSX from "xlsx";
+import { EXCEL_CONFIG } from "@/config/excelConfig";
 
 /**
- * Configuration constants for Excel to JSON conversion
+ * Dynamically imports XLSX library only when needed to reduce bundle size.
+ * @returns Promise<typeof XLSX> - The XLSX library
  */
-import { EXCEL_CONFIG } from "@/config/excelConfig";
+const loadXLSX = async (): Promise<typeof import("xlsx")> => {
+  return import("xlsx");
+};
 
 /**
  * Error messages for Excel JSON processing
@@ -36,7 +39,7 @@ export const convertExcelToJson = async (
   try {
     const workbook = await processExcelFile(excelFile);
     const worksheet = getFirstWorksheet(workbook);
-    const jsonData = convertSheetToJsonData(worksheet);
+    const jsonData = await convertSheetToJsonData(worksheet);
 
     return processJsonData(jsonData);
   } catch (error) {
@@ -50,7 +53,10 @@ export const convertExcelToJson = async (
  * @param excelFile - The Excel file to process
  * @returns Promise<XLSX.WorkBook> - The processed workbook
  */
-const processExcelFile = async (excelFile: File): Promise<XLSX.WorkBook> => {
+const processExcelFile = async (
+  excelFile: File
+): Promise<import("xlsx").WorkBook> => {
+  const XLSX = await loadXLSX();
   const arrayBuffer = await excelFile.arrayBuffer();
   return XLSX.read(arrayBuffer, { type: EXCEL_CONFIG.WORKBOOK_TYPE });
 };
@@ -60,7 +66,9 @@ const processExcelFile = async (excelFile: File): Promise<XLSX.WorkBook> => {
  * @param workbook - The Excel workbook
  * @returns XLSX.WorkSheet - The first worksheet
  */
-const getFirstWorksheet = (workbook: XLSX.WorkBook): XLSX.WorkSheet => {
+const getFirstWorksheet = (
+  workbook: import("xlsx").WorkBook
+): import("xlsx").WorkSheet => {
   const sheetName = workbook.SheetNames[EXCEL_CONFIG.DEFAULT_SHEET_INDEX];
   return workbook.Sheets[sheetName];
 };
@@ -70,7 +78,10 @@ const getFirstWorksheet = (workbook: XLSX.WorkBook): XLSX.WorkSheet => {
  * @param worksheet - The Excel worksheet
  * @returns ExcelData - Array of arrays representing the sheet data
  */
-const convertSheetToJsonData = (worksheet: XLSX.WorkSheet): ExcelData => {
+const convertSheetToJsonData = async (
+  worksheet: import("xlsx").WorkSheet
+): Promise<ExcelData> => {
+  const XLSX = await loadXLSX();
   return XLSX.utils.sheet_to_json(worksheet, {
     header: EXCEL_CONFIG.HEADER_ROW_INDEX,
   }) as ExcelData;
