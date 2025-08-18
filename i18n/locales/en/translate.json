@@ -1,0 +1,68 @@
+{
+  "navigation": {
+    "next": "Next",
+    "back": "Back"
+  },
+  "actions": {
+    "actions": "Actions",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "submit": "Submit"
+  },
+  "ui": {
+    "search": "Search",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "empty": "Empty",
+    "confirmation": "Are you sure?"
+  },
+  "labels": {
+    "logo": "Logo"
+  },
+  "excel_headers": {
+    "ID": ["id", "ID", "Id"],
+    "firstName": [
+      "name",
+      "Name",
+      "NAME",
+      "first_name",
+      "First_Name",
+      "First Name",
+      "firstName",
+      "FirstName",
+      "first name"
+    ],
+    "lastName": [
+      "last_name",
+      "Last_Name",
+      "Last Name",
+      "LAST_NAME",
+      "lastName",
+      "LastName",
+      "last name",
+      "surname",
+      "Surname",
+      "family_name",
+      "Family Name"
+    ],
+    "employee_number": [
+      "employee_number",
+      "Employee_Number",
+      "Employee Number",
+      "EMPLOYEE_NUMBER",
+      "staff_number",
+      "Staff Number"
+    ]
+  },
+  "excel_errors": {
+    "empty_file": "Excel file is empty or invalid",
+    "unrecognized_format": "Unrecognized Excel format. Available headers: {{headers}}",
+    "missing_required_fields": "Missing required fields in row {{row}}",
+    "processing_error": "Error processing row {{row}}: {{error}}"
+  }
+}

@@ -24,14 +24,11 @@
  */
 
 import React, { FC, useRef, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Box } from "@mui/material";
 
 import { makeOrder } from "@/app/actions/order.action";
-import {
-  useApplicantSelection,
-  useApplicantSelector,
-} from "@/app/contexts/ApplicantContext";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import {
   useGiftSelector,
@@ -76,17 +73,17 @@ const GiftList: FC = () => {
   // Context state selectors
   const { selectedApplicant } = useApplicantSelection();
   const { approverList } = useApproverSelection();
-  const eventIdMaybe = useApplicantSelector((state) => state.data.eventId);
   const applicantGiftsMaybe = useGiftSelector(
     (state) => state.data.applicantGifts
   );
   const actions = useGiftActions();
 
-  // Memoized derived state with safe context access for consistent dependencies
-  const eventId = useMemo(
-    () => (eventIdMaybe._tag === "Some" ? eventIdMaybe.value : ""),
-    [eventIdMaybe]
-  );
+  // Get eventId from URL parameters
+  const pathname = usePathname();
+  const eventId = useMemo(() => {
+    const match = pathname.match(/\/events\/([^\/]+)/);
+    return match ? match[1] : "";
+  }, [pathname]);
 
   const applicantGifts = useMemo(
     () =>

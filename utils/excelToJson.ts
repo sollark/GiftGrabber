@@ -4,6 +4,12 @@
  * Configuration constants for Excel to JSON conversion
  */
 import { EXCEL_CONFIG } from "@/config/excelConfig";
+import { parseExcelFile } from "./excel_utils";
+import {
+  ExcelImportFormat,
+  ExcelFormatType,
+  ExcelImportConfig,
+} from "@/types/excel.types";
 
 /**
  * Dynamically imports XLSX library only when needed to reduce bundle size.
@@ -26,6 +32,52 @@ const ERROR_MESSAGES = {
 type ExcelRow = any[];
 type ExcelData = ExcelRow[];
 type JsonRecord = Record<string, string>;
+
+// ============================================================================
+// ENHANCED EXCEL TO JSON - Format-aware processing
+// ============================================================================
+
+/**
+ * Enhanced Excel to JSON conversion with format detection and type awareness.
+ * Uses the advanced parseExcelFile function for better format support.
+ *
+ * @param excelFile - The Excel file to convert
+ * @param config - Optional configuration for processing
+ * @returns Promise<JsonRecord[]> - Array of objects with string key-value pairs
+ * @throws Error if conversion fails
+ */
+export const convertExcelToJsonEnhanced = async (
+  excelFile: File,
+  config?: Partial<ExcelImportConfig>
+): Promise<JsonRecord[]> => {
+  try {
+    const result = await parseExcelFile(excelFile, {
+      language: "auto",
+      skipEmptyRows: true,
+      validateRequired: false,
+      ...config,
+    });
+
+    // Convert advanced format data to simple JSON records
+    return result.data.map((record: ExcelImportFormat): JsonRecord => {
+      const jsonRecord: JsonRecord = {};
+
+      // Convert typed format data to string key-value pairs
+      Object.entries(record).forEach(([key, value]) => {
+        jsonRecord[key] = String(value || "");
+      });
+
+      return jsonRecord;
+    });
+  } catch (error) {
+    console.error("Enhanced Excel to JSON conversion failed:", error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// LEGACY EXCEL TO JSON - Backward compatibility
+// ============================================================================
 
 /**
  * Converts an Excel file to an array of JSON objects

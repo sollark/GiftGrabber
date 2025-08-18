@@ -1,8 +1,5 @@
 import ControlledTextInput from "@/ui/form/ControlledTextInput";
-
-const FORM_CONFIG = {
-  INPUT_STYLES: { style: { fontSize: 24 } },
-} as const;
+import { FORM_CONFIG } from "@/config/eventFormConfig";
 
 /**
  * Component for rendering text input fields

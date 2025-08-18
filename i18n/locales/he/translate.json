@@ -1,0 +1,39 @@
+{
+  "navigation": {
+    "next": "הבא",
+    "back": "חזור"
+  },
+  "actions": {
+    "actions": "פעולות",
+    "ok": "אישור",
+    "cancel": "ביטול",
+    "save": "שמור",
+    "edit": "עריכה",
+    "delete": "מחק",
+    "add": "הוסף",
+    "submit": "שלח"
+  },
+  "ui": {
+    "search": "חיפוש",
+    "close": "סגור",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "empty": "ריק",
+    "confirmation": "האם אתה בטוח?"
+  },
+  "labels": {
+    "logo": "לוגו"
+  },
+  "excel_headers": {
+    "ID": ["ת.ז", "ת.ז.", "תעודת זהות", "מספר תעודת זהות"],
+    "firstName": ["שם", "שם פרטי"],
+    "lastName": ["שם משפחה", "שם המשפחה"],
+    "employee_number": ["מספר עובד", "מס' עובד", "מס עובד"]
+  },
+  "excel_errors": {
+    "empty_file": "קובץ האקסל ריק או לא תקין",
+    "unrecognized_format": "פורמט אקסל לא מזוהה. כותרות זמינות: {{headers}}",
+    "missing_required_fields": "חסרים שדות נדרשים בשורה {{row}}",
+    "processing_error": "שגיאה בעיבוד שורה {{row}}: {{error}}"
+  }
+}

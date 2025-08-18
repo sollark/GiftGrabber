@@ -1,22 +1,36 @@
-import { Schema, Types, model, models } from 'mongoose'
+import { Schema, Types, model, models } from "mongoose";
+import { ExcelFormatType } from "@/types/excel.types";
 
 export type Person = {
-  _id: Types.ObjectId
-  firstName: string
-  lastName: string
-}
+  _id: Types.ObjectId;
+  firstName?: string;
+  lastName?: string;
+  employeeId?: string;
+  personIdNumber?: string;
+  sourceFormat: ExcelFormatType;
+};
 
 type PersonDoc = {
-  _id: Types.ObjectId
-  firstName: string
-  lastName: string
-}
+  _id: Types.ObjectId;
+  firstName?: string;
+  lastName?: string;
+  employeeId?: string;
+  personIdNumber?: string;
+  sourceFormat: ExcelFormatType;
+};
 
 const personSchema: Schema = new Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-})
+  firstName: { type: String, required: false },
+  lastName: { type: String, required: false },
+  employeeId: { type: String, required: false },
+  personIdNumber: { type: String, required: false },
+  sourceFormat: {
+    type: String,
+    enum: Object.values(ExcelFormatType),
+    required: true,
+  },
+});
 
-const PersonModel = models.Person || model<PersonDoc>('Person', personSchema)
+const PersonModel = models.Person || model<PersonDoc>("Person", personSchema);
 
-export default PersonModel
+export default PersonModel;

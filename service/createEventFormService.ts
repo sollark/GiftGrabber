@@ -1,10 +1,32 @@
-import { excelFileToPersonList } from "@/utils/utils";
-import {
-  PersonWithoutId,
-  ProcessFormDataInput,
-  ProcessFormDataOutput,
-} from "@/types/event.types";
+import { excelFileToPersonList, parseExcelFile } from "@/utils/excel_utils";
+import { PersonWithoutId } from "@/types/event.types";
 import { Result, success, failure } from "@/utils/fp";
+
+// ============================================================================
+// FORM DATA TYPES - Local to this service
+// ============================================================================
+
+/**
+ * Input type for processing event form data
+ * Contains event name, email, and applicant/approver files from user input
+ */
+export interface ProcessFormDataInput {
+  eventName: string;
+  eventEmail: string;
+  applicantsFile: File;
+  approversFile?: File;
+}
+
+/**
+ * Output type for processed event form data
+ * Contains normalized event name, email, and applicant/approver lists
+ */
+export interface ProcessFormDataOutput {
+  name: string;
+  email: string;
+  applicantList: PersonWithoutId[];
+  approverList: PersonWithoutId[];
+}
 
 /**
  * Processes form data and returns structured event information.
@@ -21,18 +43,14 @@ export const processFormData = async (
     approversFile,
   } = data;
 
-  const applicantList = (await excelFileToPersonList(applicantsFile)) as
-    | PersonWithoutId[]
-    | null;
+  const applicantList = await excelFileToPersonList(applicantsFile);
   if (!applicantList) {
     return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
 
   let approverList: PersonWithoutId[] = [];
   if (approversFile) {
-    const parsed = (await excelFileToPersonList(approversFile)) as
-      | PersonWithoutId[]
-      | null;
+    const parsed = await excelFileToPersonList(approversFile);
     if (!parsed) {
       return failure(errorMessages.APPROVER_LIST_ERROR);
     }

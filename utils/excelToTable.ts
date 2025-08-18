@@ -1,6 +1,8 @@
 import * as XLSX from "xlsx";
 import parse from "html-react-parser";
 import { ReactNode } from "react";
+import { parseExcelFile } from "./excel_utils";
+import { ExcelImportConfig, ExcelFormatType } from "@/types/excel.types";
 
 /**
  * Configuration constants for the Excel to Table conversion
@@ -22,10 +24,93 @@ interface ExcelTableResult {
   success: boolean;
   table?: ReactNode;
   error?: string;
+  formatType?: ExcelFormatType;
+  detectedLanguage?: string;
+}
+
+// ============================================================================
+// ENHANCED EXCEL TO TABLE - Format-aware processing
+// ============================================================================
+
+/**
+ * Enhanced Excel to table conversion with format detection and type awareness.
+ * Uses the advanced parseExcelFile function for better format support.
+ *
+ * @param file - The Excel file to convert
+ * @param config - Optional configuration for processing
+ * @returns Promise<ExcelTableResult> - Enhanced table result with format information
+ */
+export async function excelToTableEnhanced(
+  file: File,
+  config?: Partial<ExcelImportConfig>
+): Promise<ExcelTableResult> {
+  try {
+    const result = await parseExcelFile(file, {
+      language: "auto",
+      skipEmptyRows: true,
+      validateRequired: false,
+      ...config,
+    });
+
+    // Convert structured data to HTML table
+    const tableHTML = generateEnhancedTableHTML(result.data, result.formatType);
+    const tableElement = extractTableFromHTML(tableHTML);
+
+    if (!tableElement) {
+      return {
+        success: false,
+        error: ERROR_MESSAGES.NO_TABLE_FOUND,
+        formatType: result.formatType,
+        detectedLanguage: result.language,
+      };
+    }
+
+    return {
+      success: true,
+      table: convertToReactTable(tableElement),
+      formatType: result.formatType,
+      detectedLanguage: result.language,
+    };
+  } catch (error) {
+    console.error("Enhanced Excel to table conversion failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
 
 /**
- * Converts an Excel file to a React table component
+ * Generates HTML table from structured Excel data with format awareness
+ */
+function generateEnhancedTableHTML(
+  data: any[],
+  formatType: ExcelFormatType
+): string {
+  if (data.length === 0) return "<table></table>";
+
+  // Get headers based on format type
+  const headers = Object.keys(data[0]);
+
+  const headerRow = headers.map((header) => `<th>${header}</th>`).join("");
+  const dataRows = data
+    .map((row) => {
+      const cells = headers
+        .map((header) => `<td>${row[header] || ""}</td>`)
+        .join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
+
+  return `<table><thead><tr>${headerRow}</tr></thead><tbody>${dataRows}</tbody></table>`;
+}
+
+// ============================================================================
+// LEGACY EXCEL TO TABLE - Backward compatibility
+// ============================================================================
+
+/**
+ * Legacy Excel to table conversion (kept for backward compatibility)
  * @param file - The Excel file to convert
  * @returns Promise<ReactNode> - The React table component or undefined on error
  */

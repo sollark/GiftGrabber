@@ -8,6 +8,7 @@ import {
   CreateEventData,
   EventFormData,
 } from "@/types/common.types";
+import { ExcelFormatType } from "@/types/excel.types";
 
 /**
  * Validates that an event exists.

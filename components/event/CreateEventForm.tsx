@@ -44,6 +44,25 @@ import { sendMailToClient } from "@/service/mailService";
 const CreateEventForm: FC = () => {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [formatInfo, setFormatInfo] = useState<{
+    applicantFormat?: string;
+    approverFormat?: string;
+    detectedLanguage?: string;
+  }>({});
+
+  /**
+   * Handles format detection from file upload
+   */
+  const handleFormatDetected = useCallback(
+    (detectedFormatInfo: {
+      applicantFormat?: string;
+      approverFormat?: string;
+      detectedLanguage?: string;
+    }) => {
+      setFormatInfo(detectedFormatInfo);
+    },
+    []
+  );
 
   const eventId = useMemo(generateEventId, []);
   const ownerId = useMemo(generateOwnerId, []);
@@ -71,10 +90,9 @@ const CreateEventForm: FC = () => {
     null
   ) as React.RefObject<HTMLDivElement>;
 
-  // Main form submission handler (useCallback version)
-  // Two versions provided: one using useCallback, one as a regular function for testing rendering behavior
+  // Main form submission handler
   /**
-   * handleSubmitCallback
+   * handleSubmit
    * Public API (passed to Form).
    * Handles form submission: validates, processes, generates QR codes, sends email, creates event.
    * @param data { eventName: string, eventEmail: string, applicantsFile: File, approversFile?: File }
@@ -82,21 +100,18 @@ const CreateEventForm: FC = () => {
    * Side effects: Updates error state, triggers backend and email services, navigates on success.
    * Notes: Memoized with useCallback to avoid unnecessary rerenders.
    */
-  const handleSubmitCallback = useCallback(
+  const handleSubmit = useCallback(
     async (data: {
       eventName: string;
       eventEmail: string;
       applicantsFile: File;
       approversFile?: File;
     }) => {
-      console.log("handleSubmitCallback");
-
       const processedResult = await processFormData(data, ERROR_MESSAGES);
       if (processedResult._tag === "Failure") {
         setErrorMessage(processedResult.error);
         return;
       }
-      //{ name, email, applicantList, approverList }
       const processedData = processedResult.value;
 
       const qrResult = await generateQRCodes(
@@ -108,7 +123,6 @@ const CreateEventForm: FC = () => {
         setErrorMessage(qrResult.error);
         return;
       }
-      //{eventQRCodeBase64,ownerIdQRCodeBase64}
       const qrCodes = qrResult.value;
 
       const mailResult = await sendMailToClient(
@@ -140,83 +154,15 @@ const CreateEventForm: FC = () => {
     [eventId, ownerId, router]
   );
 
-  // Main form submission handler (regular function version)
-  // Two versions provided: one using useCallback, one as a regular function for testing rendering behavior
-  /**
-   * handleSubmitRegular
-   * Public API (passed to Form).
-   * Same as handleSubmitCallback, but not memoized.
-   * @param data { eventName: string, eventEmail: string, applicantsFile: File, approversFile?: File }
-   * @returns {Promise<void>} (async)
-   * Side effects: Same as above.
-   * Notes: Used for testing rerender behavior.
-   */
-  async function handleSubmitRegular(data: {
-    eventName: string;
-    eventEmail: string;
-    applicantsFile: File;
-    approversFile?: File;
-  }) {
-    console.log("handleSubmitRegular");
-
-    const processedResult = await processFormData(data, ERROR_MESSAGES);
-    if (processedResult._tag === "Failure") {
-      setErrorMessage(processedResult.error);
-      return;
-    }
-    const processedData = processedResult.value;
-
-    const qrResult = await generateQRCodes(
-      eventQRCodeRef,
-      ownerQRCodeRef,
-      ERROR_MESSAGES
-    );
-    if (qrResult._tag === "Failure") {
-      setErrorMessage(qrResult.error);
-      return;
-    }
-    const qrCodes = qrResult.value;
-
-    const mailResult = await sendMailToClient(
-      processedData.email,
-      qrCodes.eventQRCodeBase64,
-      qrCodes.ownerIdQRCodeBase64
-    );
-    if (mailResult._tag === "Failure") {
-      setErrorMessage(mailResult.error);
-      return;
-    }
-
-    const success = await createEvent({
-      name: processedData.name,
-      email: processedData.email,
-      eventId,
-      ownerId,
-      eventQRCodeBase64: qrCodes.eventQRCodeBase64,
-      ownerIdQRCodeBase64: qrCodes.ownerIdQRCodeBase64,
-      applicantList: processedData.applicantList,
-      approverList: processedData.approverList,
-    });
-    if (success) {
-      router.push(`/events/${eventId}/${ownerId}`);
-    } else {
-      setErrorMessage(ERROR_MESSAGES.EVENT_CREATION_ERROR);
-    }
-  }
-
   return (
     <>
-      {/*
-        Swap between handleSubmitCallback and handleSubmitRegular below to test behavior.
-        Only one should be passed to <Form /> at a time.
-      */}
       <Form
         schema={EventSchema}
         defaultValues={FORM_CONFIG.DEFAULT_VALUES}
-        submit={handleSubmitCallback} // or handleSubmitRegular
+        submit={handleSubmit}
       >
         <FormInputSection />
-        <FormFileSection />
+        <FormFileSection onFormatDetected={handleFormatDetected} />
         <ErrorMessage message={errorMessage} />
       </Form>
       <QRCodeSection

@@ -47,6 +47,7 @@ import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
 import { Types } from "mongoose";
+import { ExcelFormatType } from "@/types/excel.types";
 
 // Helper function to get person name
 const getPersonName = (person: Person): string => {
@@ -579,6 +580,7 @@ export const OrderCreationWizard: React.FC = () => {
                   _id: new Types.ObjectId(),
                   firstName: "John",
                   lastName: "Doe",
+                  sourceFormat: ExcelFormatType.COMPLETE_EMPLOYEE,
                 };
                 completeApplicantSelection(mockApplicant);
               }}

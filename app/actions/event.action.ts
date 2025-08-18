@@ -1,19 +1,6 @@
 "use server";
 
 /**
- * Logs event-related errors
- */
-const logEventError = (message: string): void => {
-  console.log(message);
-};
-
-/**
- * Logs event retrieval start
- */
-const logEventRetrieval = (): void => {
-  console.log(LOG_MESSAGES.GET_EVENT_DETAILS);
-};
-/**
  * @file event.action.ts
  * @description Server-side actions and data access logic for event operations in GiftGrabber.
  * Handles event creation, querying, and population of related data (applicants, approvers, gifts).
@@ -27,8 +14,28 @@ import {
   createEventInternal,
   validateEventExists,
 } from "@/service/eventService";
+import {
+  populateEventApplicants,
+  populateEventApprovers,
+  populateEvent,
+} from "@/service/mongoPopulationService";
 import { withDatabase } from "@/lib/withDatabase";
 import { failure, Result, success, isSuccess, fromPromise } from "@/utils/fp";
+import { PersonWithoutId } from "@/types/event.types";
+
+/**
+ * Logs event-related errors
+ */
+const logEventError = (message: string): void => {
+  console.log(message);
+};
+
+/**
+ * Logs event retrieval start
+ */
+const logEventRetrieval = (): void => {
+  console.log(LOG_MESSAGES.GET_EVENT_DETAILS);
+};
 
 /**
  * Configuration constants for event operations
@@ -73,15 +80,6 @@ const ERROR_MESSAGES = {
 } as const;
 
 /**
- * Type definitions for improved type safety
- */
-import {
-  PersonWithoutId,
-  EventForm,
-  CreateEventData,
-} from "@/types/event.types";
-
-/**
  * createEvent (Public API)
  *
  * Server action for creating new events with applicants and gifts.
@@ -95,6 +93,7 @@ export const createEvent = withDatabase(
     return isSuccess(result) && result.value === true;
   }
 );
+
 /**
  * Fetches event applicants with populated applicant data.
  * @param eventId - The unique identifier for the event
@@ -225,12 +224,6 @@ const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
  * Action: Gets all events for use in API/server components.
  */
 export const getAllEvents = withDatabase(getAllEventsInternal);
-
-import {
-  populateEventApplicants,
-  populateEventApprovers,
-  populateEvent,
-} from "@/service/mongoPopulationService";
 
 // Helper Functions
 

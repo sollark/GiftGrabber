@@ -33,8 +33,22 @@ const OrderDetails: FC = () => {
 
   // Memoized approver name calculation
   const approverName = useMemo(() => {
-    if (order?.confirmedBy) return formatPersonName(order.confirmedBy);
-    if (approver) return formatPersonName(approver);
+    if (
+      order?.confirmedBy &&
+      order.confirmedBy.firstName &&
+      order.confirmedBy.lastName
+    ) {
+      return formatPersonName({
+        firstName: order.confirmedBy.firstName,
+        lastName: order.confirmedBy.lastName,
+      });
+    }
+    if (approver && approver.firstName && approver.lastName) {
+      return formatPersonName({
+        firstName: approver.firstName,
+        lastName: approver.lastName,
+      });
+    }
     return "";
   }, [order?.confirmedBy, approver]);
 
@@ -51,7 +65,13 @@ const OrderDetails: FC = () => {
           <strong>Order date:</strong> {new Date(createdAt).toLocaleString()}
         </p>
         <p>
-          <strong>Applicant:</strong> {formatPersonName(applicant)}
+          <strong>Applicant:</strong>{" "}
+          {applicant && applicant.firstName && applicant.lastName
+            ? formatPersonName({
+                firstName: applicant.firstName,
+                lastName: applicant.lastName,
+              })
+            : "N/A"}
         </p>
         <p>
           <strong>Approver:</strong> {approverName}

@@ -1,6 +1,7 @@
 import { Person } from "@/database/models/person.model";
 import { customAlphabet } from "nanoid";
 import { convertExcelToJson } from "./excelToJson";
+import { excelToTable } from "./excelToTable";
 import { tryAsync } from "./fp";
 
 /**
@@ -55,22 +56,6 @@ export function generateOrderId(): string {
 }
 
 /**
- * Converts an Excel file to a list of Person objects (without _id).
- * Returns a Promise<Omit<Person, "_id">[]>.
- * Pure function.
- */
-export async function excelFileToPersonList(
-  file: File
-): Promise<Omit<Person, "_id">[]> {
-  const json = await convertExcelToJson(file);
-  // Remove _id if present
-  return json.map((row) => {
-    const { _id, ...rest } = row;
-    return rest as Omit<Person, "_id">;
-  });
-}
-
-/**
  * Extracts a QR code buffer from a React ref to a QR code element.
  * Returns a Buffer or undefined.
  * Impure: depends on DOM and React ref.
@@ -85,3 +70,12 @@ export const getQRcodeBuffer = async (qrRef: any) => {
     }
   }
 };
+
+// ============================================================================
+// EXCEL PROCESSING UTILITIES - Re-exports for convenience
+// ============================================================================
+
+/**
+ * Re-export Excel processing utilities for easy access
+ */
+export { convertExcelToJson, excelToTable };
