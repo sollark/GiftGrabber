@@ -1,32 +1,35 @@
-import { Schema, Types, model, models } from 'mongoose'
-import { Person } from './person.model'
-import { Gift } from './gift.model'
+import { Schema, Types, model, models } from "mongoose";
+import { Person } from "./person.model";
+import { Gift } from "./gift.model";
+import { Order } from "./order.model";
 
 export type Event = {
-  _id: Types.ObjectId
-  eventId: string
-  name: string
-  email: string
-  ownerId: string
-  eventQRCodeBase64: string
-  ownerIdQRCodeBase64: string
-  applicantList: Person[]
-  giftList: Gift[]
-  approverList: Person[]
-}
+  // _id: Types.ObjectId
+  eventId: string;
+  name: string;
+  email: string;
+  ownerId: string;
+  eventQRCodeBase64: string;
+  ownerIdQRCodeBase64: string;
+  applicantList: Person[];
+  giftList: Gift[];
+  approverList: Person[] | null;
+  orders: Order[] | null;
+};
 
 type EventDoc = {
-  _id: Types.ObjectId
-  eventId: string
-  name: string
-  email: string
-  ownerId: string
-  eventQRCodeBase64: string
-  ownerIdQRCodeBase64: string
-  applicantList: Types.ObjectId[]
-  giftList: Types.ObjectId[]
-  approverList: Types.ObjectId[]
-}
+  _id: Types.ObjectId;
+  eventId: string;
+  name: string;
+  email: string;
+  ownerId: string;
+  eventQRCodeBase64: string;
+  ownerIdQRCodeBase64: string;
+  applicantList: Types.ObjectId[];
+  giftList: Types.ObjectId[];
+  approverList: Types.ObjectId[] | null;
+  orders: Types.ObjectId[] | null;
+};
 
 const eventSchema: Schema = new Schema({
   eventId: { type: String, required: true },
@@ -38,26 +41,33 @@ const eventSchema: Schema = new Schema({
   applicantList: [
     {
       type: Types.ObjectId,
-      ref: 'Person',
+      ref: "Person",
       required: true,
     },
   ],
   giftList: [
     {
       type: Types.ObjectId,
-      ref: 'Gift',
+      ref: "Gift",
       required: true,
     },
   ],
   approverList: [
     {
       type: Types.ObjectId,
-      ref: 'Person',
-      required: true,
+      ref: "Person",
+      default: null,
     },
   ],
-})
+  orders: [
+    {
+      type: Types.ObjectId,
+      ref: "Order",
+      default: null,
+    },
+  ],
+});
 
-const EventModel = models.Event || model<EventDoc>('Event', eventSchema)
+const EventModel = models.Event || model<EventDoc>("Event", eventSchema);
 
-export default EventModel
+export default EventModel;

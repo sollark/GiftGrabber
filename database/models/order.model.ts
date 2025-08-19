@@ -4,7 +4,7 @@ import { Gift } from "./gift.model";
 import { Person } from "./person.model";
 
 export type Order = {
-  _id: Types.ObjectId;
+  // _id: Types.ObjectId;
   createdAt: Date;
   applicant: Person;
   gifts: Gift[];
@@ -21,7 +21,7 @@ type OrderDoc = {
   gifts: Types.ObjectId[];
   orderId: string;
   confirmationRQCode: string;
-  confirmedAt?: Date;
+  confirmedAt: Date | null;
   confirmedBy: Types.ObjectId | null;
   status: OrderStatus;
 };
@@ -32,11 +32,10 @@ const orderSchema: Schema = new Schema({
   gifts: [{ type: Types.ObjectId, ref: "Gift", required: true }],
   orderId: { type: String, required: true },
   confirmationRQCode: { type: String, required: true },
-  confirmedAt: { type: Date },
+  confirmedAt: { type: Date, default: null },
   confirmedBy: {
     type: Types.ObjectId,
     ref: "Person",
-    required: false,
     default: null,
   },
   status: {

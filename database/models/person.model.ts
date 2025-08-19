@@ -2,7 +2,7 @@ import { Schema, Types, model, models } from "mongoose";
 import { ExcelFormatType } from "@/types/excel.types";
 
 export type Person = {
-  _id: Types.ObjectId;
+  // _id: Types.ObjectId;
   firstName?: string;
   lastName?: string;
   employeeId?: string;
