@@ -6,6 +6,7 @@
  */
 
 import { Person } from "@/database/models/person.model";
+import { ExcelFormatType } from "@/types/excel.types";
 import { Types } from "mongoose";
 
 // ============================================================================
@@ -54,8 +55,8 @@ export interface EventFormData {
   ownerId: string;
   eventQRCodeBase64: string;
   ownerIdQRCodeBase64: string;
-  applicantList: Person[];
-  approverList: Person[];
+  applicantList: NewPerson[];
+  approverList: NewPerson[];
 }
 
 /**
@@ -70,6 +71,29 @@ export interface OrderCreationData {
   gifts: ObjectId[];
   orderId: string;
   confirmationRQCode: string;
+}
+
+/**
+ * Data required to create a new order using publicIds (new publicId strategy)
+ * Contains publicIds instead of ObjectIds for external API safety
+ */
+export interface OrderCreationPublicData {
+  applicantPublicId: string;
+  giftPublicIds: string[];
+  orderId: string;
+  confirmationRQCode: string;
+}
+
+/**
+ * Person data for creation (before database save)
+ * Excludes publicId as it will be generated automatically
+ */
+export interface NewPerson {
+  firstName?: string;
+  lastName?: string;
+  employeeId?: string;
+  personId?: string;
+  sourceFormat: ExcelFormatType;
 }
 
 // ============================================================================

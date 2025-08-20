@@ -1,14 +1,16 @@
 /**
- * MongoPopulationService - Updated for PersonDoc schema changes
+ * MongoPopulationService - Updated for PublicId Strategy
  * Handles population of related documents with proper field selection
- * All Person fields now included: firstName, lastName, employeeId, personId, sourceFormat
+ * All Person fields now include publicId and exclude _id for security
  */
+
+import { PUBLIC_FIELD_SELECTIONS } from "./databaseService";
 
 /**
  * Standard Person field selection for consistent population across all functions
+ * Updated to include publicId and exclude _id
  */
-const PERSON_SELECT_FIELDS =
-  "firstName lastName employeeId personId sourceFormat";
+const PERSON_SELECT_FIELDS = PUBLIC_FIELD_SELECTIONS.PERSON;
 
 /**
  * Populates the applicantList field of an event query with Person documents.

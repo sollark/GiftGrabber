@@ -15,7 +15,7 @@
  * @module excel_utils
  */
 
-import { Person } from "@/database/models/person.model";
+import { NewPerson } from "@/types/common.types";
 import {
   ExcelFormatType,
   ExcelImportFormat,
@@ -828,15 +828,15 @@ export async function getExpectedHeaders(
 // ============================================================================
 
 /**
- * Converts Excel file to Person array format.
- * Maps different Excel formats to proper Person fields.
+ * Converts Excel file to NewPerson array format.
+ * Maps different Excel formats to proper Person fields for creation.
  *
  * @param file - Excel file to process
- * @returns Promise resolving to array of Person objects or null on error
+ * @returns Promise resolving to array of NewPerson objects or null on error
  */
 export async function excelFileToPersonList(
   file: File
-): Promise<Person[] | null> {
+): Promise<NewPerson[] | null> {
   try {
     const result = await parseExcelFile(file, {
       language: "auto",
@@ -844,8 +844,8 @@ export async function excelFileToPersonList(
       validateRequired: false,
     });
 
-    return result.data.map((record): Person => {
-      const person: Person = {
+    return result.data.map((record): NewPerson => {
+      const person: NewPerson = {
         sourceFormat: result.formatType,
       };
 

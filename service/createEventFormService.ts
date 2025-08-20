@@ -1,6 +1,6 @@
 import { excelFileToPersonList, parseExcelFile } from "@/utils/excel_utils";
 import { Result, success, failure } from "@/utils/fp";
-import { Person } from "@/database/models/person.model";
+import { NewPerson } from "@/types/common.types";
 
 // ============================================================================
 // FORM DATA TYPES - Local to this service
@@ -24,8 +24,8 @@ export interface ProcessFormDataInput {
 export interface ProcessFormDataOutput {
   name: string;
   email: string;
-  applicantList: Person[];
-  approverList: Person[];
+  applicantList: NewPerson[];
+  approverList: NewPerson[];
 }
 
 /**
@@ -48,7 +48,7 @@ export const processFormData = async (
     return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
 
-  let approverList: Person[] = [];
+  let approverList: NewPerson[] = [];
   if (approversFile) {
     const parsed = await excelFileToPersonList(approversFile);
     if (!parsed) {

@@ -577,6 +577,7 @@ export const OrderCreationWizard: React.FC = () => {
               onClick={() => {
                 // Mock applicant selection - should be one applicant
                 const mockApplicant: Person = {
+                  publicId: "example-public-id-123",
                   firstName: "John",
                   lastName: "Doe",
                   sourceFormat: ExcelFormatType.COMPLETE_EMPLOYEE,

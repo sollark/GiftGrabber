@@ -1,8 +1,22 @@
 import { failure, success, Result } from "@/utils/fp";
-import EventModel, { Event } from "@/database/models/event.model";
-import GiftModel from "@/database/models/gift.model";
-import PersonModel, { Person } from "@/database/models/person.model";
+import { Event } from "@/database/models/event.model";
+import { NewPerson } from "@/types/common.types";
 import { CreateEventData, EventFormData } from "@/types/common.types";
+import {
+  PersonService,
+  GiftService,
+  EventService as DatabaseEventService,
+} from "./databaseService";
+
+/**
+ * Event Service - Refactored to use PublicId strategy
+ *
+ * This service now uses the new DatabaseService layer which ensures:
+ * - All queries use publicId
+ * - _id is kept internal to the database layer
+ * - Consistent field selection across all operations
+ * - Type-safe operations with Result<T, E> pattern
+ */
 
 /**
  * Validates that an event exists.
@@ -17,48 +31,34 @@ export const validateEventExists = (
 
 /**
  * Creates person records for a list of person data (applicants or approvers).
- * @param personList - Array of person objects without _id.
- * @returns Promise<string[]> - Array of created person IDs as strings.
+ * @param personList - Array of person objects without publicId.
+ * @returns Promise<Result<string[], Error>> - Result with array of created person publicIds.
  */
 export const createPersonList = async (
-  personList: Person[]
-): Promise<string[]> => {
-  return Promise.all(
-    personList.map(async (person) => {
-      const personDoc = await PersonModel.create(person);
-      return personDoc._id.toString();
-    })
-  );
+  personList: NewPerson[]
+): Promise<Result<string[], Error>> => {
+  return PersonService.createMany(personList);
 };
 
 /**
- * Creates gift records for a list of applicant IDs.
- * @param applicantIds - Array of applicant IDs.
- * @returns Promise<string[]> - Array of created gift IDs as strings.
+ * Creates gift records for a list of applicant publicIds.
+ * @param applicantPublicIds - Array of applicant publicIds.
+ * @returns Promise<Result<string[], Error>> - Result with array of created gift publicIds.
  */
 export const createGiftList = async (
-  applicantIds: string[]
-): Promise<string[]> => {
-  return Promise.all(
-    applicantIds.map(async (applicantId) => {
-      const giftDoc = await GiftModel.create({
-        owner: applicantId,
-        applicant: null,
-        order: null,
-      });
-      return giftDoc._id.toString();
-    })
-  );
+  applicantPublicIds: string[]
+): Promise<Result<string[], Error>> => {
+  return GiftService.createForApplicants(applicantPublicIds);
 };
 
 /**
- * Creates the actual event record in the database.
- * @param eventData - Object containing all event creation fields and related IDs.
- * @returns Promise<Event> - The created Event document.
+ * Creates the actual event record in the database using publicIds.
+ * @param eventData - Object containing all event creation fields and related publicIds.
+ * @returns Promise<Result<Event, Error>> - Result with the created Event document.
  */
 const createEventRecord = async (
   eventData: CreateEventData
-): Promise<Event> => {
+): Promise<Result<Event, Error>> => {
   const {
     name,
     email,
@@ -70,16 +70,17 @@ const createEventRecord = async (
     giftIds,
     approverIds,
   } = eventData;
-  return EventModel.create({
+
+  return DatabaseEventService.create({
     name,
     email,
     eventId,
     ownerId,
     eventQRCodeBase64,
     ownerIdQRCodeBase64,
-    applicantList: applicantIds,
-    giftList: giftIds,
-    approverList: approverIds,
+    applicantPublicIds: applicantIds,
+    approverPublicIds: approverIds,
+    giftPublicIds: giftIds,
   });
 };
 
@@ -102,22 +103,23 @@ export const createEventInternal = async (
     approverList,
   } = event;
 
-  let applicantIds: string[] = [];
-  let approverIds: string[] = [];
-  let giftIds: string[] = [];
-
-  try {
-    applicantIds = await createPersonList(applicantList);
-    approverIds = await createPersonList(approverList);
-  } catch (error) {
-    console.error(error);
-    return failure("Failed to create applicants or approvers");
+  // Create applicants and approvers
+  const applicantResult = await createPersonList(applicantList);
+  if (applicantResult._tag === "Failure") {
+    console.error(applicantResult.error);
+    return failure("Failed to create applicants");
   }
 
-  try {
-    giftIds = await createGiftList(applicantIds);
-  } catch (error) {
-    console.error(error);
+  const approverResult = await createPersonList(approverList);
+  if (approverResult._tag === "Failure") {
+    console.error(approverResult.error);
+    return failure("Failed to create approvers");
+  }
+
+  // Create gifts for applicants
+  const giftResult = await createGiftList(applicantResult.value);
+  if (giftResult._tag === "Failure") {
+    console.error(giftResult.error);
     return failure("Failed to create gifts");
   }
 
@@ -128,97 +130,60 @@ export const createEventInternal = async (
     ownerId,
     eventQRCodeBase64,
     ownerIdQRCodeBase64,
-    applicantIds,
-    giftIds,
-    approverIds,
+    applicantIds: applicantResult.value,
+    giftIds: giftResult.value,
+    approverIds: approverResult.value,
   };
 
-  try {
-    const newEvent = await createEventRecord(eventData);
-    return success(Boolean(newEvent));
-  } catch (error) {
-    console.error(error);
+  const eventResult = await createEventRecord(eventData);
+  if (eventResult._tag === "Failure") {
+    console.error(eventResult.error);
     return failure("Failed to create event record");
   }
+
+  return success(true);
 };
 
 /**
  * Gets event with populated applicants for service layer.
  * @param eventId - The unique identifier for the event.
- * @param selectFields - Fields to select from the event.
+ * @param selectFields - Fields to select from the event (ignored, using publicId selection).
  * @returns Promise<Event | null> - Event with populated applicants or null.
  */
 export const getEventWithApplicants = async (
   eventId: string,
-  selectFields: Record<string, number>
+  selectFields?: Record<string, number>
 ): Promise<Event | null> => {
-  const event = await EventModel.findOne({ eventId }, selectFields);
-  if (!event) return null;
-
-  return await event.populate({
-    path: "applicantList",
-    model: "Person",
-    select: "firstName lastName employeeId personId sourceFormat",
-  });
+  const result = await DatabaseEventService.findWithApplicants(eventId);
+  return result._tag === "Success" ? result.value : null;
 };
 
 /**
  * Gets event with populated approvers for service layer.
  * @param eventId - The unique identifier for the event.
- * @param selectFields - Fields to select from the event.
+ * @param selectFields - Fields to select from the event (ignored, using publicId selection).
  * @returns Promise<Event | null> - Event with populated approvers or null.
  */
 export const getEventWithApprovers = async (
   eventId: string,
-  selectFields: Record<string, number>
+  selectFields?: Record<string, number>
 ): Promise<Event | null> => {
-  const event = await EventModel.findOne({ eventId }, selectFields);
-  if (!event) return null;
-
-  return await event.populate({
-    path: "approverList",
-    model: "Person",
-    select: "firstName lastName employeeId personId sourceFormat",
-  });
+  const result = await DatabaseEventService.findWithApprovers(eventId);
+  return result._tag === "Success" ? result.value : null;
 };
 
 /**
  * Gets event with full details including all populated fields.
  * @param eventId - The unique identifier for the event.
- * @param selectFields - Fields to select from the event.
+ * @param selectFields - Fields to select from the event (ignored, using publicId selection).
  * @returns Promise<Event | null> - Event with all relationships populated or null.
  */
 export const getEventWithDetails = async (
   eventId: string,
-  selectFields: Record<string, number>
+  selectFields?: Record<string, number>
 ): Promise<Event | null> => {
-  const event = await EventModel.findOne({ eventId }, selectFields);
-  if (!event) return null;
-
-  const populatedEvent = await event.populate([
-    {
-      path: "applicantList",
-      model: "Person",
-      select: "firstName lastName",
-    },
-    {
-      path: "giftList",
-      model: "Gift",
-      select: "owner applicant order",
-      populate: {
-        path: "owner",
-        model: "Person",
-        select: "firstName lastName",
-      },
-    },
-    {
-      path: "approverList",
-      model: "Person",
-      select: "firstName lastName",
-    },
-  ]);
-
-  return populatedEvent;
+  const result = await DatabaseEventService.findWithAllDetails(eventId);
+  return result._tag === "Success" ? result.value : null;
 };
 
 /**
@@ -226,7 +191,8 @@ export const getEventWithDetails = async (
  * @returns Promise<Event[]> - Array of all events.
  */
 export const getAllEvents = async (): Promise<Event[]> => {
-  return await EventModel.find();
+  const result = await DatabaseEventService.findAll();
+  return result._tag === "Success" ? result.value : [];
 };
 
 /**
@@ -234,6 +200,10 @@ export const getAllEvents = async (): Promise<Event[]> => {
  * @param data - The data to serialize.
  * @returns Serialized object.
  */
-export const parseEventData = <T>(data: T): T => {
+export const parseEventData = (data: any): any => {
+  // Remove any Mongoose-specific properties and ensure clean serialization
+  if (data && typeof data.toObject === "function") {
+    return data.toObject();
+  }
   return JSON.parse(JSON.stringify(data));
 };

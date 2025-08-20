@@ -157,9 +157,8 @@ const GiftList: FC = () => {
       }
 
       const response = await makeOrder(
-        approverList._tag === "Some" ? approverList.value : [],
-        applicant,
-        applicantGifts,
+        applicant.publicId,
+        applicantGifts.map((gift) => gift.publicId),
         orderId,
         qrCodeData
       );
@@ -170,7 +169,7 @@ const GiftList: FC = () => {
 
       return true;
     },
-    [approverList, applicant, applicantGifts, orderId]
+    [applicant, applicantGifts, orderId]
   );
 
   /**

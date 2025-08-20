@@ -1,10 +1,11 @@
 import { Schema, Types, model, models } from "mongoose";
+import { nanoid } from "nanoid";
 import { Person } from "./person.model";
 import { Gift } from "./gift.model";
 import { Order } from "./order.model";
 
 export type Event = {
-  // _id: Types.ObjectId
+  publicId: string;
   eventId: string;
   name: string;
   email: string;
@@ -19,6 +20,7 @@ export type Event = {
 
 type EventDoc = {
   _id: Types.ObjectId;
+  publicId: string;
   eventId: string;
   name: string;
   email: string;
@@ -32,6 +34,12 @@ type EventDoc = {
 };
 
 const eventSchema: Schema = new Schema({
+  publicId: {
+    type: String,
+    required: true,
+    unique: true,
+    default: () => nanoid(),
+  },
   eventId: { type: String, required: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
