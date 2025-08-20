@@ -74,53 +74,54 @@ describe("MultistepContext integration", () => {
    */
   it("navigates between steps and manages step data correctly", async () => {
     await renderWithContext(async ({ nav, data }) => {
-      expect(nav._tag).toBe("Success");
-      if (nav._tag === "Success") {
-        // Wait for initial step to be set
-        await waitFor(() => {
-          expect(nav.value.currentStepId).not.toBe("");
-        });
-        expect(nav.value.currentStepId).toBe("step1");
+      // The navigation hook returns the navigation object directly, not a Result
+      expect(nav).toBeDefined();
+      expect(typeof nav.currentStepId).toBe("string");
 
-        // Test setting step data
-        act(() => {
-          data.setStepData("step1", { name: "test" });
-        });
+      // Wait for initial step to be set
+      await waitFor(() => {
+        expect(nav.currentStepId).not.toBe("");
+      });
+      expect(nav.currentStepId).toBe("step1");
 
-        // Navigate to next step
-        act(() => {
-          const result = nav.value.goToNextStep();
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        await waitFor(() => {
-          expect(nav.value.currentStepId).toBe("step2");
-        });
+      // Test setting step data
+      act(() => {
+        data.setStepData("step1", { name: "test" });
+      });
 
-        // Navigate back
-        act(() => {
-          nav.value.goToPreviousStep();
-        });
-        await waitFor(() => {
-          expect(nav.value.currentStepId).toBe("step1");
-        });
+      // Navigate to next step
+      act(() => {
+        const result = nav.goToNextStep();
+        if (result._tag === "Success") {
+          // Navigation succeeded
+        } else {
+          // Navigation failed
+        }
+      });
+      await waitFor(() => {
+        expect(nav.currentStepId).toBe("step2");
+      });
 
-        // Jump to step 3
-        act(() => {
-          const result = nav.value.jumpToStep("step3");
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        await waitFor(() => {
-          expect(nav.value.currentStepId).toBe("step3");
-        });
-      }
+      // Navigate back
+      act(() => {
+        nav.goToPreviousStep();
+      });
+      await waitFor(() => {
+        expect(nav.currentStepId).toBe("step1");
+      });
+
+      // Jump to step 3
+      act(() => {
+        const result = nav.jumpToStep("step3");
+        if (result._tag === "Success") {
+          // Navigation succeeded
+        } else {
+          // Navigation failed
+        }
+      });
+      await waitFor(() => {
+        expect(nav.currentStepId).toBe("step3");
+      });
     });
   });
 
@@ -129,55 +130,55 @@ describe("MultistepContext integration", () => {
    */
   it("skips optional steps and completes required ones", async () => {
     await renderWithContext(async ({ nav }) => {
-      expect(nav._tag).toBe("Success");
-      if (nav._tag === "Success") {
-        act(() => {
-          const result = nav.value.goToNextStep();
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        await waitFor(() => {
-          expect(nav.value.currentStepId).toBe("step2");
-        });
-        act(() => {
-          const result = nav.value.jumpToStep("step3");
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        await waitFor(() => {
-          expect(nav.value.currentStepId).toBe("step3");
-        });
-      }
+      expect(nav).toBeDefined();
+      expect(typeof nav.currentStepId).toBe("string");
+
+      act(() => {
+        const result = nav.goToNextStep();
+        if (result._tag === "Success") {
+          // Navigation succeeded
+        } else {
+          // Navigation failed
+        }
+      });
+      await waitFor(() => {
+        expect(nav.currentStepId).toBe("step2");
+      });
+      act(() => {
+        const result = nav.jumpToStep("step3");
+        if (result._tag === "Success") {
+          // Navigation succeeded
+        } else {
+          // Navigation failed
+        }
+      });
+      await waitFor(() => {
+        expect(nav.currentStepId).toBe("step3");
+      });
     });
   });
 
   /**
    * Checks that navigation to steps with unmet dependencies is blocked and does not update state.
    */
-  it("prevents navigation to steps with unmet dependencies", () => {
-    renderWithContext(async ({ nav }) => {
-      expect(nav._tag).toBe("Success");
-      if (nav._tag === "Success") {
-        // Wait for initial step to be set
-        await waitFor(() => {
-          expect(nav.value.currentStepId).not.toBe("");
-        });
-        act(() => {
-          const result = nav.value.jumpToStep("step3");
-          if (result._tag === "Success") {
-            // Navigation succeeded
-          } else {
-            // Navigation failed
-          }
-        });
-        expect(nav.value.currentStepId).toBe("step1");
-      }
+  it("prevents navigation to steps with unmet dependencies", async () => {
+    await renderWithContext(async ({ nav }) => {
+      expect(nav).toBeDefined();
+      expect(typeof nav.currentStepId).toBe("string");
+
+      // Wait for initial step to be set
+      await waitFor(() => {
+        expect(nav.currentStepId).not.toBe("");
+      });
+      act(() => {
+        const result = nav.jumpToStep("step3");
+        if (result._tag === "Success") {
+          // Navigation succeeded
+        } else {
+          // Navigation failed
+        }
+      });
+      expect(nav.currentStepId).toBe("step1");
     });
   });
 });
