@@ -25,6 +25,9 @@ import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/service/qrcodeService";
+import { useEventActions } from "@/app/contexts/EventContext";
+import { useApplicantActions } from "@/app/contexts/ApplicantContext";
+import { useApproverActions } from "@/app/contexts/ApproverContext";
 import {
   FORM_CONFIG,
   BASE_URL,
@@ -44,25 +47,29 @@ import { sendMailToClient } from "@/service/mailService";
 const CreateEventForm: FC = () => {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [formatInfo, setFormatInfo] = useState<{
-    applicantFormat?: string;
-    approverFormat?: string;
-    detectedLanguage?: string;
-  }>({});
+  // Context action hooks
+  const eventActions = useEventActions();
+  const applicantActions = useApplicantActions();
+  const approverActions = useApproverActions();
+  // const [formatInfo, setFormatInfo] = useState<{
+  //   applicantFormat?: string;
+  //   approverFormat?: string;
+  //   detectedLanguage?: string;
+  // }>({});
 
   /**
    * Handles format detection from file upload
    */
-  const handleFormatDetected = useCallback(
-    (detectedFormatInfo: {
-      applicantFormat?: string;
-      approverFormat?: string;
-      detectedLanguage?: string;
-    }) => {
-      setFormatInfo(detectedFormatInfo);
-    },
-    []
-  );
+  // const handleFormatDetected = useCallback(
+  //   (detectedFormatInfo: {
+  //     applicantFormat?: string;
+  //     approverFormat?: string;
+  //     detectedLanguage?: string;
+  //   }) => {
+  //     setFormatInfo(detectedFormatInfo);
+  //   },
+  //   []
+  // );
 
   const eventId = useMemo(generateEventId, []);
   const ownerId = useMemo(generateOwnerId, []);
@@ -125,6 +132,29 @@ const CreateEventForm: FC = () => {
       }
       const qrCodes = qrResult.value;
 
+      // --- Save data to contexts ---
+      // Save event id to EventContext
+      if (eventActions._tag === "Some") {
+        eventActions.value.dispatchSafe({
+          type: "SET_EVENT_ID",
+          payload: { eventId },
+        });
+      }
+      // Save applicant list to ApplicantContext
+      if (applicantActions._tag === "Some") {
+        applicantActions.value.dispatchSafe({
+          type: "SET_EVENT_APPLICANTS",
+          payload: { applicantList: processedData.applicantList },
+        });
+      }
+      // Save approver list to ApproverContext
+      if (approverActions._tag === "Some") {
+        approverActions.value.dispatchSafe({
+          type: "SET_EVENT_APPROVERS",
+          payload: { approverList: processedData.approverList },
+        });
+      }
+
       const mailResult = await sendMailToClient(
         processedData.email,
         qrCodes.eventQRCodeBase64,
@@ -162,7 +192,7 @@ const CreateEventForm: FC = () => {
         submit={handleSubmit}
       >
         <FormInputSection />
-        <FormFileSection onFormatDetected={handleFormatDetected} />
+        <FormFileSection />
         <ErrorMessage message={errorMessage} />
       </Form>
       <QRCodeSection

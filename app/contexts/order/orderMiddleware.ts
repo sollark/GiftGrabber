@@ -11,6 +11,7 @@ import {
 } from "@/utils/fp-contexts";
 import { success, failure } from "@/utils/fp";
 import { OrderState, OrderAction } from "./types";
+import { isPersonInList } from "@/utils/utils";
 
 /**
  * Validation middleware for order actions.
@@ -25,9 +26,7 @@ export const orderValidation = validationMiddleware<OrderState, OrderAction>(
         if (!action.payload) {
           return failure("Approver data is required");
         }
-        if (
-          !state.data.approverList.some((p) => p._id === action.payload._id)
-        ) {
+        if (!isPersonInList(state.data.approverList, action.payload)) {
           return failure("Approver not found in approver list");
         }
         return success(true);

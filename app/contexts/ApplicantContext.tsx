@@ -16,6 +16,7 @@ import {
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { isPersonInList } from "@/utils/utils";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -36,7 +37,7 @@ export interface ApplicantState
  * ApplicantAction: Action types for the applicant reducer.
  */
 export interface ApplicantAction extends FunctionalAction {
-  type: "SET_EVENT_DATA" | "SELECT_APPLICANT" | "CLEAR_APPLICANT";
+  type: "SET_EVENT_APPLICANTS" | "SELECT_APPLICANT" | "CLEAR_APPLICANT";
   payload?: unknown;
 }
 
@@ -55,13 +56,14 @@ const isEventDataPayload = (
 
 /**
  * Type guard for person payload
+ * Checks if payload has the required sourceFormat field (only required field in Person)
  */
 const isPersonPayload = (payload: unknown): payload is Person => {
   return (
     typeof payload === "object" &&
     payload !== null &&
-    "firstName" in payload &&
-    "lastName" in payload
+    "sourceFormat" in payload &&
+    typeof (payload as any).sourceFormat === "string"
   );
 };
 
@@ -103,7 +105,7 @@ const applicantReducer = (
   action: ApplicantAction
 ): Result<ApplicantState, Error> => {
   switch (action.type) {
-    case "SET_EVENT_DATA": {
+    case "SET_EVENT_APPLICANTS": {
       if (!isEventDataPayload(action.payload)) {
         return failure(new Error("Invalid event data payload"));
       }
@@ -161,11 +163,7 @@ const applicantValidation = validationMiddleware<
       if (!action.payload) {
         return failure("Applicant data is required");
       }
-      if (
-        !state.data.applicantList.some(
-          (p) => p._id === (action.payload as Person)._id
-        )
-      ) {
+      if (!isPersonInList(state.data.applicantList, action.payload as Person)) {
         return failure("Applicant not found in applicant list");
       }
       return success(true);

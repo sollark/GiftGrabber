@@ -15,6 +15,7 @@ import { validationMiddleware } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { isGiftInList, areGiftsEqual } from "@/utils/utils";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -83,9 +84,7 @@ const giftReducer = (
         return failure(new Error("Invalid gift data"));
       }
       const gift = action.payload as Gift;
-      const alreadyAdded = state.data.applicantGifts.some(
-        (g) => g._id === gift._id
-      );
+      const alreadyAdded = isGiftInList(state.data.applicantGifts, gift);
       if (alreadyAdded) {
         return failure(new Error("Gift already added"));
       }
@@ -106,7 +105,7 @@ const giftReducer = (
         data: {
           ...state.data,
           applicantGifts: state.data.applicantGifts.filter(
-            (gift) => gift._id !== action.payload
+            (gift) => !areGiftsEqual(gift, action.payload)
           ),
         },
       });
@@ -170,7 +169,7 @@ const giftValidation = validationMiddleware<GiftState, GiftAction>(
         if (!action.payload) {
           return failure("Gift data is required");
         }
-        if (!state.data.giftList.some((g) => g._id === action.payload._id)) {
+        if (!isGiftInList(state.data.giftList, action.payload)) {
           return failure("Gift not found in gift list");
         }
         if (state.data.applicantGifts.length >= 5) {

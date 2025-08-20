@@ -17,6 +17,7 @@ import {
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { isPersonInList } from "@/utils/utils";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -29,7 +30,7 @@ export interface ApproverState
   }> {}
 
 export interface ApproverAction extends FunctionalAction {
-  type: "SET_EVENT_DATA" | "SELECT_APPROVER" | "CLEAR_APPROVER";
+  type: "SET_EVENT_APPROVERS" | "SELECT_APPROVER" | "CLEAR_APPROVER";
   payload?: unknown;
 }
 
@@ -58,7 +59,7 @@ const approverReducer = (
   action: ApproverAction
 ): Result<ApproverState, Error> => {
   switch (action.type) {
-    case "SET_EVENT_DATA":
+    case "SET_EVENT_APPROVERS":
       return success({
         ...state,
         data: {
@@ -111,12 +112,7 @@ const approverValidation = validationMiddleware<ApproverState, ApproverAction>(
           return failure("Approver data is required");
         }
         if (
-          !state.data.approverList.some(
-            (p) =>
-              "_id" in p &&
-              "_id" in (action.payload as Person) &&
-              p._id === (action.payload as Person)._id
-          )
+          !isPersonInList(state.data.approverList, action.payload as Person)
         ) {
           return failure("Approver not found in approver list");
         }
