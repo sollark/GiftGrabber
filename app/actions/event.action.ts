@@ -21,7 +21,6 @@ import {
 } from "@/service/mongoPopulationService";
 import { withDatabase } from "@/lib/withDatabase";
 import { failure, Result, success, isSuccess, fromPromise } from "@/utils/fp";
-import { PersonWithoutId } from "@/types/event.types";
 
 /**
  * Logs event-related errors
@@ -234,9 +233,7 @@ export const getAllEvents = withDatabase(getAllEventsInternal);
  * @remarks
  * Used for batch creation of applicants/approvers. Pure function: only creates and returns IDs.
  */
-const createPersonList = async (
-  personList: PersonWithoutId[]
-): Promise<string[]> => {
+const createPersonList = async (personList: Person[]): Promise<string[]> => {
   return Promise.all(
     personList.map(async (person) => {
       const personDoc = await PersonModel.create(person);

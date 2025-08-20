@@ -1,4 +1,3 @@
-import { Person } from "@/database/models/person.model";
 import { customAlphabet } from "nanoid";
 import { convertExcelToJson } from "./excelToJson";
 import { excelToTable } from "./excelToTable";
@@ -79,3 +78,45 @@ export const getQRcodeBuffer = async (qrRef: any) => {
  * Re-export Excel processing utilities for easy access
  */
 export { convertExcelToJson, excelToTable };
+
+// ============================================================================
+// OBJECT COMPARISON UTILITIES
+// ============================================================================
+
+/**
+ * Generic deep equality comparison for any type.
+ * Handles primitives, objects, arrays, dates, null/undefined.
+ * @param a - First value to compare
+ * @param b - Second value to compare
+ * @returns boolean - True if values are deeply equal
+ */
+export function deepEqual<T>(a: T, b: T): boolean {
+  if (a === b) return true;
+
+  // Handle null and undefined
+  if (a == null || b == null) return a === b;
+
+  // Handle Date
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() === b.getTime();
+  }
+
+  // Handle Array
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((val, i) => deepEqual(val, b[i]));
+  }
+
+  // Handle Object
+  if (typeof a === "object" && typeof b === "object") {
+    const keysA = Object.keys(a as object);
+    const keysB = Object.keys(b as object);
+
+    if (keysA.length !== keysB.length) return false;
+
+    return keysA.every((key) => deepEqual((a as any)[key], (b as any)[key]));
+  }
+
+  // Fallback (numbers, strings, booleans, etc.)
+  return a === b;
+}

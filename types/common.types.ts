@@ -6,9 +6,6 @@
  */
 
 import { Person } from "@/database/models/person.model";
-import { Order } from "@/database/models/order.model";
-import { Gift } from "@/database/models/gift.model";
-import { Event } from "@/database/models/event.model";
 import { Types } from "mongoose";
 
 // ============================================================================
@@ -20,26 +17,6 @@ import { Types } from "mongoose";
  * Used when creating new entities or working with form data
  */
 export type WithoutId<T extends { _id: any }> = Omit<T, "_id">;
-
-/**
- * Person without _id - commonly used in forms and creation flows
- */
-export type PersonWithoutId = WithoutId<Person>;
-
-/**
- * Gift without _id - used in gift creation flows
- */
-export type GiftWithoutId = WithoutId<Gift>;
-
-/**
- * Order without _id - used in order creation flows
- */
-export type OrderWithoutId = WithoutId<Order>;
-
-/**
- * Event without _id - used in event creation flows
- */
-export type EventWithoutId = WithoutId<Event>;
 
 /**
  * Common MongoDB ObjectId type alias for cleaner code
@@ -77,13 +54,14 @@ export interface EventFormData {
   ownerId: string;
   eventQRCodeBase64: string;
   ownerIdQRCodeBase64: string;
-  applicantList: PersonWithoutId[];
-  approverList: PersonWithoutId[];
+  applicantList: Person[];
+  approverList: Person[];
 }
 
 /**
  * Data required to create a new order in the database
  * Contains all the processed information needed for order creation
+ * Aligned with Order model schema
  */
 export interface OrderCreationData {
   createdAt: Date;
