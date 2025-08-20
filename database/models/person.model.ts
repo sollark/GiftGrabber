@@ -6,7 +6,7 @@ export type Person = {
   firstName?: string;
   lastName?: string;
   employeeId?: string;
-  personIdNumber?: string;
+  personId?: string;
   sourceFormat: ExcelFormatType;
 };
 
@@ -15,7 +15,7 @@ type PersonDoc = {
   firstName?: string;
   lastName?: string;
   employeeId?: string;
-  personIdNumber?: string;
+  personId?: string;
   sourceFormat: ExcelFormatType;
 };
 
@@ -23,7 +23,7 @@ const personSchema: Schema = new Schema({
   firstName: { type: String, required: false },
   lastName: { type: String, required: false },
   employeeId: { type: String, required: false },
-  personIdNumber: { type: String, required: false },
+  personId: { type: String, required: false },
   sourceFormat: {
     type: String,
     enum: Object.values(ExcelFormatType),

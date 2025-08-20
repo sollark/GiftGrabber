@@ -870,7 +870,7 @@ export async function excelFileToPersonList(
 
         case ExcelFormatType.PERSON_ID_ONLY:
           const personId = record as PersonIdOnlyFormat;
-          person.personIdNumber = personId.person_id_number || "";
+          person.personId = personId.person_id_number || "";
           break;
 
         default:

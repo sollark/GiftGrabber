@@ -227,7 +227,7 @@ describe("excelFileToPersonList", () => {
       expect(firstPerson.firstName).toBeDefined();
       expect(firstPerson.lastName).toBeDefined();
       expect(firstPerson.employeeId).toBeUndefined();
-      expect(firstPerson.personIdNumber).toBeUndefined();
+      expect(firstPerson.personId).toBeUndefined();
     });
   });
 
