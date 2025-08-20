@@ -6,7 +6,7 @@
  */
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
-import { OrderStatus as ImportedOrderStatus } from "@/components/order/OrderStatus";
+import { OrderStatus as ImportedOrderStatus } from "@/types/common.types";
 import { some, none } from "@/utils/fp";
 import { EnhancedOrder, LocalOrderStatus, OrderState } from "./types";
 

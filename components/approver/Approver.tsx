@@ -4,7 +4,7 @@ import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNaviga
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { Person } from "@/database/models/person.model";
 import React, { FC, useLayoutEffect } from "react";
-import { ConditionalRender } from "../../ui/primitives";
+import { ConditionalRender } from "@/ui/primitives";
 import PersonAutocomplete from "../PersonAutocomplete";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 

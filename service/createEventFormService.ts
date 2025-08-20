@@ -1,4 +1,4 @@
-import { excelFileToPersonList, parseExcelFile } from "@/utils/excel_utils";
+import { excelFileToPersonList } from "@/utils/excel_utils";
 import { Result, success, failure } from "@/utils/fp";
 import { NewPerson } from "@/types/common.types";
 

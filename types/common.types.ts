@@ -120,6 +120,17 @@ export interface EmailAttachment {
 }
 
 /**
+ * Order status enumeration - moved from components to avoid circular dependencies
+ * Shared between database models and UI components
+ */
+export enum OrderStatus {
+  PENDING = "Pending",
+  PROCESSING = "Processing",
+  COMPLETE = "Complete",
+  CANCELLED = "Cancelled",
+}
+
+/**
  * Email payload structure for sending emails
  * Contains all information needed to compose and send an email
  */

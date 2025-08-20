@@ -1,6 +1,6 @@
 import { Schema, Types, model, models } from "mongoose";
 import { nanoid } from "nanoid";
-import { OrderStatus } from "../../components/order/OrderStatus";
+import { OrderStatus } from "@/types/common.types";
 import { Gift } from "./gift.model";
 import { Person } from "./person.model";
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { OrderStatus } from "@/components/order/OrderStatus";
+import { OrderStatus } from "@/types/common.types";
 import { Order } from "@/database/models/order.model";
 import { withDatabase } from "@/lib/withDatabase";
 import {
@@ -9,7 +9,7 @@ import {
   confirmOrderInternal,
   getAllOrdersInternal,
   serializeOrder,
-} from "@/service/orderService.refactored";
+} from "@/service/orderService";
 import { OrderCreationPublicData } from "@/types/common.types";
 import { failure, Result, success, fromPromise } from "@/utils/fp";
 

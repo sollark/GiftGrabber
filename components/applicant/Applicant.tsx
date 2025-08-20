@@ -16,14 +16,10 @@
  */
 
 "use client";
-import React, { FC, useCallback } from "react";
+import React, { FC, useCallback, useState } from "react";
 import { getPersonKey } from "@/utils/utils";
-import {
-  ApplicantContext,
-  useApplicantSelection,
-} from "@/app/contexts/ApplicantContext";
-import { useState } from "react";
 import { Maybe, some, none } from "@/utils/fp";
+import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import {
   useGiftSelector,
   useGiftActions,
@@ -42,6 +38,13 @@ import PersonAutocomplete from "../PersonAutocomplete";
 const Applicant: FC = () => {
   const { applicantList, selectApplicant } = useApplicantSelection();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
+  const actions = useGiftActions();
+  const { goToNextStep } = useStepNavigationActions();
+
+  // Local state for selected person
+  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
+
+  // Simplified gift list extraction
   const giftList = React.useMemo(
     () =>
       giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
@@ -49,7 +52,8 @@ const Applicant: FC = () => {
         : [],
     [giftListMaybe]
   );
-  const actions = useGiftActions();
+
+  // Simplified gift addition with safe access
   const addGift = React.useCallback(
     (gift: Gift) => {
       if (actions._tag === "Some") {
@@ -58,9 +62,6 @@ const Applicant: FC = () => {
     },
     [actions]
   );
-  // Local state for selected person
-  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
-  const { goToNextStep } = useStepNavigationActions();
 
   /**
    * findApplicantGift

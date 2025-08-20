@@ -24,7 +24,7 @@ import FormInputSection from "./FormInputSection";
 import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
-import { generateQRCodes } from "@/service/qrcodeService";
+import { generateQRCodes } from "@/utils/qrcodeUtils";
 import { useEventActions } from "@/app/contexts/EventContext";
 import { useApplicantActions } from "@/app/contexts/ApplicantContext";
 import { useApproverActions } from "@/app/contexts/ApproverContext";
@@ -132,27 +132,45 @@ const CreateEventForm: FC = () => {
       }
       const qrCodes = qrResult.value;
 
+      // --- Validate contexts before saving data ---
+      if (
+        eventActions._tag === "None" ||
+        applicantActions._tag === "None" ||
+        approverActions._tag === "None"
+      ) {
+        setErrorMessage("Context not available. Please refresh the page.");
+        return;
+      }
+
       // --- Save data to contexts ---
       // Save event id to EventContext
-      if (eventActions._tag === "Some") {
-        eventActions.value.dispatchSafe({
-          type: "SET_EVENT_ID",
-          payload: { eventId },
-        });
+      const eventResult = eventActions.value.dispatchSafe({
+        type: "SET_EVENT_ID",
+        payload: { eventId },
+      });
+      if (eventResult._tag === "Failure") {
+        setErrorMessage("Failed to save event data");
+        return;
       }
+
       // Save applicant list to ApplicantContext
-      if (applicantActions._tag === "Some") {
-        applicantActions.value.dispatchSafe({
-          type: "SET_EVENT_APPLICANTS",
-          payload: { applicantList: processedData.applicantList },
-        });
+      const applicantResult = applicantActions.value.dispatchSafe({
+        type: "SET_EVENT_APPLICANTS",
+        payload: { applicantList: processedData.applicantList },
+      });
+      if (applicantResult._tag === "Failure") {
+        setErrorMessage("Failed to save applicant data");
+        return;
       }
+
       // Save approver list to ApproverContext
-      if (approverActions._tag === "Some") {
-        approverActions.value.dispatchSafe({
-          type: "SET_EVENT_APPROVERS",
-          payload: { approverList: processedData.approverList },
-        });
+      const approverResult = approverActions.value.dispatchSafe({
+        type: "SET_EVENT_APPROVERS",
+        payload: { approverList: processedData.approverList },
+      });
+      if (approverResult._tag === "Failure") {
+        setErrorMessage("Failed to save approver data");
+        return;
       }
 
       const mailResult = await sendMailToClient(
