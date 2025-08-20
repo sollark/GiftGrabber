@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo, memo } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { getPersonKey } from "@/utils/utils";
 import {
   useGiftSelector,
   useGiftActions,
@@ -18,7 +19,11 @@ const findUnclaimedGift = (
   selectedPerson: Person,
   gifts: Gift[]
 ): Gift | undefined =>
-  gifts.find((gift) => gift.owner._id === selectedPerson._id && !gift.receiver);
+  gifts.find(
+    (gift) =>
+      getPersonKey(gift.owner) === getPersonKey(selectedPerson) &&
+      !(gift as any).applicant
+  );
 
 /**
  * Functional SelectUnclaimedGift component.

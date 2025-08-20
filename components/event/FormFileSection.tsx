@@ -8,20 +8,22 @@ import { FORM_CONFIG } from "@/config/eventFormConfig";
 /**
  * Props for the FormFileSection component
  */
-interface FormFileSectionProps {
-  onFormatDetected?: (formatInfo: {
-    applicantFormat?: ExcelFormatType;
-    approverFormat?: ExcelFormatType;
-    detectedLanguage?: string;
-  }) => void;
-}
+// interface FormFileSectionProps {
+//   onFormatDetected?: (formatInfo: {
+//     applicantFormat?: ExcelFormatType;
+//     approverFormat?: ExcelFormatType;
+//     detectedLanguage?: string;
+//   }) => void;
+// }
 
 /**
  * Component for rendering file input fields with format detection
  */
-const FormFileSection: React.FC<FormFileSectionProps> = ({
-  onFormatDetected,
-}) => {
+const FormFileSection: React.FC = (
+  {
+    // onFormatDetected,
+  }
+) => {
   const [formatInfo, setFormatInfo] = useState<{
     applicantFormat?: ExcelFormatType;
     approverFormat?: ExcelFormatType;
@@ -59,7 +61,7 @@ const FormFileSection: React.FC<FormFileSectionProps> = ({
         };
 
         setFormatInfo(newFormatInfo);
-        onFormatDetected?.(newFormatInfo);
+        // onFormatDetected?.(newFormatInfo);
       } catch (error) {
         console.error("Format detection failed:", error);
         setFormatInfo({
@@ -75,7 +77,7 @@ const FormFileSection: React.FC<FormFileSectionProps> = ({
         setIsDetecting(false);
       }
     },
-    [formatInfo, onFormatDetected]
+    [formatInfo]
   );
 
   return (

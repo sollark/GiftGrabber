@@ -1,9 +1,9 @@
 "use server";
 
 import { OrderStatus } from "@/components/order/OrderStatus";
-import GiftModel, { Gift } from "@/database/models/gift.model";
-import OrderModel, { Order } from "@/database/models/order.model";
-import PersonModel, { Person } from "@/database/models/person.model";
+import { Gift } from "@/database/models/gift.model";
+import { Order } from "@/database/models/order.model";
+import { Person } from "@/database/models/person.model";
 import { withDatabase } from "@/lib/withDatabase";
 import { Types } from "mongoose";
 import {
@@ -12,34 +12,14 @@ import {
   validateOrderExists,
   validateOrderForConfirmation,
   serializeOrder,
+  createOrder,
+  findOrderWithPopulation,
+  findUnconfirmedOrder,
+  processOrderConfirmation,
+  updateAssociatedGifts,
 } from "@/service/orderService";
 import { OrderCreationData } from "@/types/common.types";
-import { saveObject } from "@/lib/castToDocument";
 import { failure, Result, success, fromPromise } from "@/utils/fp";
-
-/**
- * Configuration constants for order operations
- */
-const ORDER_CONFIG = {
-  POPULATE_FIELDS: {
-    APPLICANT: {
-      path: "applicant",
-      select: "firstName lastName",
-    },
-    GIFTS: {
-      path: "gifts",
-      select: "owner",
-      populate: {
-        path: "owner",
-        select: "firstName lastName",
-      },
-    },
-    CONFIRMED_BY: {
-      path: "confirmedBy",
-      select: "firstName lastName",
-    },
-  },
-} as const;
 
 /**
  * Log messages for order operations
@@ -61,13 +41,6 @@ const ERROR_MESSAGES = {
   ORDER_NOT_FOUND: "Order not found",
   ORDER_NOT_FOUND_OR_CONFIRMED: "Order not found or already confirmed",
 } as const;
-
-/**
- * Creates a new order in the database
- */
-const createNewOrder = async (orderData: OrderCreationData): Promise<Order> => {
-  return await OrderModel.create(orderData);
-};
 
 /**
  * Logs order creation success
@@ -101,88 +74,9 @@ const logOrderConfirmation = (
 };
 
 /**
- * Finds an order with populated fields
- */
-const findOrderWithPopulation = async (
-  orderId: string
-): Promise<Order | null> => {
-  return await populateOrder(OrderModel.findOne({ orderId }));
-};
-
-/**
- * Populates order fields with related data
- */
-const populateOrder = async (query: any): Promise<Order | null> => {
-  return query
-    .populate(ORDER_CONFIG.POPULATE_FIELDS.APPLICANT)
-    .populate(ORDER_CONFIG.POPULATE_FIELDS.GIFTS)
-    .populate(ORDER_CONFIG.POPULATE_FIELDS.CONFIRMED_BY);
-};
-
-/**
- * Finds an unconfirmed order
- */
-const findUnconfirmedOrder = async (orderId: string): Promise<Order | null> => {
-  return await populateOrder(
-    OrderModel.findOne({
-      orderId,
-      confirmedBy: null,
-    })
-  );
-};
-
-/**
- * Processes order confirmation by updating order fields
- */
-const processOrderConfirmation = async (
-  order: Order,
-  confirmedBy: Types.ObjectId
-): Promise<Order> => {
-  // Fetch the Person document from the database
-  const person = await PersonModel.findById(confirmedBy);
-  if (!person) {
-    throw new Error("Person not found for confirmation");
-  }
-  // Work with object, not document
-  const updatedOrder: Order = {
-    ...order,
-    confirmedBy: person._id,
-    confirmedAt: new Date(),
-    status: OrderStatus.COMPLETE,
-  };
-  // Save as document using functional utility
-  const savedOrder = await saveObject(updatedOrder, OrderModel);
-  return savedOrder;
-};
-
-/**
- * Updates gifts associated with the confirmed order
- */
-const updateAssociatedGifts = async (order: Order): Promise<void> => {
-  const { applicant } = order;
-  const giftUpdates = order.gifts.map(async (gift: Gift) => {
-    const giftToUpdate = await GiftModel.findById(gift._id);
-    if (giftToUpdate) {
-      // Work with object, not document
-      const updatedGift: Gift = {
-        ...giftToUpdate.toObject(),
-        receiver: applicant._id,
-        order: order._id,
-      };
-      await saveObject(updatedGift, GiftModel);
-      return updatedGift;
-    }
-    return null;
-  });
-
-  await Promise.all(giftUpdates);
-};
-
-/**
  * Creates a new order in the database (orchestration + error handling)
  */
 const makeOrderInternal = async (
-  approverList: Person[],
   applicant: Person,
   gifts: Gift[],
   orderId: string,
@@ -190,13 +84,12 @@ const makeOrderInternal = async (
 ): Promise<boolean | undefined> => {
   try {
     const orderData = createOrderData(
-      approverList,
       applicant,
       gifts,
       orderId,
       confirmationRQCode
     );
-    const newOrder = await createNewOrder(orderData);
+    const newOrder = await createOrder(orderData);
 
     logOrderCreation(newOrder);
     const result = validateOrderCreation(newOrder);
@@ -220,7 +113,6 @@ export const makeOrder = withDatabase(
     confirmationRQCode: string
   ): Promise<boolean> => {
     const result = await makeOrderInternal(
-      approverList,
       applicant,
       gifts,
       orderId,

@@ -1,5 +1,26 @@
 import { Result, success, failure } from "@/utils/fp";
 
+// TODO: ARCHITECTURAL ISSUE - This service violates the server-only service pattern
+// This service has a hybrid client/server responsibility which breaks the clean separation:
+//
+// PROBLEM:
+// - Accepts React.RefObject parameters (client-side DOM references)
+// - Performs server-side Buffer operations (.toString("base64"))
+// - Mixed client/server dependencies make it unclear where this runs
+// - Violates the principle that services should be pure server-side business logic
+//
+// SOLUTION OPTIONS:
+// 1. SPLIT INTO TWO SERVICES:
+//    - Client service: Extract QR code data from DOM refs
+//    - Server service: Convert raw QR data to base64 buffers
+// 2. MOVE TO CLIENT UTILITY:
+//    - If this only runs client-side, move to utils/ and rename appropriately
+// 3. REFACTOR TO SERVER-ONLY:
+//    - Generate QR codes directly on server without DOM dependencies
+//    - Pass raw QR data instead of DOM refs
+//
+// RECOMMENDATION: Option 1 (split) for better separation of concerns
+
 /**
  * Output type for generated QR codes.
  */

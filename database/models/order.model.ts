@@ -10,7 +10,7 @@ export type Order = {
   gifts: Gift[];
   orderId: string;
   confirmationRQCode: string;
-  confirmedBy: Person | null;
+  confirmedByApprover: Person | null;
   confirmedAt?: Date;
   status: OrderStatus;
 };
@@ -22,7 +22,7 @@ type OrderDoc = {
   orderId: string;
   confirmationRQCode: string;
   confirmedAt: Date | null;
-  confirmedBy: Types.ObjectId | null;
+  confirmedByApprover: Types.ObjectId | null;
   status: OrderStatus;
 };
 
@@ -33,7 +33,7 @@ const orderSchema: Schema = new Schema({
   orderId: { type: String, required: true },
   confirmationRQCode: { type: String, required: true },
   confirmedAt: { type: Date, default: null },
-  confirmedBy: {
+  confirmedByApprover: {
     type: Types.ObjectId,
     ref: "Person",
     default: null,

@@ -1,14 +1,8 @@
 import { failure, success, Result } from "@/utils/fp";
 import EventModel, { Event } from "@/database/models/event.model";
 import GiftModel from "@/database/models/gift.model";
-import PersonModel from "@/database/models/person.model";
-
-import {
-  PersonWithoutId,
-  CreateEventData,
-  EventFormData,
-} from "@/types/common.types";
-import { ExcelFormatType } from "@/types/excel.types";
+import PersonModel, { Person } from "@/database/models/person.model";
+import { CreateEventData, EventFormData } from "@/types/common.types";
 
 /**
  * Validates that an event exists.
@@ -26,8 +20,8 @@ export const validateEventExists = (
  * @param personList - Array of person objects without _id.
  * @returns Promise<string[]> - Array of created person IDs as strings.
  */
-const createPersonList = async (
-  personList: PersonWithoutId[]
+export const createPersonList = async (
+  personList: Person[]
 ): Promise<string[]> => {
   return Promise.all(
     personList.map(async (person) => {
@@ -42,10 +36,16 @@ const createPersonList = async (
  * @param applicantIds - Array of applicant IDs.
  * @returns Promise<string[]> - Array of created gift IDs as strings.
  */
-const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
+export const createGiftList = async (
+  applicantIds: string[]
+): Promise<string[]> => {
   return Promise.all(
     applicantIds.map(async (applicantId) => {
-      const giftDoc = await GiftModel.create({ owner: applicantId });
+      const giftDoc = await GiftModel.create({
+        owner: applicantId,
+        applicant: null,
+        order: null,
+      });
       return giftDoc._id.toString();
     })
   );
@@ -84,21 +84,6 @@ const createEventRecord = async (
 };
 
 /**
- * Creates applicants and approvers, returning their IDs.
- * @param applicantList - Array of applicant objects.
- * @param approverList - Array of approver objects.
- * @returns Promise<{ applicantIds: string[]; approverIds: string[] }>
- */
-export const createApplicantsAndApprovers = async (
-  applicantList: PersonWithoutId[],
-  approverList: PersonWithoutId[]
-): Promise<{ applicantIds: string[]; approverIds: string[] }> => {
-  const applicantIds = await createPersonList(applicantList);
-  const approverIds = await createPersonList(approverList);
-  return { applicantIds, approverIds };
-};
-
-/**
  * Orchestrates creation of a new event with all related applicants, approvers, and gifts.
  * @param event - The event form data containing all necessary information.
  * @returns Promise<Result<boolean, string>> - Success if event was created, failure with error message otherwise.
@@ -122,12 +107,8 @@ export const createEventInternal = async (
   let giftIds: string[] = [];
 
   try {
-    const result = await createApplicantsAndApprovers(
-      applicantList,
-      approverList
-    );
-    applicantIds = result.applicantIds;
-    approverIds = result.approverIds;
+    applicantIds = await createPersonList(applicantList);
+    approverIds = await createPersonList(approverList);
   } catch (error) {
     console.error(error);
     return failure("Failed to create applicants or approvers");
@@ -159,4 +140,100 @@ export const createEventInternal = async (
     console.error(error);
     return failure("Failed to create event record");
   }
+};
+
+/**
+ * Gets event with populated applicants for service layer.
+ * @param eventId - The unique identifier for the event.
+ * @param selectFields - Fields to select from the event.
+ * @returns Promise<Event | null> - Event with populated applicants or null.
+ */
+export const getEventWithApplicants = async (
+  eventId: string,
+  selectFields: Record<string, number>
+): Promise<Event | null> => {
+  const event = await EventModel.findOne({ eventId }, selectFields);
+  if (!event) return null;
+
+  return await event.populate({
+    path: "applicantList",
+    model: "Person",
+    select: "firstName lastName employeeId personId sourceFormat",
+  });
+};
+
+/**
+ * Gets event with populated approvers for service layer.
+ * @param eventId - The unique identifier for the event.
+ * @param selectFields - Fields to select from the event.
+ * @returns Promise<Event | null> - Event with populated approvers or null.
+ */
+export const getEventWithApprovers = async (
+  eventId: string,
+  selectFields: Record<string, number>
+): Promise<Event | null> => {
+  const event = await EventModel.findOne({ eventId }, selectFields);
+  if (!event) return null;
+
+  return await event.populate({
+    path: "approverList",
+    model: "Person",
+    select: "firstName lastName employeeId personId sourceFormat",
+  });
+};
+
+/**
+ * Gets event with full details including all populated fields.
+ * @param eventId - The unique identifier for the event.
+ * @param selectFields - Fields to select from the event.
+ * @returns Promise<Event | null> - Event with all relationships populated or null.
+ */
+export const getEventWithDetails = async (
+  eventId: string,
+  selectFields: Record<string, number>
+): Promise<Event | null> => {
+  const event = await EventModel.findOne({ eventId }, selectFields);
+  if (!event) return null;
+
+  const populatedEvent = await event.populate([
+    {
+      path: "applicantList",
+      model: "Person",
+      select: "firstName lastName",
+    },
+    {
+      path: "giftList",
+      model: "Gift",
+      select: "owner applicant order",
+      populate: {
+        path: "owner",
+        model: "Person",
+        select: "firstName lastName",
+      },
+    },
+    {
+      path: "approverList",
+      model: "Person",
+      select: "firstName lastName",
+    },
+  ]);
+
+  return populatedEvent;
+};
+
+/**
+ * Gets all events from the database.
+ * @returns Promise<Event[]> - Array of all events.
+ */
+export const getAllEvents = async (): Promise<Event[]> => {
+  return await EventModel.find();
+};
+
+/**
+ * Helper to serialize any object for safe JSON transmission.
+ * @param data - The data to serialize.
+ * @returns Serialized object.
+ */
+export const parseEventData = <T>(data: T): T => {
+  return JSON.parse(JSON.stringify(data));
 };

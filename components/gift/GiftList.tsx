@@ -34,6 +34,7 @@ import {
   useGiftSelector,
   useGiftActions,
 } from "@/app/contexts/gift/GiftContext";
+import { getGiftKey } from "@/utils/utils";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
@@ -222,7 +223,7 @@ const GiftList: FC = () => {
    * @param gift - The gift object to remove from the list
    */
   const handleRemoveGift = useCallback(
-    (gift: Gift) => removeGiftAction(gift._id.toString()),
+    (gift: Gift) => removeGiftAction(getGiftKey(gift)),
     [removeGiftAction]
   );
 
@@ -233,8 +234,8 @@ const GiftList: FC = () => {
    * @returns JSX.Element - Gift item with remove functionality
    */
   const renderGiftItem = useCallback(
-    (gift: Gift) => (
-      <li key={gift._id.toString()}>
+    (gift: Gift, index: number) => (
+      <li key={getGiftKey(gift, index)}>
         <div className="flex flex-row" style={GIFT_LIST_STYLES.giftItem}>
           <GiftComponent gift={gift} />
           <SecondaryButton onClick={() => handleRemoveGift(gift)}>
@@ -255,7 +256,11 @@ const GiftList: FC = () => {
     if (!hasGifts) {
       return <p>{MESSAGES.NO_GIFTS}</p>;
     }
-    return <ul>{applicantGifts.map(renderGiftItem)}</ul>;
+    return (
+      <ul>
+        {applicantGifts.map((gift, index) => renderGiftItem(gift, index))}
+      </ul>
+    );
   }, [hasGifts, applicantGifts, renderGiftItem]);
 
   return (

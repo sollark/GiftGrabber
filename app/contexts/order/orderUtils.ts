@@ -86,7 +86,9 @@ export const createInitialState = (
   data: {
     order: convertOrderToEnhanced(order),
     approverList,
-    selectedApprover: order.confirmedBy ? some(order.confirmedBy) : none,
+    selectedApprover: order.confirmedByApprover
+      ? some(order.confirmedByApprover)
+      : none,
     orderHistory: [],
     notifications: [],
     optimisticUpdates: {},

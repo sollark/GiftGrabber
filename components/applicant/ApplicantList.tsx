@@ -1,5 +1,6 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
+import { getPersonKey } from "@/utils/utils";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 
 /**
@@ -29,8 +30,8 @@ const ApplicantList: FC<ApplicantListProps> = ({ personArray }) => {
     <div>
       <h3>Applicants</h3>
       <ul>
-        {list.map((applicant: Person) => (
-          <li key={applicant._id.toString()}>
+        {list.map((applicant: Person, index: number) => (
+          <li key={getPersonKey(applicant, index)}>
             {`${applicant.firstName} ${applicant.lastName}`}
           </li>
         ))}

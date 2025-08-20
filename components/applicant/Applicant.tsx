@@ -17,7 +17,11 @@
 
 "use client";
 import React, { FC, useCallback } from "react";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { getPersonKey } from "@/utils/utils";
+import {
+  ApplicantContext,
+  useApplicantSelection,
+} from "@/app/contexts/ApplicantContext";
 import { useState } from "react";
 import { Maybe, some, none } from "@/utils/fp";
 import {
@@ -67,7 +71,9 @@ const Applicant: FC = () => {
   const findApplicantGift = useCallback(
     (person: Person): Gift | undefined =>
       giftList.find(
-        (gift: Gift) => gift.owner._id === person._id && !gift.receiver
+        (gift: Gift) =>
+          getPersonKey(gift.owner) === getPersonKey(person) &&
+          !(gift as any).receiver
       ),
     [giftList]
   );

@@ -7,18 +7,17 @@
  * Exports functions for use in API routes and server components.
  */
 
-import EventModel, { Event } from "@/database/models/event.model";
-import PersonModel, { Person } from "@/database/models/person.model";
-import GiftModel from "@/database/models/gift.model";
+import { Event } from "@/database/models/event.model";
+import { Person } from "@/database/models/person.model";
 import {
   createEventInternal,
   validateEventExists,
+  getEventWithApplicants,
+  getEventWithApprovers,
+  getEventWithDetails,
+  getAllEvents as getAllEventsFromService,
+  parseEventData,
 } from "@/service/eventService";
-import {
-  populateEventApplicants,
-  populateEventApprovers,
-  populateEvent,
-} from "@/service/mongoPopulationService";
 import { withDatabase } from "@/lib/withDatabase";
 import { failure, Result, success, isSuccess, fromPromise } from "@/utils/fp";
 
@@ -112,9 +111,7 @@ export const getEventApplicantsInternal = async (
 ): Promise<Result<Event, Error>> => {
   // Use fromPromise to wrap async DB call in Result
   const eventResult = await fromPromise<Event | null, Error>(
-    populateEventApplicants(
-      EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPLICANTS)
-    )
+    getEventWithApplicants(eventId, EVENT_CONFIG.QUERY_FIELDS.APPLICANTS)
   );
   if (eventResult._tag === "Failure") {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
@@ -149,13 +146,14 @@ const getEventApproversInternal = async (
   eventId: string
 ): Promise<Person[]> => {
   try {
-    const event = await populateEventApprovers(
-      EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.APPROVERS)
+    const event = await getEventWithApprovers(
+      eventId,
+      EVENT_CONFIG.QUERY_FIELDS.APPROVERS
     );
     if (!event) {
       throw new Error(ERROR_MESSAGES.EVENT_NOT_FOUND);
     }
-    return parseEventData(event.approverList);
+    return parseEventData(event.approverList || []);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_EVENT_APPROVERS);
     logEventError(error instanceof Error ? error.message : String(error));
@@ -182,8 +180,9 @@ const getEventDetailsInternal = async (
 ): Promise<Event | null> => {
   try {
     console.log(LOG_MESSAGES.GET_EVENT_DETAILS, eventId);
-    const event = await populateEvent(
-      EventModel.findOne({ eventId }, EVENT_CONFIG.QUERY_FIELDS.DETAILS)
+    const event = await getEventWithDetails(
+      eventId,
+      EVENT_CONFIG.QUERY_FIELDS.DETAILS
     );
     if (!event) {
       throw new Error(ERROR_MESSAGES.EVENT_NOT_FOUND);
@@ -211,7 +210,7 @@ export const getEventDetails = withDatabase(
  */
 const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
   try {
-    const events = await EventModel.find();
+    const events = await getAllEventsFromService();
     return parseEventData(events);
   } catch (error) {
     console.log(ERROR_MESSAGES.GET_ALL_EVENTS);
@@ -223,44 +222,3 @@ const getAllEventsInternal = async (): Promise<Event[] | undefined> => {
  * Action: Gets all events for use in API/server components.
  */
 export const getAllEvents = withDatabase(getAllEventsInternal);
-
-// Helper Functions
-
-/**
- * Helper: Creates person records for a list of person data (applicants or approvers).
- * @param personList - Array of person objects without _id
- * @returns Promise resolving to array of created person IDs (as strings)
- * @remarks
- * Used for batch creation of applicants/approvers. Pure function: only creates and returns IDs.
- */
-const createPersonList = async (personList: Person[]): Promise<string[]> => {
-  return Promise.all(
-    personList.map(async (person) => {
-      const personDoc = await PersonModel.create(person);
-      return personDoc._id.toString();
-    })
-  );
-};
-
-/**
- * Helper: Creates gift records for a list of applicant IDs.
- * @param applicantIds - Array of applicant IDs
- * @returns Promise resolving to array of created gift IDs (as strings)
- * @remarks
- * Used for batch creation of gifts for each applicant. Pure function: only creates and returns IDs.
- */
-const createGiftList = async (applicantIds: string[]): Promise<string[]> => {
-  return Promise.all(
-    applicantIds.map(async (applicantId) => {
-      const giftDoc = await GiftModel.create({ owner: applicantId });
-      return giftDoc._id.toString();
-    })
-  );
-};
-
-/**
- * Helper
- */
-const parseEventData = <T>(data: T): T => {
-  return JSON.parse(JSON.stringify(data));
-};

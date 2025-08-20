@@ -18,6 +18,8 @@ interface EventDetailsClientProps {
  *   - approverList: array of approvers
  * Returns: JSX.Element
  */
+import { getPersonKey } from "@/utils/utils";
+
 export default function EventDetailsClient({
   applicantList,
   giftList,
@@ -36,14 +38,14 @@ export default function EventDetailsClient({
             </tr>
           </thead>
           <tbody>
-            {applicantList.map((applicant: Person) => (
-              <tr key={applicant._id.toString()}>
+            {applicantList.map((applicant: Person, index: number) => (
+              <tr key={getPersonKey(applicant, index)}>
                 <td>{`${applicant.firstName} ${applicant.lastName}`}</td>
                 <td>
                   {giftList.find(
                     (gift: Gift) =>
-                      gift.owner._id.toString() === applicant._id.toString()
-                  )?.receiver
+                      getPersonKey(gift.owner) === getPersonKey(applicant)
+                  )?.applicant
                     ? "Taken"
                     : "Available"}
                 </td>

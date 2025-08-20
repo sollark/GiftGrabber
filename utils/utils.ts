@@ -120,3 +120,97 @@ export function deepEqual<T>(a: T, b: T): boolean {
   // Fallback (numbers, strings, booleans, etc.)
   return a === b;
 }
+
+// ============================================================================
+// PERSON UTILITIES
+// ============================================================================
+
+/**
+ * Checks if a person exists in a list of persons.
+ * Uses deep equality comparison to match persons.
+ * @param personList - Array of persons to search in
+ * @param person - Person to find
+ * @returns boolean - True if person is found in the list
+ */
+export function isPersonInList(personList: any[], person: any): boolean {
+  return personList.some((p) => deepEqual(p, person));
+}
+
+// ============================================================================
+// GIFT UTILITIES
+// ============================================================================
+
+/**
+ * Checks if a gift exists in a list of gifts.
+ * Uses deep equality comparison to match gifts.
+ * @param giftList - Array of gifts to search in
+ * @param gift - Gift to find
+ * @returns boolean - True if gift is found in the list
+ */
+export function isGiftInList(giftList: any[], gift: any): boolean {
+  return giftList.some((g) => deepEqual(g, gift));
+}
+
+/**
+ * Checks if two gifts are equal using deep equality.
+ * @param gift1 - First gift to compare
+ * @param gift2 - Second gift to compare
+ * @returns boolean - True if gifts are equal
+ */
+export function areGiftsEqual(gift1: any, gift2: any): boolean {
+  return deepEqual(gift1, gift2);
+}
+
+// ============================================================================
+// KEY GENERATION UTILITIES
+// ============================================================================
+
+/**
+ * Generates a unique key for a person object.
+ * Uses available identifiers in order of preference: _id, personId, employeeId, or combination of name fields.
+ * @param person - Person object (can be either Person or PersonDoc)
+ * @param index - Optional index to use as fallback
+ * @returns string - Unique key for the person
+ */
+export function getPersonKey(person: any, index?: number): string {
+  // Try _id first (for documents from database)
+  if (person._id) {
+    return person._id.toString();
+  }
+
+  // Try personId
+  if (person.personId) {
+    return person.personId;
+  }
+
+  // Try employeeId
+  if (person.employeeId) {
+    return person.employeeId;
+  }
+
+  // Fallback to name combination + index
+  const name = `${person.firstName || ""}_${person.lastName || ""}`;
+  return index !== undefined ? `${name}_${index}` : name;
+}
+
+/**
+ * Generates a unique key for a gift object.
+ * Uses available identifiers in order of preference: _id, owner key, or index.
+ * @param gift - Gift object (can be either Gift or GiftDoc)
+ * @param index - Optional index to use as fallback
+ * @returns string - Unique key for the gift
+ */
+export function getGiftKey(gift: any, index?: number): string {
+  // Try _id first (for documents from database)
+  if (gift._id) {
+    return gift._id.toString();
+  }
+
+  // Try owner key
+  if (gift.owner) {
+    return getPersonKey(gift.owner, index);
+  }
+
+  // Fallback to index
+  return index?.toString() || "0";
+}

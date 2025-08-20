@@ -30,8 +30,8 @@ type GiftProps = {
 const GiftComponent: FC<GiftProps> = ({ gift }) => {
   if (!gift) return <></>;
 
-  const { owner, receiver } = gift;
-  const giftStatus = receiver ? "Claimed" : "Available";
+  const { owner, applicant } = gift;
+  const giftStatus = applicant ? "Claimed" : "Available";
 
   return (
     <Box sx={{ padding: "1rem" }}>

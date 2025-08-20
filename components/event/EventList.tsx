@@ -39,9 +39,9 @@ const EventList: FC<EventListProps> = ({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold mb-4">Events</h2>
-      {events.map((event) => (
+      {events.map((event, index) => (
         <div
-          key={event._id.toString()}
+          key={event.eventId || index}
           className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
         >
           <div className="flex justify-between items-start mb-2">

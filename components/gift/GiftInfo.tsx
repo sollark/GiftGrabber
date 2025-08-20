@@ -18,6 +18,7 @@ import { FC, useState } from "react";
 import { none, Maybe, getMaybeOrElse } from "@/utils/fp";
 import { useGiftSelector } from "@/app/contexts/gift/GiftContext";
 import GiftComponent from "./GiftComponent";
+import { getPersonKey } from "@/utils/utils";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 
@@ -38,7 +39,10 @@ const GiftInfo: FC = () => {
   const person = selectedPerson.value;
   // Find the first unclaimed gift for the selected person
   const gift = giftList.find(
-    (gift) => gift.owner && person._id === gift.owner._id && !gift.receiver
+    (gift) =>
+      gift.owner &&
+      getPersonKey(person) === getPersonKey(gift.owner) &&
+      !(gift as any).applicant
   );
 
   if (!gift) return null;

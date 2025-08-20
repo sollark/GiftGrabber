@@ -17,7 +17,7 @@ export default async function EventDetails({
     <EventDetailsClient
       applicantList={applicantList}
       giftList={giftList}
-      approverList={approverList}
+      approverList={approverList || []}
     />
   );
 }

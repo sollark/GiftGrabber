@@ -1,6 +1,7 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
+import { getPersonKey } from "@/utils/utils";
 
 type ApproverListProps = {
   personArray: Person[];
@@ -20,8 +21,8 @@ const ApproverList: FC<ApproverListProps> = ({ personArray }) => {
     <div>
       <h3>Approvers</h3>
       <ul>
-        {list.map((approver: Person) => (
-          <li key={approver._id.toString()}>
+        {list.map((approver: Person, index: number) => (
+          <li key={getPersonKey(approver, index)}>
             {`${approver.firstName} ${approver.lastName}`}
           </li>
         ))}
