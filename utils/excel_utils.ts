@@ -15,6 +15,7 @@
  * @module excel_utils
  */
 
+import { Person } from "@/database/models/person.model";
 import {
   ExcelFormatType,
   ExcelImportFormat,
@@ -29,7 +30,6 @@ import {
   SupportedLanguage,
   ExcelTranslations,
 } from "@/types/excel.types";
-import { PersonWithoutId } from "@/types/common.types";
 
 // ============================================================================
 // CACHES AND CONSTANTS
@@ -828,15 +828,15 @@ export async function getExpectedHeaders(
 // ============================================================================
 
 /**
- * Converts Excel file to PersonWithoutId array format.
+ * Converts Excel file to Person array format.
  * Maps different Excel formats to proper Person fields.
  *
  * @param file - Excel file to process
- * @returns Promise resolving to array of PersonWithoutId objects or null on error
+ * @returns Promise resolving to array of Person objects or null on error
  */
 export async function excelFileToPersonList(
   file: File
-): Promise<PersonWithoutId[] | null> {
+): Promise<Person[] | null> {
   try {
     const result = await parseExcelFile(file, {
       language: "auto",
@@ -844,8 +844,8 @@ export async function excelFileToPersonList(
       validateRequired: false,
     });
 
-    return result.data.map((record): PersonWithoutId => {
-      const person: PersonWithoutId = {
+    return result.data.map((record): Person => {
+      const person: Person = {
         sourceFormat: result.formatType,
       };
 

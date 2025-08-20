@@ -148,6 +148,7 @@ describe("excelFileToPersonList", () => {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       }) as any; // Cast to any to satisfy File interface      // Act
       const result = await excelFileToPersonList(file);
+      console.log("File processed successfully:", result);
 
       // Debug output
       if (result === null) {
@@ -183,6 +184,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(file);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).not.toBeNull();
@@ -215,6 +217,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(file as File);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).not.toBeNull();
@@ -254,6 +257,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(emptyFile);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).toBeNull();
@@ -269,6 +273,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(corruptedFile);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).toBeNull();
@@ -290,6 +295,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(file as File);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).not.toBeNull();
@@ -318,6 +324,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(file as File);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).not.toBeNull();
@@ -346,6 +353,7 @@ describe("excelFileToPersonList", () => {
 
       // Act
       const result = await excelFileToPersonList(file as File);
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).not.toBeNull();
@@ -386,6 +394,7 @@ describe("excelFileToPersonList", () => {
       const startTime = performance.now();
       const result = await excelFileToPersonList(file as File);
       const endTime = performance.now();
+      console.log("File processed successfully:", result);
 
       // Assert
       expect(result).not.toBeNull();
