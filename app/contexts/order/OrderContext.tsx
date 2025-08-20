@@ -55,14 +55,14 @@ const contextResult = createFunctionalContext<OrderState, OrderAction>({
 
 /**
  * Provides access to order context, actions, and selectors.
- * @see contextResult for details on available properties.
+ * All exports are properly typed from the functional context factory.
  */
-export const OrderContext = (contextResult as any).Context;
-export const BaseOrderProvider = (contextResult as any).Provider;
-export const useOrderContext = (contextResult as any).useContext;
-export const useOrderContextResult = (contextResult as any).useContextResult;
-export const useOrderSelector = (contextResult as any).useSelector;
-export const useOrderActions = (contextResult as any).useActions;
+export const OrderContext = contextResult.Context;
+export const BaseOrderProvider = contextResult.Provider;
+export const useOrderContext = contextResult.useContext;
+export const useOrderContextResult = contextResult.useContextResult;
+export const useOrderSelector = contextResult.useSelector;
+export const useOrderActions = contextResult.useActions;
 
 // =======================
 // Provider Component

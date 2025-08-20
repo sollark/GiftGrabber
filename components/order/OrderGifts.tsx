@@ -30,32 +30,60 @@ import GiftList from "../gift/GiftList";
 import { useOrderContext } from "@/app/contexts/order/OrderContext";
 
 /**
+ * OrderContextsProvider (Internal Component)
+ * Composed provider that wraps multiple order-related contexts in the correct order.
+ * Reduces provider nesting and improves readability.
+ * @param order - Order data containing applicant and gifts
+ * @param approverList - List of available approvers
+ * @param children - Child components to render
+ * @returns JSX with composed context providers
+ */
+interface OrderContextsProviderProps {
+  order: any;
+  approverList: any[];
+  children: React.ReactNode;
+}
+
+const OrderContextsProvider: React.FC<OrderContextsProviderProps> = React.memo(
+  ({ order, approverList, children }) => (
+    <ApproverProvider approverList={approverList}>
+      <ApplicantProvider applicantList={[order.applicant]}>
+        <GiftProvider giftList={order.gifts}>{children}</GiftProvider>
+      </ApplicantProvider>
+    </ApproverProvider>
+  )
+);
+
+OrderContextsProvider.displayName = "OrderContextsProvider";
+
+/**
  * Functional OrderGifts component.
  * Wraps the ordering flow in context providers and a multi-step UI.
  * Uses event data from order context to avoid prop drilling.
  * @returns {JSX.Element} The rendered component.
  */
 const OrderGifts: FC = () => {
-  const { order } = useOrderContext();
-  // All event data is now accessed from order context
+  const orderContext = useOrderContext();
 
+  // Handle Maybe type safely - extract data from context state
+  if (orderContext._tag === "None") {
+    return <div>Order context not available</div>;
+  }
+
+  const { order, approverList } = orderContext.value.state.data;
   if (!order) return null;
 
   return (
-    <ApproverProvider approverList={order.approverList}>
-      <ApplicantProvider applicantList={order.applicantList}>
-        <GiftProvider giftList={order.giftList}>
-          <MultistepNavigator>
-            <Applicant />
-            <>
-              <SelectUnclaimedGift />
-              <GiftInfo />
-              <GiftList />
-            </>
-          </MultistepNavigator>
-        </GiftProvider>
-      </ApplicantProvider>
-    </ApproverProvider>
+    <OrderContextsProvider order={order} approverList={approverList}>
+      <MultistepNavigator>
+        <Applicant />
+        <>
+          <SelectUnclaimedGift />
+          <GiftInfo />
+          <GiftList />
+        </>
+      </MultistepNavigator>
+    </OrderContextsProvider>
   );
 };
 

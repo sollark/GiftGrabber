@@ -91,18 +91,61 @@ export type ContextMiddleware<S, A> = (
 // ============================================================================
 
 /**
+ * Return type interface for createFunctionalContext factory
+ * Provides complete type safety for all context utilities and hooks
+ */
+export interface FunctionalContextResult<S, A extends FunctionalAction> {
+  Context: React.Context<
+    | {
+        state: S;
+        dispatch: (action: A) => void;
+        getState: () => S;
+      }
+    | undefined
+  >;
+  Provider: React.FC<{
+    children: React.ReactNode;
+    initialState?: Partial<S>;
+  }>;
+  useContext: () => MaybeContext<{
+    state: S;
+    dispatch: (action: A) => void;
+    getState: () => S;
+  }>;
+  useContextResult: () => Result<
+    {
+      state: S;
+      dispatch: (action: A) => void;
+      getState: () => S;
+    },
+    Error
+  >;
+  useSelector: <R>(selector: (state: S) => R) => Maybe<R>;
+  useActions: () => Maybe<{
+    dispatch: (action: A) => void;
+    dispatchSafe: (action: A) => Result<void, Error>;
+    dispatchAsync: (
+      actionCreator: () => Promise<A>
+    ) => Promise<Result<void, Error>>;
+    createAction: (type: string, payload?: any) => A;
+    getState: () => S;
+  }>;
+  name: string;
+}
+
+/**
  * createFunctionalContext (Public API)
  *
  * Factory for creating a functional React context with immutable state, action-based updates, and optional middleware/persistence.
  *
  * @param config ContextConfig<S, A> - Configuration for the context (name, initialState, reducer, middleware, etc.)
- * @returns Object with Context, Provider, hooks, and utilities for the context
+ * @returns FunctionalContextResult<S, A> - Fully typed context utilities and hooks
  * @sideEffects Instantiates React context, may persist state to localStorage
  * @notes Handles error boundaries, middleware, and debug logging internally
  */
 export function createFunctionalContext<S, A extends FunctionalAction>(
   config: ContextConfig<S, A>
-) {
+): FunctionalContextResult<S, A> {
   const {
     name,
     initialState,
@@ -159,27 +202,39 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
       const result = reducer(state, processedAction);
 
       if (result._tag === "Success") {
-        const newState = Object.freeze({
+        const newState = {
           ...result.value,
           lastUpdated: Date.now(),
           version: (state as any).version ? (state as any).version + 1 : 1,
-        });
+        };
+
+        // Only freeze in development for debugging - avoid performance cost in production
+        const finalState = debugMode ? Object.freeze(newState) : newState;
 
         if (debugMode) {
-          console.log("New State:", newState);
+          console.log("New State:", finalState);
           console.groupEnd();
         }
 
-        // Persist if configured
+        // Persist asynchronously to avoid blocking the main thread
         if (persistKey && typeof window !== "undefined") {
-          try {
-            localStorage.setItem(persistKey, JSON.stringify(newState));
-          } catch (error) {
-            console.warn(`Failed to persist ${name} state:`, error);
+          const persistState = () => {
+            try {
+              localStorage.setItem(persistKey, JSON.stringify(finalState));
+            } catch (error) {
+              console.warn(`Failed to persist ${name} state:`, error);
+            }
+          };
+
+          // Use requestIdleCallback for better performance, fallback to setTimeout
+          if (typeof requestIdleCallback !== "undefined") {
+            requestIdleCallback(persistState, { timeout: 1000 });
+          } else {
+            setTimeout(persistState, 0);
           }
         }
 
-        return newState;
+        return finalState;
       } else {
         if (debugMode) {
           console.error("Reducer Error:", result.error);

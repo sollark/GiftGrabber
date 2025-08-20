@@ -67,27 +67,123 @@ export const executeTransaction = async <T>(
 };
 
 // ============================================================================
-// CONNECTION MEMOIZATION
+// CONNECTION MEMOIZATION WITH RESILIENCE
 // ============================================================================
 
 /**
- * Memoized connection promise to avoid redundant database connections.
- * Resets on connection failure for automatic retry.
+ * Configuration for database connection resilience
  */
-let connectionPromise: Promise<void> | null = null;
+interface ConnectionConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
+  timeoutMs: number;
+  circuitBreakerTimeoutMs: number;
+}
+
+const DEFAULT_CONNECTION_CONFIG: ConnectionConfig = {
+  maxRetries: 3,
+  baseDelay: 1000,
+  maxDelay: 10000,
+  timeoutMs: 30000,
+  circuitBreakerTimeoutMs: 60000, // 1 minute circuit breaker
+};
 
 /**
- * Creates or reuses existing database connection promise.
- * @returns Promise<void> - Resolves when connection is established
+ * Memoized connection promise to avoid redundant database connections.
+ * Enhanced with retry logic and circuit breaker pattern.
  */
-const getMemoizedConnection = (): Promise<void> => {
+let connectionPromise: Promise<void> | null = null;
+let failureCount = 0;
+let lastFailureTime = 0;
+
+/**
+ * Attempts database connection with retry logic and exponential backoff.
+ * @param config - Connection configuration options
+ * @returns Promise<void> - Resolves when connection is established
+ * @throws Error when all retries are exhausted or circuit breaker is open
+ */
+const tryConnectWithRetry = async (config: ConnectionConfig): Promise<void> => {
+  let lastError: Error;
+
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      // Race connection attempt against timeout
+      await Promise.race([
+        connectToDatabase(),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Database connection timeout")),
+            config.timeoutMs
+          )
+        ),
+      ]);
+
+      // Reset failure tracking on successful connection
+      failureCount = 0;
+      lastFailureTime = 0;
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Don't delay on final attempt
+      if (attempt < config.maxRetries) {
+        const delay = Math.min(
+          config.baseDelay * Math.pow(2, attempt),
+          config.maxDelay
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError!;
+};
+
+/**
+ * Creates or reuses existing database connection promise with enhanced resilience.
+ * Implements circuit breaker pattern to prevent cascading failures.
+ * @param config - Optional connection configuration (uses defaults if not provided)
+ * @returns Promise<void> - Resolves when connection is established
+ * @throws Error when circuit breaker is open or connection fails after retries
+ */
+const getMemoizedConnection = async (
+  config = DEFAULT_CONNECTION_CONFIG
+): Promise<void> => {
+  const now = Date.now();
+
+  // Circuit breaker - don't retry immediately after multiple failures
+  if (
+    failureCount >= config.maxRetries &&
+    now - lastFailureTime < config.circuitBreakerTimeoutMs
+  ) {
+    throw new Error(
+      `Database connection circuit breaker is open. Last failure: ${new Date(
+        lastFailureTime
+      ).toISOString()}. Retry after: ${new Date(
+        lastFailureTime + config.circuitBreakerTimeoutMs
+      ).toISOString()}`
+    );
+  }
+
+  // Reset circuit breaker if enough time has passed
+  if (
+    failureCount >= config.maxRetries &&
+    now - lastFailureTime >= config.circuitBreakerTimeoutMs
+  ) {
+    failureCount = 0;
+    lastFailureTime = 0;
+  }
+
   if (!connectionPromise) {
-    connectionPromise = connectToDatabase().catch((error) => {
-      // Reset promise on failure to allow retry
+    connectionPromise = tryConnectWithRetry(config).catch((error) => {
       connectionPromise = null;
+      failureCount++;
+      lastFailureTime = now;
       throw error;
     });
   }
+
   return connectionPromise;
 };
 
