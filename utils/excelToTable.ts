@@ -1,12 +1,8 @@
-import * as XLSX from "xlsx";
+import XLSX from "xlsx";
 import parse from "html-react-parser";
 import { ReactNode } from "react";
 import { parseExcelFile } from "./excel_utils";
 import { ExcelImportConfig, ExcelFormatType } from "@/types/excel.types";
-
-/**
- * Configuration constants for the Excel to Table conversion
- */
 import { EXCEL_CONFIG } from "@/config/excelConfig";
 
 /**

@@ -15,7 +15,7 @@
  */
 
 import React from "react";
-import { failure } from "@/utils/fp";
+import { getMaybeOrElse, failure } from "@/utils/fp";
 
 // Enhanced context imports
 import {
@@ -27,7 +27,6 @@ import {
   useGiftSelector,
   useGiftActions,
 } from "@/app/contexts/gift/GiftContext";
-import { getMaybeOrElse } from "@/utils/fp";
 
 import {
   OrderProvider,
