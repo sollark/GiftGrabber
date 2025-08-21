@@ -18,6 +18,12 @@ import EventModel, { Event } from "@/database/models/event.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
+import {
+  populateEventApplicants,
+  populateEventApprovers,
+  populateEvent,
+  populateEventGifts,
+} from "./mongoPopulationService";
 
 /**
  * Standard field selections that include publicId but exclude _id
@@ -153,11 +159,11 @@ export class EventService {
   static async findWithApplicants(
     eventId: string
   ): Promise<Result<Event | null, Error>> {
-    return fromPromise(
-      EventModel.findOne({ eventId }, PUBLIC_FIELD_SELECTIONS.EVENT)
-        .populate(POPULATION_CONFIG.EVENT_APPLICANTS)
-        .exec()
+    const query = EventModel.findOne(
+      { eventId },
+      PUBLIC_FIELD_SELECTIONS.EVENT
     );
+    return fromPromise(populateEventApplicants(query).exec());
   }
 
   /**
@@ -166,11 +172,11 @@ export class EventService {
   static async findWithApprovers(
     eventId: string
   ): Promise<Result<Event | null, Error>> {
-    return fromPromise(
-      EventModel.findOne({ eventId }, PUBLIC_FIELD_SELECTIONS.EVENT)
-        .populate(POPULATION_CONFIG.EVENT_APPROVERS)
-        .exec()
+    const query = EventModel.findOne(
+      { eventId },
+      PUBLIC_FIELD_SELECTIONS.EVENT
     );
+    return fromPromise(populateEventApprovers(query).exec());
   }
 
   /**
@@ -180,18 +186,16 @@ export class EventService {
    * @returns Promise<Result<Person[], Error>> - Array of approver persons with publicIds
    */
   static async getApprovers(eventId: string): Promise<Result<Person[], Error>> {
-    const result = await fromPromise(
-      EventModel.findOne({ eventId }, { approverList: 1 })
-        .populate(POPULATION_CONFIG.EVENT_APPROVERS)
-        .exec()
-    );
+    const query = EventModel.findOne({ eventId }, { approverList: 1 });
+    const result = await fromPromise(populateEventApprovers(query).exec());
 
     if (result._tag === "Failure") {
       return failure(result.error);
     }
 
     // Return empty array if event not found or no approvers
-    return success(result.value?.approverList || []);
+    const event = result.value as any;
+    return success(event?.approverList || []);
   }
 
   /**
@@ -203,18 +207,16 @@ export class EventService {
   static async getApplicants(
     eventId: string
   ): Promise<Result<Person[], Error>> {
-    const result = await fromPromise(
-      EventModel.findOne({ eventId }, { applicantList: 1 })
-        .populate(POPULATION_CONFIG.EVENT_APPLICANTS)
-        .exec()
-    );
+    const query = EventModel.findOne({ eventId }, { applicantList: 1 });
+    const result = await fromPromise(populateEventApplicants(query).exec());
 
     if (result._tag === "Failure") {
       return failure(result.error);
     }
 
     // Return empty array if event not found or no applicants
-    return success(result.value?.applicantList || []);
+    const event = result.value as any;
+    return success(event?.applicantList || []);
   }
 
   /**
@@ -223,15 +225,11 @@ export class EventService {
   static async findWithAllDetails(
     eventId: string
   ): Promise<Result<Event | null, Error>> {
-    return fromPromise(
-      EventModel.findOne({ eventId }, PUBLIC_FIELD_SELECTIONS.EVENT)
-        .populate([
-          POPULATION_CONFIG.EVENT_APPLICANTS,
-          POPULATION_CONFIG.EVENT_APPROVERS,
-          POPULATION_CONFIG.EVENT_GIFTS,
-        ])
-        .exec()
+    const query = EventModel.findOne(
+      { eventId },
+      PUBLIC_FIELD_SELECTIONS.EVENT
     );
+    return fromPromise(populateEvent(query).exec());
   }
 
   /**

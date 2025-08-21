@@ -77,24 +77,3 @@ export type EmailAttachment = {
   content: string;
   encoding: string;
 };
-
-export const createEmailAttachments = (
-  eventQRCodeBase64: string,
-  ownerIdQRCodeBase64: string,
-  config: {
-    EVENT_QR_FILENAME: string;
-    OWNER_QR_FILENAME: string;
-    ENCODING: string;
-  }
-): EmailAttachment[] => [
-  {
-    filename: config.EVENT_QR_FILENAME,
-    content: eventQRCodeBase64,
-    encoding: config.ENCODING,
-  },
-  {
-    filename: config.OWNER_QR_FILENAME,
-    content: ownerIdQRCodeBase64,
-    encoding: config.ENCODING,
-  },
-];

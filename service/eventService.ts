@@ -22,14 +22,6 @@ import {
 /**
  * Validates that an event exists.
  * @param event - The Event object or null.
- * @returns Result<Event, string> - Success if event exists, failure otherwise.
- */
-export const validateEventExists = (
-  event: Event | null
-): Result<Event, string> => {
-  return event ? success(event) : failure("Event not found");
-};
-
 /**
  * Creates person records for a list of person data (applicants or approvers).
  * @param personList - Array of person objects without publicId.
