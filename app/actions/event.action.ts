@@ -15,15 +15,14 @@ import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
 import {
   createEventInternal,
-  validateEventExists,
-  getEventWithApplicants,
-  getEventWithApprovers,
+  fetchEventApprovers,
+  fetchEventApplicants,
   getEventWithDetails,
-  getAllEvents as getAllEventsFromService,
+  fetchAllEvents,
   parseEventData,
 } from "@/service/eventService";
 import { withDatabase } from "@/lib/withDatabase";
-import { failure, Result, success, isSuccess, fromPromise } from "@/utils/fp";
+import { isSuccess } from "@/utils/fp";
 
 /**
  * Logs event-related errors
@@ -92,43 +91,27 @@ export const createEvent = withDatabase(
 );
 
 /**
- * Fetches event applicants with populated applicant data using publicIds.
- * @param eventId - The unique identifier for the event (legacy field)
- * @returns Result<Event, Error> - Success with Event (including publicIds) or Failure with Error
- *
- * Key changes in publicId strategy:
- * - All populated Person documents include publicId
- * - No _id fields are returned
- * - Consistent field selection across all queries
+ * Fetches event applicants list with populated applicant data using publicIds.
+ * Optimized to fetch only applicant data without full event object.
+ * @param eventId - The unique identifier for the event
+ * @returns Promise<Person[]> - Array of applicant persons with publicIds
  */
 export const getEventApplicantsInternal = async (
   eventId: string
-): Promise<Result<Event, Error>> => {
-  console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+): Promise<Person[]> => {
+  try {
+    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
 
-  // Use the refactored service that ensures publicId selection
-  const eventResult = await fromPromise<Event | null, Error>(
-    getEventWithApplicants(eventId) // selectFields ignored - uses publicId selection
-  );
+    // Use optimized service that fetches only applicant list
+    const applicants = await fetchEventApplicants(eventId);
 
-  if (eventResult._tag === "Failure") {
+    // Service already handles null/empty cases and returns empty array
+    return applicants;
+  } catch (error) {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
-    logEventError(
-      eventResult.error instanceof Error
-        ? eventResult.error.message
-        : String(eventResult.error)
-    );
-    return failure(eventResult.error);
+    logEventError(error instanceof Error ? error.message : String(error));
+    return [];
   }
-
-  const validationResult = validateEventExists(eventResult.value);
-  if (validationResult._tag === "Failure") {
-    const err = new Error(validationResult.error);
-    logEventError(err.message);
-    return failure(err);
-  }
-
-  return success(parseEventData(validationResult.value));
 };
 
 /**
@@ -138,6 +121,7 @@ export const getEventApplicants = withDatabase(getEventApplicantsInternal);
 
 /**
  * Fetches event approvers list with populated approver data using publicIds.
+ * Optimized to fetch only approver data without full event object.
  * @param eventId - The unique identifier for the event
  * @returns Promise<Person[]> - Array of approver persons with publicIds
  */
@@ -147,13 +131,11 @@ const getEventApproversInternal = async (
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
 
-    const event = await getEventWithApprovers(eventId); // Uses publicId selection
-    if (!event || !event.approverList) {
-      return [];
-    }
+    // Use optimized service that fetches only approver list
+    const approvers = await fetchEventApprovers(eventId);
 
-    // All returned Person objects now include publicId and exclude _id
-    return event.approverList;
+    // Service already handles null/empty cases and returns empty array
+    return approvers;
   } catch (error) {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPROVERS);
     logEventError(error instanceof Error ? error.message : String(error));
@@ -200,7 +182,7 @@ const getAllEventsInternal = async (): Promise<Event[]> => {
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
 
-    const events = await getAllEventsFromService(); // Uses publicId selection
+    const events = await fetchAllEvents(); // Uses publicId selection
     return events.map((event) => parseEventData(event));
   } catch (error) {
     logEventError(ERROR_MESSAGES.GET_ALL_EVENTS);
@@ -242,22 +224,22 @@ export const getEventByPublicId = withDatabase(
 );
 
 /**
- * NEW: Validation helper for publicIds
+ * Validation helper for publicIds
  * @param publicId - The publicId to validate
  * @returns boolean - Whether the publicId is valid
  */
-export const isValidPublicId = (publicId: string): boolean => {
+const isValidPublicIdInternal = (publicId: string): boolean => {
   // Basic validation - publicIds should be non-empty strings
   // Could be enhanced with format validation for nanoid
   return typeof publicId === "string" && publicId.length > 0;
 };
 
 /**
- * NEW: Safe event data serializer that removes any remaining _id fields
+ * Safe event data serializer that removes any remaining _id fields
  * @param event - Event data to sanitize
  * @returns Event data with only publicId fields
  */
-export const sanitizeEventData = (event: any): any => {
+const sanitizeEventDataInternal = (event: any): any => {
   if (!event) return null;
 
   // Recursively remove any _id fields and ensure publicId presence
@@ -281,9 +263,20 @@ export const sanitizeEventData = (event: any): any => {
   return removeId(sanitized);
 };
 
-// Export configuration for testing and debugging
-export const EVENT_ACTION_CONFIG = {
-  EVENT_CONFIG,
-  LOG_MESSAGES,
-  ERROR_MESSAGES,
-} as const;
+/**
+ * Exported server action wrapper for publicId validation
+ */
+export const isValidPublicId = withDatabase(
+  async (publicId: string): Promise<boolean> => {
+    return isValidPublicIdInternal(publicId);
+  }
+);
+
+/**
+ * Exported server action wrapper for event data sanitization
+ */
+export const sanitizeEventData = withDatabase(
+  async (event: any): Promise<any> => {
+    return sanitizeEventDataInternal(event);
+  }
+);

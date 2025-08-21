@@ -1,5 +1,6 @@
 import { failure, success, Result } from "@/utils/fp";
 import { Event } from "@/database/models/event.model";
+import { Person } from "@/database/models/person.model";
 import { NewPerson } from "@/types/common.types";
 import { CreateEventData, EventFormData } from "@/types/common.types";
 import {
@@ -145,31 +146,29 @@ export const createEventInternal = async (
 };
 
 /**
- * Gets event with populated applicants for service layer.
+ * Gets only approvers list for an event.
+ * Optimized function that fetches only approver data without full event object.
  * @param eventId - The unique identifier for the event.
- * @param selectFields - Fields to select from the event (ignored, using publicId selection).
- * @returns Promise<Event | null> - Event with populated applicants or null.
+ * @returns Promise<Person[]> - Array of approver persons with publicIds.
  */
-export const getEventWithApplicants = async (
-  eventId: string,
-  selectFields?: Record<string, number>
-): Promise<Event | null> => {
-  const result = await DatabaseEventService.findWithApplicants(eventId);
-  return result._tag === "Success" ? result.value : null;
+export const fetchEventApprovers = async (
+  eventId: string
+): Promise<Person[]> => {
+  const result = await DatabaseEventService.getApprovers(eventId);
+  return result._tag === "Success" ? result.value : [];
 };
 
 /**
- * Gets event with populated approvers for service layer.
+ * Gets only applicants list for an event.
+ * Optimized function that fetches only applicant data without full event object.
  * @param eventId - The unique identifier for the event.
- * @param selectFields - Fields to select from the event (ignored, using publicId selection).
- * @returns Promise<Event | null> - Event with populated approvers or null.
+ * @returns Promise<Person[]> - Array of applicant persons with publicIds.
  */
-export const getEventWithApprovers = async (
-  eventId: string,
-  selectFields?: Record<string, number>
-): Promise<Event | null> => {
-  const result = await DatabaseEventService.findWithApprovers(eventId);
-  return result._tag === "Success" ? result.value : null;
+export const fetchEventApplicants = async (
+  eventId: string
+): Promise<Person[]> => {
+  const result = await DatabaseEventService.getApplicants(eventId);
+  return result._tag === "Success" ? result.value : [];
 };
 
 /**
@@ -188,7 +187,7 @@ export const getEventWithDetails = async (
  * Gets all events from the database.
  * @returns Promise<Event[]> - Array of all events.
  */
-export const getAllEvents = async (): Promise<Event[]> => {
+export const fetchAllEvents = async (): Promise<Event[]> => {
   const result = await DatabaseEventService.findAll();
   return result._tag === "Success" ? result.value : [];
 };

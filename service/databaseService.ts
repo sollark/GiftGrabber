@@ -174,6 +174,50 @@ export class EventService {
   }
 
   /**
+   * Get only approvers list for an event by eventId
+   * Optimized query that fetches only approverList field + populated approvers
+   * @param eventId - The unique identifier for the event
+   * @returns Promise<Result<Person[], Error>> - Array of approver persons with publicIds
+   */
+  static async getApprovers(eventId: string): Promise<Result<Person[], Error>> {
+    const result = await fromPromise(
+      EventModel.findOne({ eventId }, { approverList: 1 })
+        .populate(POPULATION_CONFIG.EVENT_APPROVERS)
+        .exec()
+    );
+
+    if (result._tag === "Failure") {
+      return failure(result.error);
+    }
+
+    // Return empty array if event not found or no approvers
+    return success(result.value?.approverList || []);
+  }
+
+  /**
+   * Get only applicants list for an event by eventId
+   * Optimized query that fetches only applicantList field + populated applicants
+   * @param eventId - The unique identifier for the event
+   * @returns Promise<Result<Person[], Error>> - Array of applicant persons with publicIds
+   */
+  static async getApplicants(
+    eventId: string
+  ): Promise<Result<Person[], Error>> {
+    const result = await fromPromise(
+      EventModel.findOne({ eventId }, { applicantList: 1 })
+        .populate(POPULATION_CONFIG.EVENT_APPLICANTS)
+        .exec()
+    );
+
+    if (result._tag === "Failure") {
+      return failure(result.error);
+    }
+
+    // Return empty array if event not found or no applicants
+    return success(result.value?.applicantList || []);
+  }
+
+  /**
    * Find event with all populated relationships by eventId
    */
   static async findWithAllDetails(
@@ -234,13 +278,16 @@ export class EventService {
         giftList: giftDocs.map((doc) => doc._id),
       });
 
-      // Return with only public fields
-      const result = await EventModel.findOne(
-        { _id: eventDoc._id },
-        PUBLIC_FIELD_SELECTIONS.EVENT
-      ).exec();
-
-      return success(result!);
+      // Optimized: Transform to public format directly instead of redundant query
+      return success({
+        publicId: eventDoc.publicId,
+        eventId: eventDoc.eventId,
+        name: eventDoc.name,
+        email: eventDoc.email,
+        ownerId: eventDoc.ownerId,
+        eventQRCodeBase64: eventDoc.eventQRCodeBase64,
+        ownerIdQRCodeBase64: eventDoc.ownerIdQRCodeBase64,
+      } as Event);
     } catch (error) {
       return failure(error as Error);
     }
@@ -388,7 +435,7 @@ export class OrderService {
         confirmationRQCode: orderData.confirmationRQCode,
       });
 
-      // Return with populated fields
+      // Return with populated fields (keeping original approach for type safety)
       const result = await OrderModel.findOne(
         { _id: orderDoc._id },
         PUBLIC_FIELD_SELECTIONS.ORDER
