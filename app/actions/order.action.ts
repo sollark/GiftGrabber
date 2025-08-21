@@ -1,13 +1,11 @@
 "use server";
 
-import { OrderStatus } from "@/types/common.types";
 import { Order } from "@/database/models/order.model";
 import { withDatabase } from "@/lib/withDatabase";
 import {
   createOrderInternal,
   findOrderByPublicId,
   confirmOrderInternal,
-  getAllOrdersInternal,
   serializeOrder,
 } from "@/service/orderService";
 import { OrderCreationPublicData } from "@/types/common.types";

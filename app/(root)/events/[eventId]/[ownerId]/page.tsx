@@ -6,7 +6,7 @@ export default async function EventDetails({
 }: {
   params: Promise<{ eventId: string; ownerId: string }>;
 }) {
-  const { eventId, ownerId } = await params; //
+  const { eventId, ownerId } = await params;
 
   const event = await getEventDetails(eventId);
   if (!event) return <div>Event not found</div>;

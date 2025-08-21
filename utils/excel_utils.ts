@@ -1,16 +1,22 @@
 /**
- * Excel Import Utilities with i18n Support
+ * @file excel_utils.ts
  *
- * This module provides comprehensive Excel file processing capabilities with multi-language
- * header detection and automatic format recognition. It supports English, Hebrew, and Russian
- * headers with performance optimizations including caching and dynamic imports.
+ * Purpose: Comprehensive Excel file processing with multi-language support and automatic format detection.
  *
- * Key Features:
- * - Automatic format detection (CompleteEmployee, BasicName, WorkerIdOnly, PersonIdOnly)
- * - Multi-language header mapping with confidence scoring
- * - Performance-optimized with translation and format detection caching
- * - Localized error messages based on detected language
- * - Type-safe data conversion with validation
+ * Responsibilities:
+ * - Parse Excel files with automatic format detection (CompleteEmployee, BasicName, WorkerIdOnly, PersonIdOnly)
+ * - Provide multi-language header mapping with confidence scoring (English, Hebrew, Russian)
+ * - Implement performance optimizations through caching and dynamic imports
+ * - Generate localized error messages based on detected language
+ * - Convert Excel data to type-safe formats with validation
+ * - Maintain backward compatibility with legacy Person creation workflow
+ *
+ * Architecture:
+ * - Translation Management: Dynamic loading and caching of language files
+ * - Format Detection: Pattern-based detection with confidence scoring
+ * - Data Processing: Type-safe conversion with validation and error handling
+ * - Performance: WeakMap caching for files, Map caching for translations
+ * - Error Handling: Localized messages with fallback to English
  *
  * @module excel_utils
  */
@@ -32,7 +38,45 @@ import {
 } from "@/types/excel.types";
 
 // ============================================================================
-// CACHES AND CONSTANTS
+// CONSTANTS AND CONFIGURATION
+// ============================================================================
+
+/**
+ * Fallback format names in English when translations fail to load.
+ * Provides user-friendly display names for each supported Excel format.
+ */
+const FALLBACK_FORMAT_NAMES = {
+  [ExcelFormatType.COMPLETE_EMPLOYEE]: "Complete Employee Data",
+  [ExcelFormatType.BASIC_NAME]: "Basic Name Information",
+  [ExcelFormatType.EMPLOYEE_ID_ONLY]: "Worker ID List",
+  [ExcelFormatType.PERSON_ID_ONLY]: "Person ID Numbers",
+} as const;
+
+/**
+ * Configuration for format pattern matching.
+ * Defines which fields are required for each format type with confidence scores.
+ */
+const FORMAT_PATTERNS = {
+  [ExcelFormatType.COMPLETE_EMPLOYEE]: {
+    requiredFields: ["id", "firstName", "lastName", "employee_number"],
+    confidence: 1.0,
+  },
+  [ExcelFormatType.BASIC_NAME]: {
+    requiredFields: ["firstName", "lastName"],
+    confidence: 0.9,
+  },
+  [ExcelFormatType.EMPLOYEE_ID_ONLY]: {
+    requiredFields: ["worker_id"],
+    confidence: 0.8,
+  },
+  [ExcelFormatType.PERSON_ID_ONLY]: {
+    requiredFields: ["person_id_number"],
+    confidence: 0.8,
+  },
+} as const;
+
+// ============================================================================
+// CACHES
 // ============================================================================
 
 /**
@@ -47,18 +91,8 @@ const translationCache = new Map<SupportedLanguage, ExcelTranslations>();
  */
 const formatDetectionCache = new WeakMap<File, FormatDetectionResult>();
 
-/**
- * Fallback format names in English when translations fail to load.
- */
-const FALLBACK_FORMAT_NAMES = {
-  [ExcelFormatType.COMPLETE_EMPLOYEE]: "Complete Employee Data",
-  [ExcelFormatType.BASIC_NAME]: "Basic Name Information",
-  [ExcelFormatType.EMPLOYEE_ID_ONLY]: "Worker ID List",
-  [ExcelFormatType.PERSON_ID_ONLY]: "Person ID Numbers",
-} as const;
-
 // ============================================================================
-// UTILITY FUNCTIONS
+// CORE UTILITY FUNCTIONS
 // ============================================================================
 
 /**
@@ -87,12 +121,34 @@ function isEmptyRow(row: Record<string, any>): boolean {
 
 /**
  * Creates a safe error message, ensuring it's always a string.
+ * Handles both Error objects and unknown error types.
  *
  * @param error - Error object or unknown value
  * @returns Error message as string
  */
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
+}
+
+/**
+ * Determines the primary language from header mappings based on successful matches.
+ * Uses the language with the most successful header mappings.
+ *
+ * @param headerMappings - Array of header mappings with language information
+ * @returns Detected primary language code
+ */
+function detectPrimaryLanguage(headerMappings: HeaderMapping[]): string {
+  const languageCount = new Map<string, number>();
+
+  headerMappings.forEach((mapping) => {
+    const count = languageCount.get(mapping.language) || 0;
+    languageCount.set(mapping.language, count + 1);
+  });
+
+  return (
+    Array.from(languageCount.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+    "en"
+  );
 }
 
 // ============================================================================
@@ -117,17 +173,16 @@ async function loadTranslations(
   }
 
   try {
-    // Dynamic import to reduce bundle size
     const translations = await import(
       `@/i18n/locales/${language}/translate.json`
     );
+
     const excelTranslations: ExcelTranslations = {
       excel_headers: translations.default.excel_headers,
       excel_formats: translations.default.excel_formats,
       excel_errors: translations.default.excel_errors,
     };
 
-    // Cache successful load
     translationCache.set(language, excelTranslations);
     return excelTranslations;
   } catch (error) {
@@ -157,14 +212,11 @@ function createHeaderMapping(
 ): Map<string, string> {
   const headerMap = new Map<string, string>();
 
-  // Process each field and its possible header variations
   for (const [fieldName, headers] of Object.entries(
     translations.excel_headers
   )) {
     for (const header of headers) {
-      // Add exact match
       headerMap.set(header, fieldName);
-      // Add case-insensitive match
       headerMap.set(header.toLowerCase(), fieldName);
     }
   }
@@ -192,8 +244,29 @@ export async function mapHeaders(
   const languagesToCheck: SupportedLanguage[] =
     preferredLanguage === "auto" ? ["en", "he", "ru"] : [preferredLanguage];
 
-  // Load all required translations
+  const translationsMap = await loadTranslationMaps(languagesToCheck);
+
+  for (const rawHeader of rawHeaders) {
+    const bestMapping = findBestMappingForHeader(rawHeader, translationsMap);
+    if (bestMapping) {
+      mappings.push(bestMapping);
+    }
+  }
+
+  return mappings;
+}
+
+/**
+ * Loads translation maps for multiple languages efficiently.
+ *
+ * @param languagesToCheck - Array of languages to load translations for
+ * @returns Promise resolving to map of language to header mappings
+ */
+async function loadTranslationMaps(
+  languagesToCheck: SupportedLanguage[]
+): Promise<Map<SupportedLanguage, Map<string, string>>> {
   const translationsMap = new Map<SupportedLanguage, Map<string, string>>();
+
   for (const lang of languagesToCheck) {
     try {
       const translations = await loadTranslations(lang);
@@ -204,27 +277,34 @@ export async function mapHeaders(
     }
   }
 
-  // Find best mapping for each header
-  for (const rawHeader of rawHeaders) {
-    let bestMapping: HeaderMapping | null = null;
+  return translationsMap;
+}
 
-    for (const [lang, headerMap] of translationsMap.entries()) {
-      const mapping = findBestHeaderMatch(rawHeader, headerMap, lang);
+/**
+ * Finds the best mapping for a single header across all available languages.
+ *
+ * @param rawHeader - The header string to map
+ * @param translationsMap - Map of language to header mappings
+ * @returns Best header mapping or null if no match found
+ */
+function findBestMappingForHeader(
+  rawHeader: string,
+  translationsMap: Map<SupportedLanguage, Map<string, string>>
+): HeaderMapping | null {
+  let bestMapping: HeaderMapping | null = null;
 
-      if (
-        mapping &&
-        (!bestMapping || mapping.confidence > bestMapping.confidence)
-      ) {
-        bestMapping = mapping;
-      }
-    }
+  for (const [lang, headerMap] of translationsMap.entries()) {
+    const mapping = findBestHeaderMatch(rawHeader, headerMap, lang);
 
-    if (bestMapping) {
-      mappings.push(bestMapping);
+    if (
+      mapping &&
+      (!bestMapping || mapping.confidence > bestMapping.confidence)
+    ) {
+      bestMapping = mapping;
     }
   }
 
-  return mappings;
+  return bestMapping;
 }
 
 /**
@@ -241,29 +321,19 @@ function findBestHeaderMatch(
   headerMap: Map<string, string>,
   language: SupportedLanguage
 ): HeaderMapping | null {
-  // Try exact match first (highest confidence)
+  // Exact match (highest confidence)
   let mappedField = headerMap.get(rawHeader.trim());
   if (mappedField) {
-    return {
-      originalHeader: rawHeader,
-      normalizedField: mappedField,
-      language,
-      confidence: 1.0,
-    };
+    return createMappingResult(rawHeader, mappedField, language, 1.0);
   }
 
-  // Try case-insensitive match
+  // Case-insensitive match
   mappedField = headerMap.get(normalizeHeader(rawHeader));
   if (mappedField) {
-    return {
-      originalHeader: rawHeader,
-      normalizedField: mappedField,
-      language,
-      confidence: 0.9,
-    };
+    return createMappingResult(rawHeader, mappedField, language, 0.9);
   }
 
-  // Try partial matching (lowest confidence)
+  // Partial matching (lowest confidence)
   const normalizedInput = normalizeHeader(rawHeader);
   for (const [headerKey, fieldValue] of headerMap.entries()) {
     const normalizedKey = normalizeHeader(headerKey);
@@ -271,12 +341,7 @@ function findBestHeaderMatch(
       normalizedKey.includes(normalizedInput) ||
       normalizedInput.includes(normalizedKey)
     ) {
-      return {
-        originalHeader: rawHeader,
-        normalizedField: fieldValue,
-        language,
-        confidence: 0.7,
-      };
+      return createMappingResult(rawHeader, fieldValue, language, 0.7);
     }
   }
 
@@ -284,24 +349,26 @@ function findBestHeaderMatch(
 }
 
 /**
- * Determines the primary language from header mappings based on successful matches.
- * Uses the language with the most successful header mappings.
+ * Creates a HeaderMapping object with the provided parameters.
  *
- * @param headerMappings - Array of header mappings with language information
- * @returns Detected primary language code
+ * @param originalHeader - The original header string
+ * @param normalizedField - The normalized field name
+ * @param language - The language used for mapping
+ * @param confidence - The confidence score of the mapping
+ * @returns HeaderMapping object
  */
-function detectPrimaryLanguage(headerMappings: HeaderMapping[]): string {
-  const languageCount = new Map<string, number>();
-
-  headerMappings.forEach((mapping) => {
-    const count = languageCount.get(mapping.language) || 0;
-    languageCount.set(mapping.language, count + 1);
-  });
-
-  return (
-    Array.from(languageCount.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-    "en"
-  );
+function createMappingResult(
+  originalHeader: string,
+  normalizedField: string,
+  language: SupportedLanguage,
+  confidence: number
+): HeaderMapping {
+  return {
+    originalHeader,
+    normalizedField,
+    language,
+    confidence,
+  };
 }
 
 // ============================================================================
@@ -325,8 +392,7 @@ export async function detectExcelFormat(
   const mappedFields = new Set(headerMappings.map((m) => m.normalizedField));
   const detectedLanguage = detectPrimaryLanguage(headerMappings);
 
-  // Check format patterns in order of specificity
-  const formatResult = checkFormatPatterns(
+  const formatResult = detectFormatPattern(
     mappedFields,
     headers,
     detectedLanguage
@@ -336,19 +402,15 @@ export async function detectExcelFormat(
     return formatResult;
   }
 
-  // No recognized format - throw localized error
   await throwLocalizedFormatError(
     headers,
     detectedLanguage as SupportedLanguage
   );
-
-  // This line should never be reached since throwLocalizedFormatError always throws
-  // But TypeScript requires it to satisfy the return type
-  throw new Error("Format detection failed");
+  throw new Error("Format detection failed"); // This line should never be reached
 }
 
 /**
- * Checks mapped fields against known format patterns.
+ * Checks mapped fields against known format patterns using the configuration.
  * Returns the first matching format with appropriate confidence score.
  *
  * @param mappedFields - Set of normalized field names
@@ -356,54 +418,20 @@ export async function detectExcelFormat(
  * @param detectedLanguage - Primary detected language
  * @returns FormatDetectionResult or null if no pattern matches
  */
-function checkFormatPatterns(
+function detectFormatPattern(
   mappedFields: Set<string>,
   headers: string[],
   detectedLanguage: string
 ): FormatDetectionResult | null {
-  // Complete employee format (most specific)
-  if (
-    mappedFields.has("id") &&
-    mappedFields.has("firstName") &&
-    mappedFields.has("lastName") &&
-    mappedFields.has("employee_number")
-  ) {
-    return {
-      formatType: ExcelFormatType.COMPLETE_EMPLOYEE,
-      confidence: 1.0,
-      detectedHeaders: headers,
-      language: detectedLanguage,
-    };
-  }
-
-  // Basic name format
-  if (mappedFields.has("firstName") && mappedFields.has("lastName")) {
-    return {
-      formatType: ExcelFormatType.BASIC_NAME,
-      confidence: 0.9,
-      detectedHeaders: headers,
-      language: detectedLanguage,
-    };
-  }
-
-  // Employee ID only format
-  if (mappedFields.has("worker_id")) {
-    return {
-      formatType: ExcelFormatType.EMPLOYEE_ID_ONLY,
-      confidence: 0.8,
-      detectedHeaders: headers,
-      language: detectedLanguage,
-    };
-  }
-
-  // Person ID only format
-  if (mappedFields.has("person_id_number")) {
-    return {
-      formatType: ExcelFormatType.PERSON_ID_ONLY,
-      confidence: 0.8,
-      detectedHeaders: headers,
-      language: detectedLanguage,
-    };
+  for (const [formatType, pattern] of Object.entries(FORMAT_PATTERNS)) {
+    if (pattern.requiredFields.every((field) => mappedFields.has(field))) {
+      return {
+        formatType: formatType as ExcelFormatType,
+        confidence: pattern.confidence,
+        detectedHeaders: headers,
+        language: detectedLanguage,
+      };
+    }
   }
 
   return null;
@@ -500,7 +528,7 @@ function convertRowToFormat(
 
 /**
  * Validates a converted record based on format-specific requirements.
- * Checks that all required fields for the format type contain non-empty values.
+ * Uses the configuration pattern to determine required fields dynamically.
  *
  * @param record - Converted record to validate
  * @param formatType - Format type defining required fields
@@ -510,31 +538,13 @@ function validateRecord(
   record: ExcelImportFormat,
   formatType: ExcelFormatType
 ): boolean {
-  switch (formatType) {
-    case ExcelFormatType.COMPLETE_EMPLOYEE:
-      const complete = record as CompleteEmployeeFormat;
-      return !!(
-        complete.id &&
-        complete.firstName &&
-        complete.lastName &&
-        complete.employee_number
-      );
+  const pattern = FORMAT_PATTERNS[formatType];
+  if (!pattern) return false;
 
-    case ExcelFormatType.BASIC_NAME:
-      const basic = record as BasicNameFormat;
-      return !!(basic.firstName && basic.lastName);
-
-    case ExcelFormatType.EMPLOYEE_ID_ONLY:
-      const worker = record as WorkerIdOnlyFormat;
-      return !!worker.worker_id;
-
-    case ExcelFormatType.PERSON_ID_ONLY:
-      const person = record as PersonIdOnlyFormat;
-      return !!person.person_id_number;
-
-    default:
-      return false;
-  }
+  return pattern.requiredFields.every((fieldName) => {
+    const value = (record as any)[fieldName];
+    return value && value.toString().trim() !== "";
+  });
 }
 
 // ============================================================================
@@ -542,67 +552,70 @@ function validateRecord(
 // ============================================================================
 
 /**
- * Creates a localized error message for missing required fields.
- * Falls back to English message if translation loading fails.
- *
- * @param rowIndex - Zero-based row index for error context
- * @param language - Language for error message
- * @returns Promise resolving to localized error message
+ * Creates localized error messages for various error types.
+ * Provides a unified interface for generating error messages with fallbacks.
  */
-async function createMissingFieldsError(
-  rowIndex: number,
-  language: SupportedLanguage
-): Promise<string> {
-  try {
-    const translations = await loadTranslations(language);
-    return translations.excel_errors.missing_required_fields.replace(
-      "{{row}}",
-      (rowIndex + 1).toString()
-    );
-  } catch (translationError) {
-    return `Row ${rowIndex + 1}: Missing required fields`;
+class ErrorMessageFactory {
+  /**
+   * Creates a localized error message for missing required fields.
+   *
+   * @param rowIndex - Zero-based row index for error context
+   * @param language - Language for error message
+   * @returns Promise resolving to localized error message
+   */
+  static async createMissingFieldsError(
+    rowIndex: number,
+    language: SupportedLanguage
+  ): Promise<string> {
+    try {
+      const translations = await loadTranslations(language);
+      return translations.excel_errors.missing_required_fields.replace(
+        "{{row}}",
+        (rowIndex + 1).toString()
+      );
+    } catch {
+      return `Row ${rowIndex + 1}: Missing required fields`;
+    }
   }
-}
 
-/**
- * Creates a localized error message for row processing errors.
- * Falls back to English message if translation loading fails.
- *
- * @param rowIndex - Zero-based row index for error context
- * @param error - Original error that occurred
- * @param language - Language for error message
- * @returns Promise resolving to localized error message
- */
-async function createProcessingError(
-  rowIndex: number,
-  error: unknown,
-  language: SupportedLanguage
-): Promise<string> {
-  try {
-    const translations = await loadTranslations(language);
-    return translations.excel_errors.processing_error
-      .replace("{{row}}", (rowIndex + 1).toString())
-      .replace("{{error}}", getErrorMessage(error));
-  } catch (translationError) {
-    return `Row ${rowIndex + 1}: ${getErrorMessage(error)}`;
+  /**
+   * Creates a localized error message for row processing errors.
+   *
+   * @param rowIndex - Zero-based row index for error context
+   * @param error - Original error that occurred
+   * @param language - Language for error message
+   * @returns Promise resolving to localized error message
+   */
+  static async createProcessingError(
+    rowIndex: number,
+    error: unknown,
+    language: SupportedLanguage
+  ): Promise<string> {
+    try {
+      const translations = await loadTranslations(language);
+      return translations.excel_errors.processing_error
+        .replace("{{row}}", (rowIndex + 1).toString())
+        .replace("{{error}}", getErrorMessage(error));
+    } catch {
+      return `Row ${rowIndex + 1}: ${getErrorMessage(error)}`;
+    }
   }
-}
 
-/**
- * Creates a localized error message for empty files.
- * Falls back to English message if translation loading fails.
- *
- * @param language - Language for error message
- * @returns Promise resolving to localized error message
- */
-async function createEmptyFileError(
-  language: SupportedLanguage
-): Promise<string> {
-  try {
-    const translations = await loadTranslations(language);
-    return translations.excel_errors.empty_file;
-  } catch (translationError) {
-    return "Excel file is empty or invalid";
+  /**
+   * Creates a localized error message for empty files.
+   *
+   * @param language - Language for error message
+   * @returns Promise resolving to localized error message
+   */
+  static async createEmptyFileError(
+    language: SupportedLanguage
+  ): Promise<string> {
+    try {
+      const translations = await loadTranslations(language);
+      return translations.excel_errors.empty_file;
+    } catch {
+      return "Excel file is empty or invalid";
+    }
   }
 }
 
@@ -631,16 +644,16 @@ export async function parseExcelFile(
 ): Promise<ExcelImportResult> {
   // Check cache for previously detected format
   const cachedResult = formatDetectionCache.get(file);
-  let formatResult: FormatDetectionResult;
+  const formatResult =
+    cachedResult && !config.language
+      ? cachedResult
+      : await detectFormatFromFile(file, config);
 
-  if (cachedResult && !config.language) {
-    formatResult = cachedResult;
-  } else {
-    formatResult = await detectFormatFromFile(file, config);
+  if (!cachedResult) {
     formatDetectionCache.set(file, formatResult);
   }
 
-  // Process Excel data
+  // Import and process Excel data
   const { convertExcelToJson } = await import("@/utils/excelToJson");
   const jsonData = await convertExcelToJson(file);
 
@@ -648,7 +661,7 @@ export async function parseExcelFile(
   const headers = Object.keys(jsonData[0]);
   const headerMappings = await mapHeaders(headers, config.language);
 
-  // Process all rows
+  // Process all rows with conversion, validation, and error handling
   const { convertedData, validRecords, errors } = await processExcelRows(
     jsonData,
     formatResult,
@@ -684,7 +697,9 @@ async function detectFormatFromFile(
   if (!jsonData || jsonData.length === 0) {
     const language =
       config.language && config.language !== "auto" ? config.language : "en";
-    const errorMessage = await createEmptyFileError(language);
+    const errorMessage = await ErrorMessageFactory.createEmptyFileError(
+      language
+    );
     throw new Error(errorMessage);
   }
 
@@ -694,6 +709,7 @@ async function detectFormatFromFile(
 
 /**
  * Processes all Excel rows with conversion, validation, and error handling.
+ * Implements efficient row processing with comprehensive error tracking.
  *
  * @param jsonData - Raw Excel data as array of objects
  * @param formatResult - Detected format information
@@ -732,21 +748,26 @@ async function processExcelRows(
         headerMappings
       );
 
-      // Validate if required
-      if (config.validateRequired) {
-        if (validateRecord(convertedRow, formatResult.formatType)) {
-          convertedData.push(convertedRow);
-          validRecords++;
-        } else {
-          const errorMessage = await createMissingFieldsError(i, language);
-          errors.push(errorMessage);
-        }
-      } else {
+      const isValid =
+        !config.validateRequired ||
+        validateRecord(convertedRow, formatResult.formatType);
+
+      if (isValid) {
         convertedData.push(convertedRow);
         validRecords++;
+      } else {
+        const errorMessage = await ErrorMessageFactory.createMissingFieldsError(
+          i,
+          language
+        );
+        errors.push(errorMessage);
       }
     } catch (error) {
-      const errorMessage = await createProcessingError(i, error, language);
+      const errorMessage = await ErrorMessageFactory.createProcessingError(
+        i,
+        error,
+        language
+      );
       errors.push(errorMessage);
     }
   }
@@ -773,7 +794,7 @@ export async function getFormatDisplayName(
   try {
     const translations = await loadTranslations(language);
     return translations.excel_formats[formatType] || formatType;
-  } catch (error) {
+  } catch {
     return FALLBACK_FORMAT_NAMES[formatType] || formatType;
   }
 }
@@ -793,43 +814,53 @@ export async function getExpectedHeaders(
 ): Promise<string[]> {
   try {
     const translations = await loadTranslations(language);
-
-    switch (formatType) {
-      case ExcelFormatType.COMPLETE_EMPLOYEE:
-        return [
-          translations.excel_headers.id[0],
-          translations.excel_headers.firstName[0],
-          translations.excel_headers.lastName[0],
-          translations.excel_headers.employee_number[0],
-        ];
-      case ExcelFormatType.BASIC_NAME:
-        return [
-          translations.excel_headers.firstName[0],
-          translations.excel_headers.lastName[0],
-        ];
-      case ExcelFormatType.EMPLOYEE_ID_ONLY:
-        return [translations.excel_headers.worker_id[0]];
-      case ExcelFormatType.PERSON_ID_ONLY:
-        return [translations.excel_headers.person_id_number[0]];
-      default:
-        return [];
-    }
-  } catch (error) {
-    // Fallback to English headers
-    if (language !== "en") {
-      return getExpectedHeaders(formatType, "en");
-    }
-    return [];
+    return getHeadersForFormat(formatType, translations);
+  } catch {
+    return language !== "en" ? getExpectedHeaders(formatType, "en") : [];
   }
 }
 
+/**
+ * Extracts header names for a specific format from translations.
+ *
+ * @param formatType - Excel format type
+ * @param translations - Translation object
+ * @returns Array of header names for the format
+ */
+function getHeadersForFormat(
+  formatType: ExcelFormatType,
+  translations: ExcelTranslations
+): string[] {
+  const headerMap = {
+    [ExcelFormatType.COMPLETE_EMPLOYEE]: [
+      translations.excel_headers.id[0],
+      translations.excel_headers.firstName[0],
+      translations.excel_headers.lastName[0],
+      translations.excel_headers.employee_number[0],
+    ],
+    [ExcelFormatType.BASIC_NAME]: [
+      translations.excel_headers.firstName[0],
+      translations.excel_headers.lastName[0],
+    ],
+    [ExcelFormatType.EMPLOYEE_ID_ONLY]: [
+      translations.excel_headers.worker_id[0],
+    ],
+    [ExcelFormatType.PERSON_ID_ONLY]: [
+      translations.excel_headers.person_id_number[0],
+    ],
+  };
+
+  return headerMap[formatType] || [];
+}
+
 // ============================================================================
-// LEGACY COMPATIBILITY FUNCTION
+// LEGACY COMPATIBILITY
 // ============================================================================
 
 /**
- * Converts Excel file to NewPerson array format.
- * Maps different Excel formats to proper Person fields for creation.
+ * Converts Excel file to NewPerson array format for backward compatibility.
+ * Maps different Excel formats to proper Person fields for database creation.
+ * This function maintains compatibility with the legacy person creation workflow.
  *
  * @param file - Excel file to process
  * @returns Promise resolving to array of NewPerson objects or null on error
@@ -844,43 +875,53 @@ export async function excelFileToPersonList(
       validateRequired: false,
     });
 
-    return result.data.map((record): NewPerson => {
-      const person: NewPerson = {
-        sourceFormat: result.formatType,
-      };
-
-      switch (result.formatType) {
-        case ExcelFormatType.COMPLETE_EMPLOYEE:
-          const complete = record as CompleteEmployeeFormat;
-          person.firstName = complete.firstName || "";
-          person.lastName = complete.lastName || "";
-          person.employeeId = complete.employee_number || "";
-          break;
-
-        case ExcelFormatType.BASIC_NAME:
-          const basic = record as BasicNameFormat;
-          person.firstName = basic.firstName || "";
-          person.lastName = basic.lastName || "";
-          break;
-
-        case ExcelFormatType.EMPLOYEE_ID_ONLY:
-          const worker = record as WorkerIdOnlyFormat;
-          person.employeeId = worker.worker_id || "";
-          break;
-
-        case ExcelFormatType.PERSON_ID_ONLY:
-          const personId = record as PersonIdOnlyFormat;
-          person.personId = personId.person_id_number || "";
-          break;
-
-        default:
-          break;
-      }
-
-      return person;
-    });
+    return result.data.map(
+      (record): NewPerson => convertRecordToPerson(record, result.formatType)
+    );
   } catch (error) {
     console.error("Excel file processing failed:", error);
     return null;
   }
+}
+
+/**
+ * Converts a single Excel record to NewPerson format based on the detected format type.
+ * Handles all supported Excel formats and maps fields appropriately.
+ *
+ * @param record - Excel record in detected format
+ * @param formatType - The detected Excel format type
+ * @returns NewPerson object with mapped fields
+ */
+function convertRecordToPerson(
+  record: ExcelImportFormat,
+  formatType: ExcelFormatType
+): NewPerson {
+  const person: NewPerson = { sourceFormat: formatType };
+
+  switch (formatType) {
+    case ExcelFormatType.COMPLETE_EMPLOYEE:
+      const complete = record as CompleteEmployeeFormat;
+      person.firstName = complete.firstName || "";
+      person.lastName = complete.lastName || "";
+      person.employeeId = complete.employee_number || "";
+      break;
+
+    case ExcelFormatType.BASIC_NAME:
+      const basic = record as BasicNameFormat;
+      person.firstName = basic.firstName || "";
+      person.lastName = basic.lastName || "";
+      break;
+
+    case ExcelFormatType.EMPLOYEE_ID_ONLY:
+      const worker = record as WorkerIdOnlyFormat;
+      person.employeeId = worker.worker_id || "";
+      break;
+
+    case ExcelFormatType.PERSON_ID_ONLY:
+      const personId = record as PersonIdOnlyFormat;
+      person.personId = personId.person_id_number || "";
+      break;
+  }
+
+  return person;
 }

@@ -36,9 +36,6 @@ import {
 import { sendMailToClient } from "@/service/mailService";
 
 /**
- * Main CreateEventForm component
- */
-/**
  * Main CreateEventForm component.
  * Public API.
  * Renders the event creation form, handles submission, and coordinates all event creation logic.
@@ -51,25 +48,6 @@ const CreateEventForm: FC = () => {
   const eventActions = useEventActions();
   const applicantActions = useApplicantActions();
   const approverActions = useApproverActions();
-  // const [formatInfo, setFormatInfo] = useState<{
-  //   applicantFormat?: string;
-  //   approverFormat?: string;
-  //   detectedLanguage?: string;
-  // }>({});
-
-  /**
-   * Handles format detection from file upload
-   */
-  // const handleFormatDetected = useCallback(
-  //   (detectedFormatInfo: {
-  //     applicantFormat?: string;
-  //     approverFormat?: string;
-  //     detectedLanguage?: string;
-  //   }) => {
-  //     setFormatInfo(detectedFormatInfo);
-  //   },
-  //   []
-  // );
 
   const eventId = useMemo(generateEventId, []);
   const ownerId = useMemo(generateOwnerId, []);

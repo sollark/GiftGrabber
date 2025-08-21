@@ -175,12 +175,10 @@ export const getEventWithApprovers = async (
 /**
  * Gets event with full details including all populated fields.
  * @param eventId - The unique identifier for the event.
- * @param selectFields - Fields to select from the event (ignored, using publicId selection).
  * @returns Promise<Event | null> - Event with all relationships populated or null.
  */
 export const getEventWithDetails = async (
-  eventId: string,
-  selectFields?: Record<string, number>
+  eventId: string
 ): Promise<Event | null> => {
   const result = await DatabaseEventService.findWithAllDetails(eventId);
   return result._tag === "Success" ? result.value : null;
