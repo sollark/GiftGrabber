@@ -1,4 +1,29 @@
 /**
+ * event.action.ts
+ *
+ * Purpose: Server actions for event management with secure public ID operations and type-safe error handling
+ *
+ * Main Responsibilities:
+ * - Provides server-side actions for event creation, retrieval, and management
+ * - Implements secure public ID strategy preventing internal ObjectId exposure
+ * - Handles complex event data operations with Result<T, E> pattern for error handling
+ * - Manages event-related data fetching with proper population and field selection
+ * - Coordinates event operations with associated applicants, approvers, and gifts
+ *
+ * Architecture Role:
+ * - Server action layer bridging client requests with business logic services
+ * - Security boundary ensuring only public IDs are exposed to client code
+ * - Type-safe interface between form submissions and database operations
+ * - Foundation for event management workflows and data access patterns
+ * - Critical component in event lifecycle management and access control
+ *
+ * @businessLogic
+ * - All external APIs use publicId while keeping internal _id operations hidden
+ * - Event operations maintain referential integrity with Person and Gift entities
+ * - Error handling provides meaningful feedback without exposing internal details
+ * - Database operations are wrapped with connection management and error boundaries
+ * - Consistent field selection ensures only necessary data is transmitted to clients
+ *
  * @file event.action.refactored.ts
  * @description Refactored Event Actions using PublicId Strategy
  *

@@ -1,4 +1,30 @@
 /**
+ * CreateEventForm.tsx
+ *
+ * Purpose: Comprehensive form component for event creation with Excel import, QR generation, and email integration
+ *
+ * Main Responsibilities:
+ * - Handles complete event creation workflow from form input to database persistence
+ * - Manages Excel file uploads for applicant and approver data import
+ * - Generates QR codes for event access and owner verification
+ * - Validates form data and processes multi-format Excel imports
+ * - Coordinates email delivery with QR codes and event details
+ * - Manages complex form state with multiple file inputs and validation steps
+ *
+ * Architecture Role:
+ * - Central component orchestrating event creation business logic
+ * - Integration point between UI form components and backend services
+ * - Coordinates multiple context providers for form state management
+ * - Bridge between file processing utilities and database services
+ * - Critical component in event organizer onboarding workflow
+ *
+ * @businessLogic
+ * - Generates unique event and owner IDs for security and identification
+ * - Processes Excel files with automatic format detection and validation
+ * - Creates QR codes linking to event pages and owner verification
+ * - Sends confirmation emails with embedded QR codes for offline access
+ * - Validates all input data before database operations
+ *
  * File: CreateEventForm.tsx
  * Purpose: UI and logic for creating a new event, including form handling, validation, QR code generation, and event creation.
  * Responsibilities:

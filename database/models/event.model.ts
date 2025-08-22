@@ -1,3 +1,23 @@
+/**
+ * event.model.ts
+ *
+ * Purpose: Mongoose model definition for Event entities representing gift exchange events
+ *
+ * Main Responsibilities:
+ * - Defines Event schema as container for all event-related entities (applicants, gifts, approvers)
+ * - Manages event metadata: owner information, QR codes, and contact details
+ * - Aggregates references to Person, Gift, and Order collections for event-specific data
+ * - Provides QR code storage for event access and owner verification
+ * - Supports event-based access control and permission management
+ *
+ * Architecture Role:
+ * - Top-level aggregate root for gift exchange event boundaries
+ * - Links event owner to all participants through applicant/approver lists
+ * - Stores QR codes for mobile-friendly event access and verification
+ * - Enables event-scoped queries for all related entities (gifts, orders, participants)
+ * - Central entity for event lifecycle management and multi-tenant isolation
+ */
+
 import { Schema, Types, model, models } from "mongoose";
 import { nanoid } from "nanoid";
 import { Person } from "./person.model";

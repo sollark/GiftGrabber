@@ -1,4 +1,30 @@
 /**
+ * excel_utils.ts
+ *
+ * Purpose: Advanced Excel file processing engine with multi-language support and intelligent format detection
+ *
+ * Main Responsibilities:
+ * - Processes Excel files with automatic format detection across 4 distinct schemas
+ * - Implements multi-language header mapping with confidence scoring (English, Hebrew, Russian)
+ * - Provides performance-optimized parsing with caching and dynamic imports
+ * - Generates localized error messages and validation feedback
+ * - Converts Excel data to type-safe Person objects with format preservation
+ * - Maintains backward compatibility while supporting new Excel import patterns
+ *
+ * Architecture Role:
+ * - Core data ingestion layer for bulk person import workflows
+ * - Bridge between raw Excel data and application Person entities
+ * - Foundation for internationalization in Excel processing workflows
+ * - Performance-critical component supporting large-scale data imports
+ * - Translation management system with dynamic language loading
+ *
+ * @businessLogic
+ * - Supports 4 Excel formats: CompleteEmployee, BasicName, WorkerIdOnly, PersonIdOnly
+ * - Automatic language detection through header analysis with confidence scoring
+ * - Format detection prioritizes more complete data formats for better accuracy
+ * - Caching strategies optimize repeated file processing and translation loading
+ * - Error handling provides detailed feedback for data validation and format issues
+ *
  * @file excel_utils.ts
  *
  * Purpose: Comprehensive Excel file processing with multi-language support and automatic format detection.

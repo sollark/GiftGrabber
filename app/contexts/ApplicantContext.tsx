@@ -1,4 +1,29 @@
 /**
+ * ApplicantContext.tsx
+ *
+ * Purpose: Functional React context for applicant selection and management with type-safe operations
+ *
+ * Main Responsibilities:
+ * - Manages applicant list state and individual applicant selection
+ * - Provides type-safe applicant selection with Maybe types for null safety
+ * - Implements functional programming patterns with immutable state updates
+ * - Offers middleware integration for logging, validation, and persistence
+ * - Enables safe applicant operations with proper error handling
+ *
+ * Architecture Role:
+ * - Core context for gift recipient management throughout the application
+ * - Foundation for gift assignment and order creation workflows
+ * - Provides isolated state management for applicant-specific operations
+ * - Enables component-level applicant selection without prop drilling
+ * - Critical for multi-step gift selection and order processing flows
+ *
+ * @businessLogic
+ * - Maintains list of eligible gift recipients (applicants) for events
+ * - Tracks currently selected applicant for gift assignment operations
+ * - Validates applicant data integrity through type guards
+ * - Prevents duplicate applicant entries in the list
+ * - Supports applicant clearing for workflow resets
+ *
  * ApplicantContext: Functional context for managing applicant state and actions.
  * Follows functional programming principles: immutability, pure functions, composable hooks.
  * Provides: ApplicantProvider, useApplicantContext, useApplicantSelector, useApplicantActions, useApplicantSelection.

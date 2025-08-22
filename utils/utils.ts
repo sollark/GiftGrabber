@@ -1,12 +1,38 @@
+/**
+ * utils.ts
+ *
+ * Purpose: Common utility functions for file processing, ID generation, and data transformations
+ *
+ * Main Responsibilities:
+ * - Provides safe file-to-base64 conversion with functional error handling
+ * - Generates unique identifiers for events, owners, and orders using custom alphabets
+ * - Offers Excel file processing utilities with format detection and validation
+ * - Implements gift comparison and list manipulation utilities for context operations
+ * - Supports QR code generation and processing for mobile functionality
+ *
+ * Architecture Role:
+ * - Foundation utility layer used across components, services, and contexts
+ * - Implements functional programming patterns with Result types for safe operations
+ * - Provides business-specific ID generation algorithms for security and usability
+ * - Bridges file handling between browser APIs and application data models
+ * - Enables data transformation pipelines for Excel import and export workflows
+ */
+
 import { customAlphabet } from "nanoid";
 import { convertExcelToJson } from "./excelToJson";
 import { excelToTable } from "./excelToTable";
 import { tryAsync } from "./fp";
 
 /**
- * Converts a File to a base64 string using functional error handling.
- * Returns a Promise<Result<string, Error>>.
- * Pure function: no side effects outside of FileReader API.
+ * Safely converts a File object to base64 string with functional error handling
+ *
+ * @param file - File object to convert to base64 representation
+ * @returns Promise<Result<string, Error>> - Success with base64 string or Failure with conversion error
+ *
+ * @sideEffects Uses FileReader API which reads file content into memory
+ * @performance O(n) where n is file size - entire file loaded into memory for conversion
+ * @notes Returns full data URL with MIME type prefix (e.g., "data:image/png;base64,...")
+ * @publicAPI Used for image uploads, QR code processing, and file attachment handling
  */
 export const convertFileToBase64 = tryAsync<[File], string>(async function (
   file: File
@@ -28,8 +54,14 @@ export const convertFileToBase64 = tryAsync<[File], string>(async function (
 });
 
 /**
- * Generates a unique event ID using a custom alphabet.
- * Pure function.
+ * Generates cryptographically secure unique event identifier
+ *
+ * @returns String containing 10-character event ID using custom alphabet
+ *
+ * @sideEffects None - pure function using nanoid's secure random generation
+ * @performance O(1) - constant time generation with nanoid algorithm
+ * @businessLogic Uses "1234567890event" alphabet for URL-safe, readable event IDs
+ * @publicAPI Used for event creation and URL routing in event management workflows
  */
 export function generateEventId(): string {
   const nanoid = customAlphabet("1234567890event", 10);
@@ -37,8 +69,14 @@ export function generateEventId(): string {
 }
 
 /**
- * Generates a unique owner ID using a custom alphabet.
- * Pure function.
+ * Generates cryptographically secure unique owner identifier
+ *
+ * @returns String containing 5-character owner ID using custom alphabet
+ *
+ * @sideEffects None - pure function using nanoid's secure random generation
+ * @performance O(1) - constant time generation with nanoid algorithm
+ * @businessLogic Uses "1234567890owner" alphabet for shorter owner identification codes
+ * @publicAPI Used for event owner identification and access control mechanisms
  */
 export function generateOwnerId(): string {
   const nanoid = customAlphabet("1234567890owner", 5);

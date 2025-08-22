@@ -1,3 +1,23 @@
+/**
+ * gift.model.ts
+ *
+ * Purpose: Mongoose model definition for Gift entities representing claimable items in events
+ *
+ * Main Responsibilities:
+ * - Defines Gift schema with ownership and assignment tracking
+ * - Manages gift lifecycle: created for owner → assigned to applicant → included in order
+ * - Provides public ID strategy for secure external API access
+ * - Maintains referential relationships with Person (owner/applicant) and Order models
+ * - Supports efficient queries for gift availability and assignment status
+ *
+ * Architecture Role:
+ * - Central entity connecting Person owners to Person applicants through gift claims
+ * - Tracks gift state progression through null → applicant → order workflow
+ * - Uses optimized indexes for real-time availability queries during gift selection
+ * - Referenced by Order model for gift aggregation and by UI components for selection
+ * - Enables business logic for gift claiming, order creation, and conflict resolution
+ */
+
 import { Schema, Types, model, models } from "mongoose";
 import { nanoid } from "nanoid";
 import { Order } from "./order.model";

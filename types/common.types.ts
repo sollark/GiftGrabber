@@ -1,11 +1,21 @@
 /**
  * common.types.ts
- * Purpose: Common utility types and interfaces used across multiple modules
- * Responsibilities: Defines utility types, service interfaces, and component props
- * Architecture: Imports from database models but doesn't redefine them
+ *
+ * Purpose: Centralized type definitions for cross-module utility types and service interfaces
+ *
+ * Main Responsibilities:
+ * - Provides utility types for database entity manipulation (WithoutId, ObjectId aliases)
+ * - Defines service layer interfaces for event creation and data processing
+ * - Establishes component prop types for reusable UI components
+ * - Declares configuration types for Excel import/export functionality
+ *
+ * Architecture Role:
+ * - Acts as a type bridge between database models and application logic
+ * - Imported by service layers, components, and context providers
+ * - Avoids redefining database model types, preferring composition over duplication
+ * - Follows functional programming patterns with immutable data structures
  */
 
-import { Person } from "@/database/models/person.model";
 import { ExcelFormatType } from "@/types/excel.types";
 import { Types } from "mongoose";
 
@@ -147,9 +157,15 @@ export interface EmailPayload {
 // ============================================================================
 
 /**
- * Type guard to check if an object has a valid ObjectId _id field
- * @param obj - Object to check
- * @returns True if object has _id as ObjectId, false otherwise
+ * Runtime type guard to validate ObjectId presence in objects
+ *
+ * @param obj - Any object to type-check for ObjectId _id field
+ * @returns Boolean indicating if object has valid ObjectId _id property
+ *
+ * @sideEffects None - pure function with no external state changes
+ * @performance O(1) - single validation check using mongoose Types.ObjectId.isValid
+ * @notes Critical for runtime type safety when working with database entities
+ * @publicAPI Used throughout service layer for input validation
  */
 export const hasObjectId = (obj: unknown): obj is { _id: ObjectId } => {
   return (
@@ -161,9 +177,15 @@ export const hasObjectId = (obj: unknown): obj is { _id: ObjectId } => {
 };
 
 /**
- * Type guard to check if an object is a Mongoose document
- * @param obj - Object to check
- * @returns True if object is a Mongoose document with toObject method
+ * Runtime type guard to identify Mongoose document instances
+ *
+ * @param obj - Any object to check for Mongoose document characteristics
+ * @returns Boolean indicating if object is a Mongoose document with toObject method
+ *
+ * @sideEffects None - pure function performing only type checks
+ * @performance O(1) - validates method presence and ObjectId in single pass
+ * @notes Essential for distinguishing between plain objects and Mongoose documents
+ * @publicAPI Used in data transformation and serialization contexts
  */
 export const isMongooseDocument = (
   obj: unknown

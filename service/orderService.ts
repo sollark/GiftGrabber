@@ -1,4 +1,29 @@
 /**
+ * orderService.ts
+ *
+ * Purpose: Business logic service for order management with secure public ID operations
+ *
+ * Main Responsibilities:
+ * - Provides high-level order creation and management operations
+ * - Implements order workflow from gift selection to confirmation
+ * - Manages order status transitions and approver assignments
+ * - Handles secure order operations using public IDs instead of internal ObjectIds
+ * - Coordinates between gift claiming, order creation, and notification workflows
+ *
+ * Architecture Role:
+ * - Business logic layer above database service for order operations
+ * - Orchestrates complex order workflows involving multiple entities
+ * - Provides public API surface for order management with security boundaries
+ * - Integrates order operations with gift assignment and approver workflows
+ * - Central service for order lifecycle management and status tracking
+ *
+ * @businessLogic
+ * - Orders aggregate multiple gifts for single applicant with approval workflow
+ * - Public ID strategy prevents enumeration attacks on order data
+ * - Order status progression: PENDING → processing → COMPLETE/CANCELLED
+ * - Approver assignment enables hierarchical approval workflows
+ * - QR code integration supports mobile-friendly order verification
+ *
  * Order Service - Unified Implementation with Centralized Population
  *
  * This service provides business logic for order operations using the PublicId Strategy

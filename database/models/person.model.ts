@@ -1,3 +1,23 @@
+/**
+ * person.model.ts
+ *
+ * Purpose: Mongoose model definition for Person entities in the gift management system
+ *
+ * Main Responsibilities:
+ * - Defines Person schema with public ID strategy for external API safety
+ * - Supports multiple Excel import formats for flexible data ingestion
+ * - Provides optimized database indexes for common query patterns
+ * - Handles person identification through employeeId, personId, or names
+ * - Maintains referential integrity with Gift and Order models
+ *
+ * Architecture Role:
+ * - Core entity model representing gift recipients and event participants
+ * - Uses nanoid for public-facing identifiers to avoid exposing MongoDB ObjectIds
+ * - Supports multi-format Excel imports through sourceFormat field
+ * - Referenced by Gift model (owner/applicant) and Order model (applicant)
+ * - Optimized for autocomplete, search, and bulk import operations
+ */
+
 import { Schema, Types, model, models } from "mongoose";
 import { nanoid } from "nanoid";
 import { ExcelFormatType } from "@/types/excel.types";

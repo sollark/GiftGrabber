@@ -1,6 +1,28 @@
 /**
  * EventContext.tsx
  *
+ * Purpose: Functional React context for event-scoped state management with middleware integration
+ *
+ * Main Responsibilities:
+ * - Manages event identification state using functional programming patterns
+ * - Provides type-safe event state mutations through pure reducer functions
+ * - Integrates logging and persistence middleware for state change tracking
+ * - Offers selector-based access patterns for efficient component re-rendering
+ * - Implements error boundary integration for robust error handling
+ *
+ * Architecture Role:
+ * - Central event scoping mechanism for multi-tenant gift management system
+ * - Foundation for other contexts that require event-specific data isolation
+ * - Uses functional context utilities for immutable state management
+ * - Enables URL-based event routing and deep linking capabilities
+ * - Provides event boundary for access control and data segregation
+ *
+ * @businessLogic
+ * - Event context stores only eventId to avoid state duplication with server data
+ * - State changes are logged and persisted for debugging and recovery
+ * - Immutable state updates prevent accidental mutations and enable time travel debugging
+ * - Error boundaries ensure event context failures don't crash entire application
+ *
  * Purpose: Provides a functional, type-safe React context for managing event-related state and actions.
  * Responsibilities:
  *   - Encapsulates event state and transitions using a pure reducer and functional context utilities.
@@ -55,6 +77,17 @@ export interface EventAction extends FunctionalAction {
  * @param eventId - Optional initial eventId
  * @returns {EventState}
  */
+/**
+ * Creates initial event state with optional eventId parameter
+ *
+ * @param eventId - Optional event identifier string, defaults to empty string
+ * @returns EventState object with provided eventId and default loading/error state
+ *
+ * @sideEffects None - pure function creating immutable state object
+ * @performance O(1) - simple object creation with timestamp
+ * @notes Used for context initialization and state reset operations
+ * @internalAPI Helper function for reducer and context setup
+ */
 const createInitialState = (eventId: string = ""): EventState => ({
   data: { eventId },
   loading: false,
@@ -64,12 +97,26 @@ const createInitialState = (eventId: string = ""): EventState => ({
 });
 
 /**
- * eventReducer
- * Pure reducer for event state transitions.
- * Only handles eventId - no other event data should be stored.
- * @param state - Current EventState
- * @param action - EventAction to apply
- * @returns {Result<EventState, Error>} New state or error
+ * Pure reducer function for event state transitions with type-safe action handling
+ *
+ * @param state - Current EventState containing eventId and metadata
+ * @param action - EventAction specifying state transition type and payload
+ * @returns Result<EventState, Error> - Success with new state or Failure with validation error
+ *
+ * @sideEffects None - pure function with immutable state updates
+ * @performance O(1) - simple state transformations with validation
+ *
+ * @businessLogic
+ * - SET_EVENT_ID: Validates payload is string and updates eventId only
+ * - RESET_EVENT: Returns clean initial state for context cleanup
+ * - Unknown actions return failure for type safety and debugging
+ *
+ * @notes
+ * - Only handles eventId storage to avoid state duplication with server data
+ * - Validation ensures type safety at runtime for action payloads
+ * - Immutable updates enable time travel debugging and predictable state changes
+ *
+ * @internalAPI Core reducer used by functional context utilities
  */
 const eventReducer = (
   state: EventState,

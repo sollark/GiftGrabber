@@ -1,5 +1,20 @@
 /**
- * TypeScript types for Excel import formats and i18n integration
+ * excel.types.ts
+ *
+ * Purpose: Type definitions for Excel file import/export functionality with i18n support
+ *
+ * Main Responsibilities:
+ * - Defines standardized Excel format types for various employee data structures
+ * - Provides type-safe interfaces for different Excel import formats (complete, basic, ID-only)
+ * - Establishes format detection and validation result types
+ * - Supports multi-language Excel files through i18n integration
+ * - Enables batch processing of Excel data with confidence scoring
+ *
+ * Architecture Role:
+ * - Bridge between raw Excel data and application Person models
+ * - Used by Excel parsing utilities, import services, and validation systems
+ * - Supports format auto-detection with confidence metrics
+ * - Enables type-safe transformation of Excel rows to Person entities
  */
 
 import { Person } from "@/database/models/person.model";
@@ -139,7 +154,15 @@ export interface ExcelTranslations {
 }
 
 /**
- * Type guard to check if data matches CompleteEmployeeFormat
+ * Runtime type guard for complete employee Excel format validation
+ *
+ * @param data - Raw Excel import data to validate against CompleteEmployeeFormat schema
+ * @returns Boolean indicating if data contains all required complete employee fields
+ *
+ * @sideEffects None - pure function with no state mutations
+ * @performance O(1) - validates presence of 4 required fields
+ * @notes Essential for format detection during Excel import process
+ * @publicAPI Used by Excel parsing utilities and validation pipelines
  */
 export function isCompleteEmployeeFormat(
   data: ExcelImportFormat
@@ -149,7 +172,15 @@ export function isCompleteEmployeeFormat(
 }
 
 /**
- * Type guard to check if data matches BasicNameFormat
+ * Runtime type guard for basic name Excel format validation
+ *
+ * @param data - Raw Excel import data to validate against BasicNameFormat schema
+ * @returns Boolean indicating if data contains required first and last name fields
+ *
+ * @sideEffects None - pure function with no state mutations
+ * @performance O(1) - validates presence of 2 required fields
+ * @notes Used for simple name-only Excel imports without employee data
+ * @publicAPI Used by Excel parsing utilities and validation pipelines
  */
 export function isBasicNameFormat(
   data: ExcelImportFormat
@@ -159,7 +190,15 @@ export function isBasicNameFormat(
 }
 
 /**
- * Type guard to check if data matches WorkerIdOnlyFormat
+ * Runtime type guard for worker ID-only Excel format validation
+ *
+ * @param data - Raw Excel import data to validate against WorkerIdOnlyFormat schema
+ * @returns Boolean indicating if data contains required worker_id field
+ *
+ * @sideEffects None - pure function with no state mutations
+ * @performance O(1) - validates presence of single required field
+ * @notes Used for importing worker identification lists without personal details
+ * @publicAPI Used by Excel parsing utilities and validation pipelines
  */
 export function isWorkerIdOnlyFormat(
   data: ExcelImportFormat
@@ -169,7 +208,15 @@ export function isWorkerIdOnlyFormat(
 }
 
 /**
- * Type guard to check if data matches PersonIdOnlyFormat
+ * Runtime type guard for person ID-only Excel format validation
+ *
+ * @param data - Raw Excel import data to validate against PersonIdOnlyFormat schema
+ * @returns Boolean indicating if data contains required person_id_number field
+ *
+ * @sideEffects None - pure function with no state mutations
+ * @performance O(1) - validates presence of single required field
+ * @notes Used for importing citizen identification lists without personal details
+ * @publicAPI Used by Excel parsing utilities and validation pipelines
  */
 export function isPersonIdOnlyFormat(
   data: ExcelImportFormat

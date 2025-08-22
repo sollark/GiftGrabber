@@ -1,3 +1,23 @@
+/**
+ * order.model.ts
+ *
+ * Purpose: Mongoose model definition for Order entities representing gift claim transactions
+ *
+ * Main Responsibilities:
+ * - Defines Order schema with applicant, gifts, and approval workflow tracking
+ * - Manages order lifecycle: creation → pending → approval → confirmation
+ * - Provides QR code integration for mobile-friendly order verification
+ * - Maintains audit trail with timestamps and approver tracking
+ * - Supports order status management through OrderStatus enumeration
+ *
+ * Architecture Role:
+ * - Aggregates multiple Gift entities into single transaction unit
+ * - Links Person applicant to their claimed gifts with approval workflow
+ * - Stores QR code data for offline/mobile order verification scenarios
+ * - Uses optimized indexes for real-time order tracking and approval dashboards
+ * - Central entity for business reporting and gift distribution analytics
+ */
+
 import { Schema, Types, model, models } from "mongoose";
 import { nanoid } from "nanoid";
 import { OrderStatus } from "@/types/common.types";

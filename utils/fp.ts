@@ -1,13 +1,39 @@
 /**
+ * fp.ts
+ *
+ * Purpose: Core functional programming utilities providing type-safe error handling and data flow
+ *
+ * Main Responsibilities:
+ * - Implements Result<T, E> monad for explicit error handling without exceptions
+ * - Provides Maybe<T> type for safe null/undefined handling
+ * - Offers function composition utilities for complex data transformations
+ * - Enables async operation chaining with automatic error propagation
+ * - Supports functional programming patterns across the application
+ *
+ * Architecture Role:
+ * - Foundation layer for all service operations and context state management
+ * - Eliminates runtime errors through compile-time type safety
+ * - Enables predictable error paths in async operations (database, API calls)
+ * - Used by database services, context providers, and validation systems
+ * - Promotes immutable data patterns and pure function composition
+ */
+
+/**
  * Example usage of fromPromise in a React hook:
  *
  *   const result = await fromPromise(fetchDataAsync());
  *   if (isSuccess(result)) { ... } else { ... }
  */
 /**
- * Converts a Promise<T> to a Promise<Result<T, E>>
- * @param promise - The promise to convert
- * @returns Promise<Result<T, E>>
+ * Converts a Promise to a Result type for safe async operations
+ *
+ * @param promise - Promise<T> to convert to Result-based async operation
+ * @returns Promise<Result<T, E>> that never throws, errors are captured in Failure
+ *
+ * @sideEffects None - wraps promise execution without side effects
+ * @performance Minimal overhead - single try/catch wrapper around promise execution
+ * @notes Essential for database operations and API calls to avoid unhandled rejections
+ * @publicAPI Core utility used throughout service layer and async hooks
  */
 export async function fromPromise<T, E = Error>(
   promise: Promise<T>
@@ -41,7 +67,15 @@ export interface Failure<E> {
 }
 
 /**
- * Creates a success result
+ * Creates a Success result containing a successful value
+ *
+ * @param value - The successful value of type T to wrap
+ * @returns Success<T> result with the provided value
+ *
+ * @sideEffects None - pure function creating immutable data structure
+ * @performance O(1) - simple object creation
+ * @notes Part of Result monad constructor functions
+ * @publicAPI Used throughout application for successful operation results
  */
 export const success = <T>(value: T): Success<T> => ({
   _tag: "Success",
@@ -49,7 +83,15 @@ export const success = <T>(value: T): Success<T> => ({
 });
 
 /**
- * Creates a failure result
+ * Creates a Failure result containing an error value
+ *
+ * @param error - The error value of type E to wrap
+ * @returns Failure<E> result with the provided error
+ *
+ * @sideEffects None - pure function creating immutable data structure
+ * @performance O(1) - simple object creation
+ * @notes Part of Result monad constructor functions for error cases
+ * @publicAPI Used throughout application for failed operation results
  */
 export const failure = <E>(error: E): Failure<E> => ({
   _tag: "Failure",
@@ -57,7 +99,15 @@ export const failure = <E>(error: E): Failure<E> => ({
 });
 
 /**
- * Creates a failure result (pure function)
+ * Creates a failure result with never success type for type inference
+ *
+ * @param error - The error value of type E to wrap
+ * @returns Result<never, E> that can only represent failure
+ *
+ * @sideEffects None - pure function creating immutable data structure
+ * @performance O(1) - simple object creation
+ * @notes Useful for early returns in error scenarios with proper type inference
+ * @publicAPI Helper function for error handling in complex operations
  */
 export const createFailure = <E = Error>(error: E): Result<never, E> =>
   failure(error);

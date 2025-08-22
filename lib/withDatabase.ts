@@ -1,3 +1,23 @@
+/**
+ * withDatabase.ts
+ *
+ * Purpose: Enhanced database middleware providing functional error handling and connection management
+ *
+ * Main Responsibilities:
+ * - Wraps database operations with automatic connection establishment
+ * - Implements Result<T, E> pattern for type-safe database error handling
+ * - Provides transaction management utilities for complex database operations
+ * - Offers memoized connection caching for performance optimization
+ * - Enables composable database operation patterns with pure functions
+ *
+ * Architecture Role:
+ * - Foundation layer for all database-dependent operations
+ * - Eliminates boilerplate connection handling in service layers
+ * - Provides consistent error handling across all database interactions
+ * - Enables functional composition of complex database workflows
+ * - Critical infrastructure for server actions and API routes
+ */
+
 import { connectToDatabase } from "@/database/connect";
 import { Result, success, failure, tryAsync } from "@/utils/fp";
 
@@ -11,10 +31,31 @@ import { Result, success, failure, tryAsync } from "@/utils/fp";
 // ============================================================================
 
 /**
- * Enhanced higher-order function that ensures database connection and returns Result
- * with memoized connection optimization.
- * @param fn - The server action function to wrap with database connection
- * @returns Wrapped function that returns Result<T, Error>
+ * Higher-order function ensuring database connection with Result-based error handling
+ *
+ * @param fn - Server action function to wrap with automatic database connection
+ * @returns Function returning Result<R, Error> instead of throwing exceptions
+ *
+ * @sideEffects
+ * - Establishes database connection if not already connected
+ * - Modifies global mongoose connection state
+ *
+ * @performance
+ * - Uses memoized connection to avoid redundant connection attempts
+ * - Connection pooling optimizes database resource usage
+ * - Minimal overhead for already-connected scenarios
+ *
+ * @businessLogic
+ * - Ensures database availability before any database operation
+ * - Converts thrown exceptions to Result.Failure for consistent error handling
+ * - Enables functional composition of database operations
+ *
+ * @notes
+ * - Critical wrapper for all server actions requiring database access
+ * - Eliminates need for manual connection management in business logic
+ * - Enables type-safe error handling without try/catch blocks
+ *
+ * @publicAPI Core utility used by service layers and server actions
  */
 export function withDatabaseResult<T extends any[], R>(
   fn: (...args: T) => Promise<R>
@@ -31,10 +72,25 @@ export function withDatabaseResult<T extends any[], R>(
 }
 
 /**
- * Database operation with automatic connection and Result handling
- * using memoized connection.
- * @param operation - Database operation to execute
- * @returns Result<T, Error>
+ * Executes database operation with automatic connection and Result-based error handling
+ *
+ * @param operation - Database operation function to execute with connection
+ * @returns Promise<Result<T, Error>> with operation result or connection/execution error
+ *
+ * @sideEffects
+ * - Establishes database connection if needed
+ * - Executes provided database operation
+ *
+ * @performance
+ * - Leverages memoized connection for optimal performance
+ * - Single operation execution with minimal middleware overhead
+ *
+ * @notes
+ * - Convenience wrapper for single database operations
+ * - Alternative to withDatabaseResult for immediate execution
+ * - Ideal for one-off database queries in utility functions
+ *
+ * @publicAPI Utility function for immediate database operation execution
  */
 export const executeWithDatabase = <T>(
   operation: () => Promise<T>
