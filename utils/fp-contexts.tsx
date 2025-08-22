@@ -26,6 +26,7 @@ import {
   success,
   failure,
   objectUtils,
+  memoize,
 } from "@/utils/fp";
 import { useSafeContext } from "../app/hooks/useSafeContext";
 
@@ -347,8 +348,15 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   const useSelector = <R extends any>(selector: (state: S) => R): Maybe<R> => {
     const context = useContext();
 
-    // Memoize selector to prevent unnecessary re-computations
-    const memoizedSelector = React.useCallback(selector, []);
+    // Enhanced memoization using existing memoize utility with function string key
+    const memoizedSelector = React.useMemo(
+      () =>
+        memoize(selector, {
+          getKey: () => selector.toString(),
+          maxSize: 50,
+        }),
+      [selector]
+    );
 
     return React.useMemo(() => {
       if (context._tag === "Some") {

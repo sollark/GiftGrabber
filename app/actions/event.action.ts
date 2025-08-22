@@ -21,8 +21,8 @@ import {
   fetchAllEvents,
   parseEventData,
 } from "@/service/eventService";
-import { withDatabase } from "@/lib/withDatabase";
-import { isSuccess } from "@/utils/fp";
+import { withDatabase, withDatabaseResult } from "@/lib/withDatabase";
+import { Result, isSuccess, mapError, flatMap, failure } from "@/utils/fp";
 
 /**
  * Logs event-related errors
@@ -79,16 +79,29 @@ const ERROR_MESSAGES = {
  * Server action for creating new events with applicants and gifts.
  * Now ensures all related entities get publicIds and no _id exposure.
  * @param event EventCreationData - Event data from form
- * @returns boolean - Success status
+ * @returns Result<boolean, string> - Result with success status or error message
  * @sideEffects Creates database records with publicIds, sends confirmation emails
  */
-export const createEvent = withDatabase(
-  async (event: any): Promise<boolean> => {
+export const createEvent = async (
+  event: any
+): Promise<Result<boolean, string>> => {
+  const databaseResult = await withDatabaseResult(async () => {
     console.log(LOG_MESSAGES.EVENT_CREATED, event.name);
-    const result = await createEventInternal(event);
-    return isSuccess(result) && result.value === true;
+    return await createEventInternal(event);
+  })();
+
+  // Handle nested Result and convert Error to string
+  if (isSuccess(databaseResult)) {
+    const innerResult = databaseResult.value;
+    if (isSuccess(innerResult)) {
+      return innerResult;
+    } else {
+      return failure(innerResult.error);
+    }
+  } else {
+    return failure(databaseResult.error.message);
   }
-);
+};
 
 /**
  * Fetches event applicants list with populated applicant data using publicIds.

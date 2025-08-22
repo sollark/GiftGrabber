@@ -1,4 +1,4 @@
-import { failure, success, Result } from "@/utils/fp";
+import { failure, success, Result, flatMap, map } from "@/utils/fp";
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
 import { NewPerson } from "@/types/common.types";
@@ -17,68 +17,21 @@ import {
  * - _id is kept internal to the database layer
  * - Consistent field selection across all operations
  * - Type-safe operations with Result<T, E> pattern
+ * - Direct service imports for better maintainability
  */
 
 /**
  * Validates that an event exists.
  * @param event - The Event object or null.
-/**
- * Creates person records for a list of person data (applicants or approvers).
- * @param personList - Array of person objects without publicId.
- * @returns Promise<Result<string[], Error>> - Result with array of created person publicIds.
+ * @returns boolean - True if event is valid, false otherwise.
  */
-export const createPersonList = async (
-  personList: NewPerson[]
-): Promise<Result<string[], Error>> => {
-  return PersonService.createMany(personList);
-};
-
-/**
- * Creates gift records for a list of applicant publicIds.
- * @param applicantPublicIds - Array of applicant publicIds.
- * @returns Promise<Result<string[], Error>> - Result with array of created gift publicIds.
- */
-export const createGiftList = async (
-  applicantPublicIds: string[]
-): Promise<Result<string[], Error>> => {
-  return GiftService.createForApplicants(applicantPublicIds);
-};
-
-/**
- * Creates the actual event record in the database using publicIds.
- * @param eventData - Object containing all event creation fields and related publicIds.
- * @returns Promise<Result<Event, Error>> - Result with the created Event document.
- */
-const createEventRecord = async (
-  eventData: CreateEventData
-): Promise<Result<Event, Error>> => {
-  const {
-    name,
-    email,
-    eventId,
-    ownerId,
-    eventQRCodeBase64,
-    ownerIdQRCodeBase64,
-    applicantIds,
-    giftIds,
-    approverIds,
-  } = eventData;
-
-  return DatabaseEventService.create({
-    name,
-    email,
-    eventId,
-    ownerId,
-    eventQRCodeBase64,
-    ownerIdQRCodeBase64,
-    applicantPublicIds: applicantIds,
-    approverPublicIds: approverIds,
-    giftPublicIds: giftIds,
-  });
+const validateEvent = (event: Event | null): boolean => {
+  return event !== null;
 };
 
 /**
  * Orchestrates creation of a new event with all related applicants, approvers, and gifts.
+ * Enhanced with direct service calls and functional Result composition.
  * @param event - The event form data containing all necessary information.
  * @returns Promise<Result<boolean, string>> - Success if event was created, failure with error message otherwise.
  */
@@ -96,42 +49,48 @@ export const createEventInternal = async (
     approverList,
   } = event;
 
-  // Create applicants and approvers
-  const applicantResult = await createPersonList(applicantList);
+  // Use parallel processing for better performance and direct service calls
+  const [applicantResult, approverResult] = await Promise.all([
+    PersonService.createMany(applicantList),
+    PersonService.createMany(approverList),
+  ]);
+
+  // Enhanced error handling with Result composition
   if (applicantResult._tag === "Failure") {
-    console.error(applicantResult.error);
+    console.error("Failed to create applicants:", applicantResult.error);
     return failure("Failed to create applicants");
   }
 
-  const approverResult = await createPersonList(approverList);
   if (approverResult._tag === "Failure") {
-    console.error(approverResult.error);
+    console.error("Failed to create approvers:", approverResult.error);
     return failure("Failed to create approvers");
   }
 
-  // Create gifts for applicants
-  const giftResult = await createGiftList(applicantResult.value);
+  // Create gifts for applicants using direct service call
+  const giftResult = await GiftService.createForApplicants(
+    applicantResult.value
+  );
   if (giftResult._tag === "Failure") {
-    console.error(giftResult.error);
+    console.error("Failed to create gifts:", giftResult.error);
     return failure("Failed to create gifts");
   }
 
-  const eventData: CreateEventData = {
+  // Create event record using direct service call
+  const eventResult = await DatabaseEventService.create({
     name,
     email,
     eventId,
     ownerId,
     eventQRCodeBase64,
     ownerIdQRCodeBase64,
-    applicantIds: applicantResult.value,
-    giftIds: giftResult.value,
-    approverIds: approverResult.value,
-  };
+    applicantPublicIds: applicantResult.value,
+    approverPublicIds: approverResult.value,
+    giftPublicIds: giftResult.value,
+  });
 
-  const eventResult = await createEventRecord(eventData);
   if (eventResult._tag === "Failure") {
-    console.error(eventResult.error);
-    return failure("Failed to create event record");
+    console.error("Failed to create event:", eventResult.error);
+    return failure("Failed to create event");
   }
 
   return success(true);

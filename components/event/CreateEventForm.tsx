@@ -1,6 +1,11 @@
 /**
  * File: CreateEventForm.tsx
- * Purpose: UI and logic for creating a new event, including form handling, validation, QR code generation, and event creation.
+ * Purpose:const CreateEventForm: FC = () => {
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  
+  // Use composed context hook for better separation of concerns
+  const contextActions = useEventFormContexts(); logic for creating a new event, including form handling, validation, QR code generation, and event creation.
  * Responsibilities:
  *   - Renders the event creation form and handles user input.
  *   - Validates and processes form data.
@@ -25,9 +30,7 @@ import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/utils/qrcodeUtils";
-import { useEventActions } from "@/app/contexts/EventContext";
-import { useApplicantActions } from "@/app/contexts/ApplicantContext";
-import { useApproverActions } from "@/app/contexts/ApproverContext";
+import { useEventFormContexts } from "@/utils/context-composers";
 import {
   FORM_CONFIG,
   BASE_URL,
@@ -44,10 +47,9 @@ import { sendMailToClient } from "@/service/mailService";
 const CreateEventForm: FC = () => {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string>("");
-  // Context action hooks
-  const eventActions = useEventActions();
-  const applicantActions = useApplicantActions();
-  const approverActions = useApproverActions();
+
+  // Use composed context hook for better separation of concerns
+  const contextActions = useEventFormContexts();
 
   const eventId = useMemo(generateEventId, []);
   const ownerId = useMemo(generateOwnerId, []);
@@ -111,18 +113,20 @@ const CreateEventForm: FC = () => {
       const qrCodes = qrResult.value;
 
       // --- Validate contexts before saving data ---
-      if (
-        eventActions._tag === "None" ||
-        applicantActions._tag === "None" ||
-        approverActions._tag === "None"
-      ) {
+      if (contextActions._tag === "None") {
         setErrorMessage("Context not available. Please refresh the page.");
         return;
       }
 
+      const {
+        event: eventActions,
+        applicant: applicantActions,
+        approver: approverActions,
+      } = contextActions.value;
+
       // --- Save data to contexts ---
       // Save event id to EventContext (only the eventId string)
-      const eventResult = eventActions.value.dispatchSafe({
+      const eventResult = eventActions.dispatchSafe({
         type: "SET_EVENT_ID",
         payload: eventId, // Pass eventId string directly, not object
       });
@@ -132,7 +136,7 @@ const CreateEventForm: FC = () => {
       }
 
       // Save applicant list to ApplicantContext
-      const applicantResult = applicantActions.value.dispatchSafe({
+      const applicantResult = applicantActions.dispatchSafe({
         type: "SET_EVENT_APPLICANTS",
         payload: { applicantList: processedData.applicantList },
       });
@@ -142,7 +146,7 @@ const CreateEventForm: FC = () => {
       }
 
       // Save approver list to ApproverContext
-      const approverResult = approverActions.value.dispatchSafe({
+      const approverResult = approverActions.dispatchSafe({
         type: "SET_EVENT_APPROVERS",
         payload: { approverList: processedData.approverList },
       });
@@ -177,7 +181,7 @@ const CreateEventForm: FC = () => {
         setErrorMessage(ERROR_MESSAGES.EVENT_CREATION_ERROR);
       }
     },
-    [eventId, ownerId, router]
+    [eventId, ownerId, router, contextActions]
   );
 
   return (
