@@ -143,11 +143,20 @@ export const createEventInternal = async (
  * @param eventId - The unique identifier for the event.
  * @returns Promise<Person[]> - Array of approver persons with publicIds.
  */
+
 export const fetchEventApprovers = async (
   eventId: string
-): Promise<Person[]> => {
-  const result = await DatabaseEventService.getApprovers(eventId);
-  return result._tag === "Success" ? result.value : [];
+): Promise<Result<Person[], Error>> => {
+  try {
+    const result = await DatabaseEventService.getApprovers(eventId);
+    if (result._tag === "Success") {
+      return success(result.value);
+    } else {
+      return failure(result.error);
+    }
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**
@@ -156,11 +165,20 @@ export const fetchEventApprovers = async (
  * @param eventId - The unique identifier for the event.
  * @returns Promise<Person[]> - Array of applicant persons with publicIds.
  */
+
 export const fetchEventApplicants = async (
   eventId: string
-): Promise<Person[]> => {
-  const result = await DatabaseEventService.getApplicants(eventId);
-  return result._tag === "Success" ? result.value : [];
+): Promise<Result<Person[], Error>> => {
+  try {
+    const result = await DatabaseEventService.getApplicants(eventId);
+    if (result._tag === "Success") {
+      return success(result.value);
+    } else {
+      return failure(result.error);
+    }
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**
@@ -168,20 +186,42 @@ export const fetchEventApplicants = async (
  * @param eventId - The unique identifier for the event.
  * @returns Promise<Event | null> - Event with all relationships populated or null.
  */
+
 export const getEventWithDetails = async (
   eventId: string
-): Promise<Event | null> => {
-  const result = await DatabaseEventService.findWithAllDetails(eventId);
-  return result._tag === "Success" ? result.value : null;
+): Promise<Result<Event, Error>> => {
+  try {
+    const result = await DatabaseEventService.findWithAllDetails(eventId);
+    if (result._tag === "Success") {
+      if (result.value) {
+        return success(result.value);
+      } else {
+        return failure(new Error(`Event with id ${eventId} not found`));
+      }
+    } else {
+      return failure(result.error);
+    }
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**
  * Gets all events from the database.
  * @returns Promise<Event[]> - Array of all events.
  */
-export const fetchAllEvents = async (): Promise<Event[]> => {
-  const result = await DatabaseEventService.findAll();
-  return result._tag === "Success" ? result.value : [];
+
+export const fetchAllEvents = async (): Promise<Result<Event[], Error>> => {
+  try {
+    const result = await DatabaseEventService.findAll();
+    if (result._tag === "Success") {
+      return success(result.value);
+    } else {
+      return failure(result.error);
+    }
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**

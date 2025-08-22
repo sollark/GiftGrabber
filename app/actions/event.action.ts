@@ -99,17 +99,17 @@ export const createEvent = withDatabase(
 export const getEventApplicantsInternal = async (
   eventId: string
 ): Promise<Person[]> => {
-  try {
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-
-    // Use optimized service that fetches only applicant list
-    const applicants = await fetchEventApplicants(eventId);
-
-    // Service already handles null/empty cases and returns empty array
-    return applicants;
-  } catch (error) {
+  console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+  const result = await fetchEventApplicants(eventId);
+  if (isSuccess(result)) {
+    return result.value;
+  } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
-    logEventError(error instanceof Error ? error.message : String(error));
+    logEventError(
+      result.error instanceof Error
+        ? result.error.message
+        : String(result.error)
+    );
     return [];
   }
 };
@@ -128,17 +128,17 @@ export const getEventApplicants = withDatabase(getEventApplicantsInternal);
 const getEventApproversInternal = async (
   eventId: string
 ): Promise<Person[]> => {
-  try {
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-
-    // Use optimized service that fetches only approver list
-    const approvers = await fetchEventApprovers(eventId);
-
-    // Service already handles null/empty cases and returns empty array
-    return approvers;
-  } catch (error) {
+  console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+  const result = await fetchEventApprovers(eventId);
+  if (isSuccess(result)) {
+    return result.value;
+  } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPROVERS);
-    logEventError(error instanceof Error ? error.message : String(error));
+    logEventError(
+      result.error instanceof Error
+        ? result.error.message
+        : String(result.error)
+    );
     return [];
   }
 };
@@ -156,15 +156,18 @@ export const getEventApprovers = withDatabase(getEventApproversInternal);
 const getEventDetailsInternal = async (
   eventId: string
 ): Promise<Event | null> => {
-  try {
-    console.log(LOG_MESSAGES.GET_EVENT_DETAILS, eventId);
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-
-    const event = await getEventWithDetails(eventId); // Uses publicId selection
-    return event ? parseEventData(event) : null;
-  } catch (error) {
+  console.log(LOG_MESSAGES.GET_EVENT_DETAILS, eventId);
+  console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+  const result = await getEventWithDetails(eventId);
+  if (isSuccess(result)) {
+    return parseEventData(result.value);
+  } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_DETAILS);
-    logEventError(error instanceof Error ? error.message : String(error));
+    logEventError(
+      result.error instanceof Error
+        ? result.error.message
+        : String(result.error)
+    );
     return null;
   }
 };
@@ -179,14 +182,17 @@ export const getEventDetails = withDatabase(getEventDetailsInternal);
  * @returns Promise<Event[]> - Array of events with publicId fields
  */
 const getAllEventsInternal = async (): Promise<Event[]> => {
-  try {
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-
-    const events = await fetchAllEvents(); // Uses publicId selection
-    return events.map((event) => parseEventData(event));
-  } catch (error) {
+  console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+  const result = await fetchAllEvents();
+  if (isSuccess(result)) {
+    return result.value.map((event) => parseEventData(event));
+  } else {
     logEventError(ERROR_MESSAGES.GET_ALL_EVENTS);
-    logEventError(error instanceof Error ? error.message : String(error));
+    logEventError(
+      result.error instanceof Error
+        ? result.error.message
+        : String(result.error)
+    );
     return [];
   }
 };
