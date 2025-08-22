@@ -22,7 +22,7 @@ import {
   parseEventData,
 } from "@/service/eventService";
 import { withDatabase, withDatabaseResult } from "@/lib/withDatabase";
-import { Result, isSuccess, mapError, flatMap, failure } from "@/utils/fp";
+import { Result, isSuccess, failure } from "@/utils/fp";
 
 /**
  * Logs event-related errors

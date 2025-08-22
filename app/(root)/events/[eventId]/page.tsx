@@ -5,13 +5,6 @@ import { getEventDetails } from "@/app/actions/event.action";
 import ApplicantPageClient from "./ApplicantPageClient";
 import { Event } from "@/database/models/event.model";
 
-// User's original type for reference (not used by Next.js, but preserved as requested)
-type SearchParamProps = {
-  params: {
-    eventId: string;
-  };
-};
-
 export default function ApplicantPage({
   params,
 }: {

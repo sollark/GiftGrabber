@@ -1,11 +1,6 @@
 /**
  * File: CreateEventForm.tsx
- * Purpose:const CreateEventForm: FC = () => {
-  const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  
-  // Use composed context hook for better separation of concerns
-  const contextActions = useEventFormContexts(); logic for creating a new event, including form handling, validation, QR code generation, and event creation.
+ * Purpose: UI and logic for creating a new event, including form handling, validation, QR code generation, and event creation.
  * Responsibilities:
  *   - Renders the event creation form and handles user input.
  *   - Validates and processes form data.

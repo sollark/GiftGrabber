@@ -1,8 +1,7 @@
-import { failure, success, Result, flatMap, map } from "@/utils/fp";
+import { failure, success, Result } from "@/utils/fp";
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
-import { NewPerson } from "@/types/common.types";
-import { CreateEventData, EventFormData } from "@/types/common.types";
+import { EventFormData } from "@/types/common.types";
 import {
   PersonService,
   GiftService,
