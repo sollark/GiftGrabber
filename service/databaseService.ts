@@ -24,6 +24,13 @@ import {
   populateEvent,
   populateEventGifts,
 } from "./mongoPopulationService";
+// Import optimized queries - Issue D Fix
+import {
+  findPersonsByPublicIds,
+  findGiftsByPublicIds,
+  findEventsPaginated,
+  executeParallelQueries,
+} from "@/database/optimizedQueries";
 
 /**
  * Standard field selections that include publicId but exclude _id
@@ -103,18 +110,28 @@ export class PersonService {
   }
 
   /**
-   * Create multiple persons and return their publicIds
+   * Create multiple persons and return their publicIds - Issue D Fix (optimized batch)
    */
   static async createMany(
     personList: Omit<Person, "publicId">[]
   ): Promise<Result<string[], Error>> {
     try {
+      // Batch create operation instead of individual creates
       const docs = await PersonModel.insertMany(personList);
       const publicIds = docs.map((doc) => doc.publicId);
       return success(publicIds);
     } catch (error) {
       return failure(error as Error);
     }
+  }
+
+  /**
+   * Batch find persons by publicIds - Issue D Fix (replaces N+1 pattern)
+   */
+  static async findManyByPublicIds(
+    publicIds: string[]
+  ): Promise<Result<Person[], Error>> {
+    return findPersonsByPublicIds(publicIds);
   }
 
   /**
@@ -248,21 +265,34 @@ export class EventService {
     giftPublicIds: string[];
   }): Promise<Result<Event, Error>> {
     try {
-      // Convert publicIds to ObjectIds for internal storage
-      const [applicantDocs, approverDocs, giftDocs] = await Promise.all([
-        PersonModel.find(
-          { publicId: { $in: eventData.applicantPublicIds } },
-          "_id"
-        ).exec(),
-        PersonModel.find(
-          { publicId: { $in: eventData.approverPublicIds } },
-          "_id"
-        ).exec(),
-        GiftModel.find(
-          { publicId: { $in: eventData.giftPublicIds } },
-          "_id"
-        ).exec(),
-      ]);
+      // Convert publicIds to ObjectIds using optimized batch queries - Issue D Fix
+      const lookupQueries = {
+        applicants: () =>
+          PersonModel.find(
+            { publicId: { $in: eventData.applicantPublicIds } },
+            "_id"
+          )
+            .lean()
+            .exec(),
+        approvers: () =>
+          PersonModel.find(
+            { publicId: { $in: eventData.approverPublicIds } },
+            "_id"
+          )
+            .lean()
+            .exec(),
+        gifts: () =>
+          GiftModel.find({ publicId: { $in: eventData.giftPublicIds } }, "_id")
+            .lean()
+            .exec(),
+      };
+
+      const lookupsResult = await executeParallelQueries(lookupQueries);
+      if (lookupsResult._tag === "Failure") {
+        return failure(lookupsResult.error);
+      }
+
+      const { applicants, approvers, gifts } = lookupsResult.value;
 
       const eventDoc = await EventModel.create({
         name: eventData.name,
@@ -271,9 +301,9 @@ export class EventService {
         ownerId: eventData.ownerId,
         eventQRCodeBase64: eventData.eventQRCodeBase64,
         ownerIdQRCodeBase64: eventData.ownerIdQRCodeBase64,
-        applicantList: applicantDocs.map((doc) => doc._id),
-        approverList: approverDocs.map((doc) => doc._id),
-        giftList: giftDocs.map((doc) => doc._id),
+        applicantList: (applicants as any[]).map((doc: any) => doc._id),
+        approverList: (approvers as any[]).map((doc: any) => doc._id),
+        giftList: (gifts as any[]).map((doc: any) => doc._id),
       });
 
       // Optimized: Transform to public format directly instead of redundant query
@@ -292,11 +322,38 @@ export class EventService {
   }
 
   /**
-   * Get all events with minimal data
+   * Get all events with pagination support - Issue D Fix (optimized)
+   * @param page - Page number (default: 1)
+   * @param limit - Results per page (default: 20)
+   * @returns Promise<Result<{ events: Event[]; total: number; page: number; pages: number }, Error>>
    */
-  static async findAll(): Promise<Result<Event[], Error>> {
+  static async findAllPaginated(
+    page: number = 1,
+    limit: number = 20
+  ): Promise<
+    Result<
+      {
+        events: Event[];
+        total: number;
+        page: number;
+        pages: number;
+      },
+      Error
+    >
+  > {
+    return findEventsPaginated(page, limit);
+  }
+
+  /**
+   * Get all events (legacy method - consider using pagination)
+   * @deprecated Use findAllPaginated for better performance
+   */
+  static async findAll(): Promise<Result<any[], Error>> {
+    console.warn(
+      "⚠️  EventService.findAll is deprecated. Use findAllPaginated for better performance."
+    );
     return fromPromise(
-      EventModel.find({}, PUBLIC_FIELD_SELECTIONS.EVENT).exec()
+      EventModel.find({}, PUBLIC_FIELD_SELECTIONS.EVENT).lean().exec()
     );
   }
 }

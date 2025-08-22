@@ -76,6 +76,23 @@ const eventSchema: Schema = new Schema({
   ],
 });
 
+// ============================================================================
+// DATABASE INDEXES - Issue E Fix
+// ============================================================================
+
+// Primary lookup indexes
+eventSchema.index({ eventId: 1 }); // Most common query pattern
+eventSchema.index({ publicId: 1 }); // External API queries
+eventSchema.index({ ownerId: 1 }); // Owner-based queries
+
+// Compound indexes for complex queries
+eventSchema.index({ eventId: 1, ownerId: 1 }); // Event access verification
+eventSchema.index({ eventId: 1, applicantList: 1 }); // Applicant membership
+eventSchema.index({ eventId: 1, approverList: 1 }); // Approver membership
+
+// Email-based lookups
+eventSchema.index({ email: 1 });
+
 const EventModel = models.Event || model<EventDoc>("Event", eventSchema);
 
 export default EventModel;

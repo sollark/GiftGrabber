@@ -121,10 +121,10 @@ const CreateEventForm: FC = () => {
       }
 
       // --- Save data to contexts ---
-      // Save event id to EventContext
+      // Save event id to EventContext (only the eventId string)
       const eventResult = eventActions.value.dispatchSafe({
         type: "SET_EVENT_ID",
-        payload: { eventId },
+        payload: eventId, // Pass eventId string directly, not object
       });
       if (eventResult._tag === "Failure") {
         setErrorMessage("Failed to save event data");

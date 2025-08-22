@@ -164,17 +164,21 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
         throw new Error(MESSAGES.NO_APPLICANT_ERROR);
       }
 
-      const response = await makeOrder(
+      const orderPublicId = await makeOrder(
+        // Now returns publicId string
         applicant.publicId,
         applicantGifts.map((gift) => gift.publicId),
         orderId,
         qrCodeData
       );
 
-      if (!response) {
+      if (!orderPublicId) {
+        // Check if publicId is returned
         throw new Error("Order creation failed");
       }
 
+      // Store the order publicId for potential future use
+      console.log(`Order created with publicId: ${orderPublicId}`);
       return true;
     },
     [applicant, applicantGifts, orderId]

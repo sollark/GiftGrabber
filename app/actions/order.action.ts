@@ -69,13 +69,15 @@ const logOrderConfirmation = (
 
 /**
  * Creates a new order in the database using publicIds (orchestration + error handling)
+ * @returns The created order's publicId for further operations, or undefined on failure
  */
 const makeOrderInternal = async (
   applicantPublicId: string,
   giftPublicIds: string[],
   orderId: string,
   confirmationRQCode: string
-): Promise<boolean | undefined> => {
+): Promise<string | undefined> => {
+  // Changed return type to return publicId
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
 
@@ -95,7 +97,7 @@ const makeOrderInternal = async (
 
     const newOrder = result.value;
     logOrderCreation(newOrder);
-    return true;
+    return newOrder.publicId; // Return the publicId instead of boolean
   } catch (error) {
     logOrderError(LOG_MESSAGES.MAKE_ORDER_ERROR);
     return undefined;
@@ -107,7 +109,8 @@ export const makeOrder = async (
   giftPublicIds: string[],
   orderId: string,
   confirmationRQCode: string
-): Promise<boolean | undefined> => {
+): Promise<string | undefined> => {
+  // Changed return type to return publicId
   return makeOrderInternal(
     applicantPublicId,
     giftPublicIds,
@@ -142,16 +145,16 @@ export const makeOrder = async (
 // };
 
 /**
- * Fetches an order with populated data and serializes it - Updated for publicId
- * @param orderId - The unique identifier for the order
+ * Fetches an order with populated data and serializes it - Fixed for publicId consistency
+ * @param orderPublicId - The public identifier for the order
  * @returns Result<Record<string, unknown>, Error> - Success with serialized order or Failure with Error
  */
 export const getOrderInternal = async (
-  orderId: string
+  orderPublicId: string // Renamed from orderId to orderPublicId for clarity
 ): Promise<Result<Record<string, unknown>, Error>> => {
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-    const orderResult = await findOrderByPublicId(orderId);
+    const orderResult = await findOrderByPublicId(orderPublicId); // Now parameter name matches usage
 
     if (orderResult._tag === "Failure") {
       const err = new Error(orderResult.error);
@@ -173,31 +176,39 @@ export const getOrderInternal = async (
   }
 };
 
-export const getOrder = withDatabase(async (orderId: string): Promise<any> => {
-  const result = await getOrderInternal(orderId);
-  return result._tag === "Success" ? result.value : null;
-});
+export const getOrder = withDatabase(
+  async (orderPublicId: string): Promise<any> => {
+    // Fixed parameter name
+    const result = await getOrderInternal(orderPublicId);
+    return result._tag === "Success" ? result.value : null;
+  }
+);
 
 /**
- * Confirms an order and updates associated gifts (orchestration + error handling) - Updated for publicId
+ * Confirms an order and updates associated gifts (orchestration + error handling) - Fixed for publicId consistency
  */
 const confirmOrderInternalAction = async (
-  orderId: string,
+  orderPublicId: string, // Changed from orderId to orderPublicId
   approverPublicId: string
 ): Promise<Record<string, unknown> | false> => {
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-    logOrderConfirmation(orderId, approverPublicId);
+    logOrderConfirmation(orderPublicId, approverPublicId);
 
-    const result = await confirmOrderInternal(orderId, approverPublicId);
+    const result = await confirmOrderInternal(orderPublicId, approverPublicId); // Now passes correct publicId
 
     if (result._tag === "Failure") {
       logOrderError(result.error);
       return false;
     }
 
-    // TODO: For now, return a placeholder since confirmation is not fully implemented
-    return { orderId, status: "confirmed", approverPublicId };
+    // Return the confirmed order with publicId (not business orderId)
+    const confirmedOrder = result.value;
+    return {
+      publicId: confirmedOrder.publicId,
+      status: "COMPLETE",
+      approverPublicId,
+    };
   } catch (error) {
     logOrderError(LOG_MESSAGES.CONFIRM_ORDER_ERROR);
     return false;

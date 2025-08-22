@@ -39,6 +39,28 @@ const personSchema: Schema = new Schema({
   },
 });
 
+// ============================================================================
+// DATABASE INDEXES - Issue E Fix
+// ============================================================================
+
+// Primary lookup index
+personSchema.index({ publicId: 1 }); // Most common external API query
+
+// Excel import identifier indexes
+personSchema.index({ employeeId: 1 }); // Employee lookup
+personSchema.index({ personId: 1 }); // Person ID lookup
+
+// Name-based queries for autocomplete/search
+personSchema.index({ firstName: 1, lastName: 1 }); // Full name search
+personSchema.index({ lastName: 1 }); // Last name search
+
+// Source format queries for data management
+personSchema.index({ sourceFormat: 1 });
+
+// Compound indexes for efficient filtering
+personSchema.index({ sourceFormat: 1, employeeId: 1 }); // Excel format + ID
+personSchema.index({ sourceFormat: 1, personId: 1 }); // Excel format + person ID
+
 const PersonModel = models.Person || model<PersonDoc>("Person", personSchema);
 
 export default PersonModel;

@@ -28,18 +28,21 @@ import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * EventState: Shape of the event context state.
+ * Only stores eventId - no other event data should be stored here.
  */
-export interface EventState extends FunctionalState<Record<string, any>> {}
+export interface EventState
+  extends FunctionalState<{
+    eventId: string;
+  }> {}
 
 /**
  * EventAction: Supported actions for event state transitions.
- * - SET_EVENT_ID: Set the current eventId
- * - SET_EVENT: Merge arbitrary event fields into state
+ * - SET_EVENT_ID: Set the current eventId (string only)
  * - RESET_EVENT: Reset state to initial
  */
 export interface EventAction extends FunctionalAction {
-  type: "SET_EVENT_ID" | "RESET_EVENT" | "SET_EVENT";
-  payload?: unknown;
+  type: "SET_EVENT_ID" | "RESET_EVENT";
+  payload?: string; // Only string eventId allowed
 }
 
 // ============================================================================
@@ -63,6 +66,7 @@ const createInitialState = (eventId: string = ""): EventState => ({
 /**
  * eventReducer
  * Pure reducer for event state transitions.
+ * Only handles eventId - no other event data should be stored.
  * @param state - Current EventState
  * @param action - EventAction to apply
  * @returns {Result<EventState, Error>} New state or error
@@ -73,26 +77,14 @@ const eventReducer = (
 ): Result<EventState, Error> => {
   switch (action.type) {
     case "SET_EVENT_ID": {
-      // Set eventId inside data object
-      const eventId =
-        typeof action.payload === "string"
-          ? action.payload
-          : (action.payload as any)?.eventId;
+      // Validate payload is a string
+      if (typeof action.payload !== "string") {
+        return failure(new Error("Event ID must be a string"));
+      }
       return success({
         ...state,
         data: {
-          ...state.data,
-          eventId: eventId ?? state.data.eventId ?? "",
-        },
-      });
-    }
-    case "SET_EVENT": {
-      // Merge all event fields into data
-      return success({
-        ...state,
-        data: {
-          ...state.data,
-          ...(action.payload as Record<string, any>),
+          eventId: action.payload,
         },
       });
     }

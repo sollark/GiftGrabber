@@ -53,6 +53,35 @@ const orderSchema: Schema = new Schema({
   },
 });
 
+// ============================================================================
+// DATABASE INDEXES - Issue E Fix
+// ============================================================================
+
+// Primary lookup indexes
+orderSchema.index({ publicId: 1 }); // External API queries
+orderSchema.index({ orderId: 1 }); // Business ID queries
+
+// Relationship-based queries
+orderSchema.index({ applicant: 1 }); // Orders by applicant
+orderSchema.index({ confirmedByApprover: 1 }); // Orders by approver
+
+// Status-based queries for dashboards/monitoring
+orderSchema.index({ status: 1 }); // Orders by status
+orderSchema.index({ createdAt: -1 }); // Recent orders first
+
+// Compound indexes for complex filtering
+orderSchema.index({ applicant: 1, status: 1 }); // Applicant's orders by status
+orderSchema.index({ status: 1, createdAt: -1 }); // Status with recency
+orderSchema.index({ confirmedByApprover: 1, status: 1 }); // Approver's decisions
+orderSchema.index({ orderId: 1, status: 1 }); // Business ID with status
+
+// Performance optimization for gift relationship queries
+orderSchema.index({ gifts: 1 }); // Orders containing specific gifts
+
+// Date-based queries for reporting
+orderSchema.index({ confirmedAt: -1 }); // Recent confirmations
+orderSchema.index({ createdAt: 1, confirmedAt: 1 }); // Order lifecycle timing
+
 const OrderModel = models.Order || model<OrderDoc>("Order", orderSchema);
 
 export default OrderModel;

@@ -2,8 +2,15 @@
 
 import React from "react";
 import { useEventSelector, useEventActions } from "@/app/contexts/EventContext";
-import { useApproverActions } from "@/app/contexts/ApproverContext";
-import { useGiftActions } from "@/app/contexts/gift/GiftContext";
+import {
+  useApproverActions,
+  useApproverSelector,
+} from "@/app/contexts/ApproverContext";
+import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
+import {
+  useGiftActions,
+  useGiftSelector,
+} from "@/app/contexts/gift/GiftContext";
 import ApproverList from "@/components/approver/ApproverList";
 import ApplicantList from "@/components/applicant/ApplicantList";
 import GiftList from "@/components/gift/GiftList";
@@ -33,24 +40,31 @@ export default function OptimisticEventDetailsClient({
   const approverActions = useApproverActions();
   const giftActions = useGiftActions();
 
+  // Get data from appropriate contexts - not from EventContext
+  const applicantListMaybe = useApplicantSelector(
+    (state) => state.data.applicantList
+  );
+  const approverListMaybe = useApproverSelector(
+    (state) => state.data.approverList
+  );
+  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
+
   const [isLoading, setIsLoading] = React.useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Get data from context immediately (optimistic approach) - memoized for performance
+  // Extract data from Maybe types with fallbacks
   const applicantList = React.useMemo(
-    () =>
-      eventData?._tag === "Some" ? eventData.value.applicantList || [] : [],
-    [eventData]
+    () => (applicantListMaybe._tag === "Some" ? applicantListMaybe.value : []),
+    [applicantListMaybe]
   );
   const giftList = React.useMemo(
-    () => (eventData?._tag === "Some" ? eventData.value.giftList || [] : []),
-    [eventData]
+    () => (giftListMaybe._tag === "Some" ? giftListMaybe.value : []),
+    [giftListMaybe]
   );
   const approverList = React.useMemo(
-    () =>
-      eventData?._tag === "Some" ? eventData.value.approverList || [] : [],
-    [eventData]
+    () => (approverListMaybe._tag === "Some" ? approverListMaybe.value : []),
+    [approverListMaybe]
   );
 
   // Determine loading states for different components
@@ -82,10 +96,11 @@ export default function OptimisticEventDetailsClient({
       try {
         const event = await getEventDetails(eventId);
         if (event) {
+          // EventContext only stores eventId - not the full event object
           if (eventActions._tag === "Some") {
             eventActions.value.dispatchSafe({
-              type: "SET_EVENT",
-              payload: event,
+              type: "SET_EVENT_ID",
+              payload: eventId, // Only pass the eventId string
             });
           }
 
