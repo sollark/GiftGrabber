@@ -1,23 +1,40 @@
-import { getEventDetails } from "@/app/actions/event.action";
-import EventDetailsClient from "./EventDetailsClient";
+"use client";
 
-export default async function EventDetails({
+import { useEffect, useState } from "react";
+import { EventProvider } from "@/app/contexts/EventContext";
+import { ApproverProvider } from "@/app/contexts/ApproverContext";
+import { GiftProvider } from "@/app/contexts/gift/GiftContext";
+import OptimisticEventDetailsClient from "./OptimisticEventDetailsClient";
+
+export default function EventDetails({
   params,
 }: {
   params: Promise<{ eventId: string; ownerId: string }>;
 }) {
-  const { eventId, ownerId } = await params;
+  const [resolvedParams, setResolvedParams] = useState<{
+    eventId: string;
+    ownerId: string;
+  } | null>(null);
 
-  const event = await getEventDetails(eventId);
-  if (!event) return <div>Event not found</div>;
+  useEffect(() => {
+    params.then(setResolvedParams);
+  }, [params]);
 
-  const { applicantList, giftList, approverList } = event;
+  if (!resolvedParams) {
+    return <div>Loading...</div>;
+  }
 
+  const { eventId, ownerId } = resolvedParams;
+
+  // Use optimistic approach - render UI immediately with contexts
+  // Data will be fetched client-side through context hooks
   return (
-    <EventDetailsClient
-      applicantList={applicantList}
-      giftList={giftList}
-      approverList={approverList || []}
-    />
+    <EventProvider eventId={eventId}>
+      <ApproverProvider approverList={[]}>
+        <GiftProvider giftList={[]}>
+          <OptimisticEventDetailsClient eventId={eventId} ownerId={ownerId} />
+        </GiftProvider>
+      </ApproverProvider>
+    </EventProvider>
   );
 }

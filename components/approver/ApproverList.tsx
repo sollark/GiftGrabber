@@ -1,13 +1,17 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import { getPersonKey } from "@/utils/utils";
+import ListSkeleton from "@/components/ui/ListSkeleton";
 
 type ApproverListProps = {
   personArray: Person[];
+  isLoading?: boolean;
 };
 
-const ApproverList: FC<ApproverListProps> = ({ personArray }) => {
+const ApproverList: FC<ApproverListProps> = ({
+  personArray,
+  isLoading = false,
+}) => {
   // Use context for approver list, but preserve original rendering and props
   const { approverList } = useApproverSelection();
 
@@ -17,16 +21,30 @@ const ApproverList: FC<ApproverListProps> = ({ personArray }) => {
       ? approverList.value
       : personArray;
 
+  // Show loading skeleton when loading and no data
+  if (isLoading && list.length === 0) {
+    return <ListSkeleton title="Approvers" rows={2} columns={1} />;
+  }
+
   return (
     <div>
       <h3>Approvers</h3>
-      <ul>
-        {list.map((approver: Person, index: number) => (
-          <li key={getPersonKey(approver, index)}>
-            {`${approver.firstName} ${approver.lastName}`}
-          </li>
-        ))}
-      </ul>
+      {list.length === 0 ? (
+        <div className="text-gray-500 text-sm">No approvers available</div>
+      ) : (
+        <ul>
+          {list.map((approver: Person, index: number) => (
+            <li
+              key={
+                approver.publicId ||
+                `${approver.firstName}-${approver.lastName}-${index}`
+              }
+            >
+              {`${approver.firstName} ${approver.lastName}`}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

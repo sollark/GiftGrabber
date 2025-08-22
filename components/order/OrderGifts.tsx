@@ -26,7 +26,7 @@ import MultistepNavigator from "../../ui/navigation/MultistepNavigator";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";
 import Applicant from "../applicant/Applicant";
 import GiftInfo from "../gift/GiftInfo";
-import GiftList from "../gift/GiftList";
+import GiftList from "../gift/SelectedGiftList";
 import { useOrderContext } from "@/app/contexts/order/OrderContext";
 
 /**

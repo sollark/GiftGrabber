@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { Event } from "@/database/models/event.model";
 import { ExcelFormatType } from "@/types/excel.types";
+import ListSkeleton from "@/components/ui/ListSkeleton";
 
 /**
  * Props for the EventList component
@@ -8,6 +9,7 @@ import { ExcelFormatType } from "@/types/excel.types";
 interface EventListProps {
   events?: Event[];
   showFormatInfo?: boolean;
+  isLoading?: boolean;
 }
 
 /**
@@ -29,7 +31,13 @@ interface EventWithFormatInfo extends Event {
 const EventList: FC<EventListProps> = ({
   events = [],
   showFormatInfo = false,
+  isLoading = false,
 }) => {
+  // Show loading skeleton when loading and no data
+  if (isLoading && events.length === 0) {
+    return <ListSkeleton title="Events" rows={3} columns={2} />;
+  }
+
   if (events.length === 0) {
     return (
       <div className="text-center text-gray-500 py-8">No events found</div>

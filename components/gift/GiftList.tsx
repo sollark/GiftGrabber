@@ -1,283 +1,99 @@
-/**
- * GiftList.tsx
- *
- * This file defines the GiftList component, which manages and displays a list of gifts for an applicant.
- *
- * Responsibilities:
- * - Display a list of gifts for the selected applicant
- * - Allow removal of gifts from the list
- * - Handle order creation and QR code generation
- * - Use context for applicant, approver, and gift data
- * - Navigate to order confirmation page upon successful order submission
- * - Integrate with multiple contexts for state management with safe access patterns
- *
- * Technical Features:
- * - Context-driven state management with functional programming patterns
- * - Memoized computations for performance optimization
- * - Error handling for QR code generation and order submission
- * - Safe context access using Maybe/Option patterns
- *
- * Constraints:
- * - No styling or UI changes
- * - No new features or business logic
- * - Only code quality, structure, and documentation improvements
- */
-
-import React, { FC, useRef, useCallback, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { Box } from "@mui/material";
-
-import { makeOrder } from "@/app/actions/order.action";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
-import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import {
-  useGiftSelector,
-  useGiftActions,
-} from "@/app/contexts/gift/GiftContext";
-import { getGiftKey } from "@/utils/utils";
+import React from "react";
 import { Gift } from "@/database/models/gift.model";
-import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
-import { BASE_URL } from "@/config/eventFormConfig";
-import { useSafeAsync } from "@/utils/fp-hooks";
+import ListSkeleton from "@/components/ui/ListSkeleton";
 
-import GiftComponent from "./GiftComponent";
-import QRcode from "@/ui/data-display/QRcode";
-import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
-import ErrorMessage from "@/ui/form/ErrorMessage";
-
-// Component constants
-const GIFT_LIST_STYLES = {
-  container: { paddingTop: "3rem" },
-  giftItem: { marginBottom: "1rem" },
-} as const;
-
-const MESSAGES = {
-  NO_GIFTS: "No gifts selected",
-  QR_CODE_ERROR: "Failed to generate QR code buffer",
-  NO_APPLICANT_ERROR: "No applicant selected",
-  ORDER_ERROR: "Error creating order:",
-} as const;
+interface GiftListProps {
+  giftList: Gift[];
+  isLoading?: boolean;
+  showLoadingWhenEmpty?: boolean;
+  error?: string | null;
+}
 
 /**
- * GiftList Component
+ * GiftList component displays all gifts with their ownership and claim status.
+ * Shows context data immediately, only shows loading when specifically needed.
+ * Includes error handling for robust user experience.
+ * Optimized with React.memo for performance.
  *
- * Renders a list of gifts for the selected applicant with removal functionality
- * and order processing capabilities. Integrates with multiple contexts to manage
- * applicant, approver, and gift state.
- *
- * @returns JSX.Element - The gift list interface with order processing
+ * @param giftList - Array of Gift objects to display
+ * @param isLoading - Whether data is currently being fetched from server
+ * @param showLoadingWhenEmpty - Whether to show loading when list is empty (for new events)
+ * @param error - Error message to display if gift loading fails
+ * @returns JSX.Element rendering gift list, empty state, loading state, or error state
  */
-const GiftList: FC = () => {
-  const router = useRouter();
-  const orderQRCodeRef = useRef<HTMLDivElement>(null!);
-
-  // Context state selectors
-  const { selectedApplicant } = useApplicantSelection();
-  const { approverList } = useApproverSelection();
-  const applicantGiftsMaybe = useGiftSelector(
-    (state) => state.data.applicantGifts
-  );
-  const actions = useGiftActions();
-
-  // Get eventId from URL parameters
-  const pathname = usePathname();
-  const eventId = useMemo(() => {
-    const match = pathname.match(/\/events\/([^\/]+)/);
-    return match ? match[1] : "";
-  }, [pathname]);
-
-  const applicantGifts = useMemo(
-    () =>
-      applicantGiftsMaybe._tag === "Some" &&
-      Array.isArray(applicantGiftsMaybe.value)
-        ? applicantGiftsMaybe.value
-        : [],
-    [applicantGiftsMaybe]
-  );
-
-  const removeGiftAction = useMemo(
-    () =>
-      actions._tag === "Some"
-        ? (id: string) =>
-            actions.value.dispatchSafe({ type: "REMOVE_GIFT", payload: id })
-        : () => {},
-    [actions]
-  );
-
-  // Memoized computed values
-  const orderId = useMemo(() => generateOrderId(), []);
-
-  const orderUrl = useMemo(
-    () => `${BASE_URL}/events/${eventId}/orders/${orderId}`,
-    [eventId, orderId]
-  );
-
-  const applicant = useMemo(() => {
-    return selectedApplicant._tag === "Some" &&
-      selectedApplicant.value._tag === "Some"
-      ? selectedApplicant.value.value
-      : null;
-  }, [selectedApplicant]);
-
-  const applicantDisplayName = useMemo(
-    () => applicant?.firstName || "Unknown",
-    [applicant?.firstName]
-  );
-
-  const hasGifts = useMemo(
-    () => applicantGifts.length > 0,
-    [applicantGifts.length]
-  );
-
-  /**
-   * Generates a base64-encoded QR code string from the QR code DOM reference
-   *
-   * @returns Promise<string> - Base64 QR code string
-   * @throws Error if QR code generation fails
-   */
-  const generateQRCodeData = useCallback(async (): Promise<string> => {
-    const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef);
-    if (!orderQRCodeBuffer) {
-      throw new Error(MESSAGES.QR_CODE_ERROR);
-    }
-    return orderQRCodeBuffer.toString("base64");
-  }, []);
-
-  /**
-   * Submits the order with applicant data, gifts, and QR code
-   *
-   * @param qrCodeData - Base64-encoded QR code string for the order
-   * @returns Promise<boolean> - True if order creation succeeds
-   * @throws Error if order creation fails
-   */
-  const submitOrder = useCallback(
-    async (qrCodeData: string): Promise<boolean> => {
-      if (!applicant) {
-        throw new Error(MESSAGES.NO_APPLICANT_ERROR);
-      }
-
-      const response = await makeOrder(
-        applicant.publicId,
-        applicantGifts.map((gift) => gift.publicId),
-        orderId,
-        qrCodeData
-      );
-
-      if (!response) {
-        throw new Error("Order creation failed");
-      }
-
-      return true;
-    },
-    [applicant, applicantGifts, orderId]
-  );
-
-  /**
-   * Orchestrates the complete order processing workflow using safe async patterns
-   * Provides loading states and error handling
-   */
-  const {
-    data: orderResult,
-    error: orderError,
-    loading: isProcessingOrder,
-    execute: executeOrderProcess,
-    reset: resetOrderProcess,
-  } = useSafeAsync(
-    async () => {
-      if (!applicant) {
-        throw new Error(MESSAGES.NO_APPLICANT_ERROR);
-      }
-
-      // Step 1: Generate QR code
-      const qrCodeData = await generateQRCodeData();
-
-      // Step 2: Submit order
-      const success = await submitOrder(qrCodeData);
-      if (!success) {
-        throw new Error("Order submission failed");
-      }
-
-      // Step 3: Navigate to order page
-      router.push(`/events/${eventId}/orders/${orderId}`);
-
-      return true;
-    },
-    {
-      deps: [applicant, eventId, orderId],
-      maxRetries: 1,
-    }
-  );
-
-  /**
-   * Initiates the order processing workflow
-   */
-  const processOrder = useCallback(() => {
-    if (!applicant || isProcessingOrder) return;
-    executeOrderProcess();
-  }, [applicant, isProcessingOrder, executeOrderProcess]);
-
-  /**
-   * Handles removal of a gift from the applicant's gift list
-   *
-   * @param gift - The gift object to remove from the list
-   */
-  const handleRemoveGift = useCallback(
-    (gift: Gift) => removeGiftAction(getGiftKey(gift)),
-    [removeGiftAction]
-  );
-
-  /**
-   * Renders a single gift item with its component and remove button
-   *
-   * @param gift - The gift object to render
-   * @returns JSX.Element - Gift item with remove functionality
-   */
-  const renderGiftItem = useCallback(
-    (gift: Gift, index: number) => (
-      <li key={getGiftKey(gift, index)}>
-        <div className="flex flex-row" style={GIFT_LIST_STYLES.giftItem}>
-          <GiftComponent gift={gift} />
-          <SecondaryButton onClick={() => handleRemoveGift(gift)}>
-            Remove
-          </SecondaryButton>
-        </div>
-      </li>
-    ),
-    [handleRemoveGift]
-  );
-
-  /**
-   * Renders the complete gift list or empty state message
-   *
-   * @returns JSX.Element - Either the gift list or no-gifts message
-   */
-  const renderGiftsList = useCallback(() => {
-    if (!hasGifts) {
-      return <p>{MESSAGES.NO_GIFTS}</p>;
-    }
-    return (
-      <ul>
-        {applicantGifts.map((gift, index) => renderGiftItem(gift, index))}
-      </ul>
+const GiftList: React.FC<GiftListProps> = React.memo(
+  ({
+    giftList,
+    isLoading = false,
+    showLoadingWhenEmpty = false,
+    error = null,
+  }) => {
+    // Memoized gift rows for performance
+    const giftRows = React.useMemo(
+      () =>
+        giftList.map((gift: Gift, index: number) => (
+          <tr key={gift.publicId || index} className="border-b border-gray-100">
+            <td className="py-2 px-3">
+              {gift.owner
+                ? `${gift.owner.firstName} ${gift.owner.lastName}`
+                : "Unknown Owner"}
+            </td>
+            <td className="py-2 px-3">
+              <span
+                className={`px-2 py-1 rounded text-xs font-medium ${
+                  gift.applicant
+                    ? "bg-red-100 text-red-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {gift.applicant ? "Claimed" : "Available"}
+              </span>
+            </td>
+          </tr>
+        )),
+      [giftList]
     );
-  }, [hasGifts, applicantGifts, renderGiftItem]);
+    // Show error state if there's an error
+    if (error) {
+      return (
+        <div>
+          <h3>Gifts</h3>
+          <div className="text-red-600 text-sm">
+            Error loading gifts: {error}
+          </div>
+        </div>
+      );
+    }
 
-  return (
-    <Box sx={GIFT_LIST_STYLES.container}>
-      <h3>{applicantDisplayName} gifts:</h3>
-      {renderGiftsList()}
-      <StyledButton
-        onClick={processOrder}
-        disabled={!applicant || isProcessingOrder}
-      >
-        {isProcessingOrder ? "Processing..." : "Take"}
-      </StyledButton>
-      {orderError._tag === "Some" && (
-        <ErrorMessage message={orderError.value.message} />
-      )}
-      <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
-    </Box>
-  );
-};
+    // Show loading only if actively loading AND no data available AND expected to load
+    if (isLoading && giftList.length === 0 && showLoadingWhenEmpty) {
+      return <ListSkeleton title="Gifts" rows={3} columns={2} />;
+    }
+
+    return (
+      <div>
+        <h3>Gifts</h3>
+        {giftList.length === 0 ? (
+          <div className="text-gray-500 text-sm">No gifts available</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-3 font-medium">Owner</th>
+                  <th className="text-left py-2 px-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>{giftRows}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+// Add display name for debugging
+GiftList.displayName = "GiftList";
 
 export default GiftList;

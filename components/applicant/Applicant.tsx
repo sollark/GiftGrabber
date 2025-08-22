@@ -17,7 +17,6 @@
 
 "use client";
 import React, { FC, useCallback, useState } from "react";
-import { getPersonKey } from "@/utils/utils";
 import { Maybe, some, none } from "@/utils/fp";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import {
@@ -73,8 +72,7 @@ const Applicant: FC = () => {
     (person: Person): Gift | undefined =>
       giftList.find(
         (gift: Gift) =>
-          getPersonKey(gift.owner) === getPersonKey(person) &&
-          !(gift as any).receiver
+          gift.owner.publicId === person.publicId && !(gift as any).receiver
       ),
     [giftList]
   );

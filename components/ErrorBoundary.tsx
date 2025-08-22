@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * ErrorBoundary component for graceful error handling in React contexts
  * Provides fallback UI and error reporting for context initialization failures

@@ -55,11 +55,9 @@ const AUTOCOMPLETE_CONFIG = {
  * @param people - Array of Person objects
  * @returns Array of OptionType objects
  */
-import { getPersonKey } from "@/utils/utils";
-
 const mapPersonListToOptions = (people: Person[]): OptionType[] =>
   people.map((person, index) => ({
-    id: getPersonKey(person, index),
+    id: person.publicId || `${person.firstName}-${person.lastName}-${index}`,
     label: `${person.firstName} ${person.lastName}`,
     person,
   }));
