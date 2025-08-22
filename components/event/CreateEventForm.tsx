@@ -72,12 +72,87 @@ const CreateEventForm: FC = () => {
     null
   ) as React.RefObject<HTMLDivElement>;
 
-  // Main form submission handler
+  // Form processing helpers
+  const processAndValidateForm = useCallback(
+    async (data: {
+      eventName: string;
+      eventEmail: string;
+      applicantsFile: File;
+      approversFile?: File;
+    }) => {
+      const processedResult = await processFormData(data, ERROR_MESSAGES);
+      if (processedResult._tag === "Failure") {
+        setErrorMessage(processedResult.error);
+        return null;
+      }
+      return processedResult.value;
+    },
+    []
+  );
+
+  const generateAndValidateQRCodes = useCallback(async () => {
+    const qrResult = await generateQRCodes(eventQRCodeRef, ownerQRCodeRef);
+    if (qrResult._tag === "Failure") {
+      setErrorMessage(qrResult.error);
+      return null;
+    }
+    return qrResult.value;
+  }, []);
+
+  const saveToContexts = useCallback(
+    async (processedData: any) => {
+      if (contextActions._tag === "None") {
+        setErrorMessage("Context not available. Please refresh the page.");
+        return false;
+      }
+
+      const {
+        event: eventActions,
+        applicant: applicantActions,
+        approver: approverActions,
+      } = contextActions.value;
+
+      // Save event id to EventContext (only the eventId string)
+      const eventResult = eventActions.dispatchSafe({
+        type: "SET_EVENT_ID",
+        payload: eventId, // Pass eventId string directly, not object
+      });
+      if (eventResult._tag === "Failure") {
+        setErrorMessage("Failed to save event data");
+        return false;
+      }
+
+      // Save applicant list to ApplicantContext
+      const applicantResult = applicantActions.dispatchSafe({
+        type: "SET_EVENT_APPLICANTS",
+        payload: { applicantList: processedData.applicantList },
+      });
+      if (applicantResult._tag === "Failure") {
+        setErrorMessage("Failed to save applicant data");
+        return false;
+      }
+
+      // Save approver list to ApproverContext
+      const approverResult = approverActions.dispatchSafe({
+        type: "SET_EVENT_APPROVERS",
+        payload: { approverList: processedData.approverList },
+      });
+      if (approverResult._tag === "Failure") {
+        setErrorMessage("Failed to save approver data");
+        return false;
+      }
+
+      return true;
+    },
+    [contextActions, eventId]
+  );
+
+  // Main form submission handler - orchestrates the workflow
   /**
    * handleSubmit
    * Public API (passed to Form).
-   * Handles form submission: validates, processes, generates QR codes, sends email, creates event.
-   * @param data { eventName: string, eventEmail: string, applicantsFile: File, approversFile?: File }
+   * Orchestrates the event creation workflow by coordinating helper functions.
+   * @param data Form data from user input
    * @returns {Promise<void>} (async)
    * Side effects: Updates error state, triggers backend and email services, navigates on success.
    * Notes: Memoized with useCallback to avoid unnecessary rerenders.
@@ -89,67 +164,19 @@ const CreateEventForm: FC = () => {
       applicantsFile: File;
       approversFile?: File;
     }) => {
-      const processedResult = await processFormData(data, ERROR_MESSAGES);
-      if (processedResult._tag === "Failure") {
-        setErrorMessage(processedResult.error);
-        return;
-      }
-      const processedData = processedResult.value;
+      // Step 1: Process and validate form data
+      const processedData = await processAndValidateForm(data);
+      if (!processedData) return;
 
-      const qrResult = await generateQRCodes(
-        eventQRCodeRef,
-        ownerQRCodeRef,
-        ERROR_MESSAGES
-      );
-      if (qrResult._tag === "Failure") {
-        setErrorMessage(qrResult.error);
-        return;
-      }
-      const qrCodes = qrResult.value;
+      // Step 2: Generate QR codes
+      const qrCodes = await generateAndValidateQRCodes();
+      if (!qrCodes) return;
 
-      // --- Validate contexts before saving data ---
-      if (contextActions._tag === "None") {
-        setErrorMessage("Context not available. Please refresh the page.");
-        return;
-      }
+      // Step 3: Save to contexts
+      const contextsSaved = await saveToContexts(processedData);
+      if (!contextsSaved) return;
 
-      const {
-        event: eventActions,
-        applicant: applicantActions,
-        approver: approverActions,
-      } = contextActions.value;
-
-      // --- Save data to contexts ---
-      // Save event id to EventContext (only the eventId string)
-      const eventResult = eventActions.dispatchSafe({
-        type: "SET_EVENT_ID",
-        payload: eventId, // Pass eventId string directly, not object
-      });
-      if (eventResult._tag === "Failure") {
-        setErrorMessage("Failed to save event data");
-        return;
-      }
-
-      // Save applicant list to ApplicantContext
-      const applicantResult = applicantActions.dispatchSafe({
-        type: "SET_EVENT_APPLICANTS",
-        payload: { applicantList: processedData.applicantList },
-      });
-      if (applicantResult._tag === "Failure") {
-        setErrorMessage("Failed to save applicant data");
-        return;
-      }
-
-      // Save approver list to ApproverContext
-      const approverResult = approverActions.dispatchSafe({
-        type: "SET_EVENT_APPROVERS",
-        payload: { approverList: processedData.approverList },
-      });
-      if (approverResult._tag === "Failure") {
-        setErrorMessage("Failed to save approver data");
-        return;
-      }
-
+      // Step 4: Send confirmation email
       const mailResult = await sendMailToClient(
         processedData.email,
         qrCodes.eventQRCodeBase64,
@@ -160,6 +187,7 @@ const CreateEventForm: FC = () => {
         return;
       }
 
+      // Step 5: Create event in database
       const success = await createEvent({
         name: processedData.name,
         email: processedData.email,
@@ -170,13 +198,21 @@ const CreateEventForm: FC = () => {
         applicantList: processedData.applicantList,
         approverList: processedData.approverList,
       });
+
       if (success) {
         router.push(`/events/${eventId}/${ownerId}`);
       } else {
         setErrorMessage(ERROR_MESSAGES.EVENT_CREATION_ERROR);
       }
     },
-    [eventId, ownerId, router, contextActions]
+    [
+      processAndValidateForm,
+      generateAndValidateQRCodes,
+      saveToContexts,
+      eventId,
+      ownerId,
+      router,
+    ]
   );
 
   return (

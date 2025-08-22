@@ -291,24 +291,15 @@ const mockOrderContext = React.createContext<any>(undefined);
 const mockUserContext = React.createContext<any>(undefined);
 
 /**
- * Example: Creating order summary logic with context integration
+ * Example: Order summary logic with direct context integration
  */
-export function createOrderSummaryLogic() {
-  // These would be used within React components as hooks
-  const useOrderContext = () => useSafeContext(mockOrderContext);
-  const useUserContext = () => useSafeContext(mockUserContext);
+// Direct hook exports that can be used in React components
+export const useOrderContext = () => useSafeContext(mockOrderContext);
+export const useUserContext = () => useSafeContext(mockUserContext);
 
-  // Combine multiple contexts safely (within component)
-  const useCombinedData = () =>
-    useCombinedContexts(useOrderContext, useUserContext);
-
-  // Return the hooks for use in components
-  return {
-    useOrderContext,
-    useUserContext,
-    useCombinedData,
-  };
-}
+// Combined context access using existing patterns
+export const useCombinedOrderData = () =>
+  useCombinedContexts(useOrderContext, useUserContext);
 
 // ============================================================================
 // UTILITY COMPOSITION EXAMPLES

@@ -13,6 +13,7 @@
 
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
+import { NewPerson } from "@/types/common.types";
 import {
   createEventInternal,
   fetchEventApprovers,
@@ -74,6 +75,20 @@ const ERROR_MESSAGES = {
 } as const;
 
 /**
+ * Interface for event creation data
+ */
+export interface EventCreationData {
+  name: string;
+  email: string;
+  eventId: string;
+  ownerId: string;
+  eventQRCodeBase64: string;
+  ownerIdQRCodeBase64: string;
+  applicantList: NewPerson[];
+  approverList: NewPerson[];
+}
+
+/**
  * createEvent (Public API) - Refactored for PublicId Strategy
  *
  * Server action for creating new events with applicants and gifts.
@@ -83,24 +98,16 @@ const ERROR_MESSAGES = {
  * @sideEffects Creates database records with publicIds, sends confirmation emails
  */
 export const createEvent = async (
-  event: any
+  event: EventCreationData
 ): Promise<Result<boolean, string>> => {
-  const databaseResult = await withDatabaseResult(async () => {
-    console.log(LOG_MESSAGES.EVENT_CREATED, event.name);
-    return await createEventInternal(event);
-  })();
+  console.log(LOG_MESSAGES.EVENT_CREATED, event.name);
 
-  // Handle nested Result and convert Error to string
-  if (isSuccess(databaseResult)) {
-    const innerResult = databaseResult.value;
-    if (isSuccess(innerResult)) {
-      return innerResult;
-    } else {
-      return failure(innerResult.error);
-    }
-  } else {
-    return failure(databaseResult.error.message);
-  }
+  // Use withDatabaseResult directly without nesting
+  const result = await withDatabaseResult(createEventInternal)(event);
+
+  return result._tag === "Success"
+    ? result.value // This should already be Result<boolean, string>
+    : failure(result.error.message);
 };
 
 /**

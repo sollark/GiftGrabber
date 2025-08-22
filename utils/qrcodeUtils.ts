@@ -14,17 +14,23 @@ export type GenerateQRCodesOutput = {
 };
 
 /**
+ * Error messages for QR code operations
+ */
+const QR_CODE_ERRORS = {
+  QR_CODE_ERROR: "Failed to generate QR codes. Please try again.",
+} as const;
+
+/**
  * Extracts QR code data from DOM elements and converts to base64
  * Pure client-side operation that handles DOM references
  */
 export const generateQRCodes = async (
   eventQRCodeRef: React.RefObject<HTMLDivElement>,
-  ownerQRCodeRef: React.RefObject<HTMLDivElement>,
-  errorMessages: { QR_CODE_ERROR: string }
+  ownerQRCodeRef: React.RefObject<HTMLDivElement>
 ): Promise<Result<GenerateQRCodesOutput, string>> => {
   try {
     if (!eventQRCodeRef.current || !ownerQRCodeRef.current) {
-      return failure(errorMessages.QR_CODE_ERROR);
+      return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
     }
 
     // Extract canvas elements from QR code containers
@@ -32,7 +38,7 @@ export const generateQRCodes = async (
     const ownerCanvas = ownerQRCodeRef.current.querySelector("canvas");
 
     if (!eventCanvas || !ownerCanvas) {
-      return failure(errorMessages.QR_CODE_ERROR);
+      return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
     }
 
     // Convert canvas to base64
@@ -46,7 +52,7 @@ export const generateQRCodes = async (
       ownerIdQRCodeBase64,
     });
   } catch (error) {
-    return failure(errorMessages.QR_CODE_ERROR);
+    return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
   }
 };
 
