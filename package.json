@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "clear-db": "node scripts/clearDatabase.js",
+    "clear-db:force": "node scripts/clearDatabase.js --force"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
