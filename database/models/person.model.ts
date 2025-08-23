@@ -63,8 +63,8 @@ const personSchema: Schema = new Schema({
 // DATABASE INDEXES - Issue E Fix
 // ============================================================================
 
-// Primary lookup index
-personSchema.index({ publicId: 1 }); // Most common external API query
+// Primary lookup index - removed because unique: true already creates this index
+// personSchema.index({ publicId: 1 }); // Most common external API query
 
 // Excel import identifier indexes
 personSchema.index({ employeeId: 1 }); // Employee lookup

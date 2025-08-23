@@ -79,7 +79,7 @@ const CreateEventForm: FC = () => {
       EVENT_URL: `${BASE_URL}/${eventId}`,
       OWNER_URL: `${BASE_URL}/${eventId}/${ownerId}`,
     }),
-    []
+    [eventId, ownerId]
   );
 
   // Initialize QR code refs for capturing QR code elements

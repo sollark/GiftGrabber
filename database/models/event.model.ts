@@ -100,9 +100,9 @@ const eventSchema: Schema = new Schema({
 // DATABASE INDEXES - Issue E Fix
 // ============================================================================
 
-// Primary lookup indexes
+// Primary lookup indexes - removed publicId because unique: true already creates this index
 eventSchema.index({ eventId: 1 }); // Most common query pattern
-eventSchema.index({ publicId: 1 }); // External API queries
+// eventSchema.index({ publicId: 1 }); // External API queries - removed duplicate
 eventSchema.index({ ownerId: 1 }); // Owner-based queries
 
 // Compound indexes for complex queries

@@ -54,8 +54,8 @@ const giftSchema: Schema = new Schema({
 // DATABASE INDEXES - Issue E Fix
 // ============================================================================
 
-// Primary lookup indexes
-giftSchema.index({ publicId: 1 }); // External API queries
+// Primary lookup indexes - removed because unique: true already creates this index
+// giftSchema.index({ publicId: 1 }); // External API queries
 
 // Relationship-based queries
 giftSchema.index({ owner: 1 }); // Gifts by owner

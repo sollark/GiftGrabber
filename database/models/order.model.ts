@@ -77,8 +77,8 @@ const orderSchema: Schema = new Schema({
 // DATABASE INDEXES - Issue E Fix
 // ============================================================================
 
-// Primary lookup indexes
-orderSchema.index({ publicId: 1 }); // External API queries
+// Primary lookup indexes - removed because unique: true already creates this index
+// orderSchema.index({ publicId: 1 }); // External API queries
 orderSchema.index({ orderId: 1 }); // Business ID queries
 
 // Relationship-based queries

@@ -416,7 +416,7 @@ export const resultToLegacy =
     throw result.error;
   };
 
-export default {
+const DatabaseUtils = {
   withDatabaseResult,
   executeWithDatabase,
   executeTransaction,
@@ -430,3 +430,5 @@ export default {
   // Legacy compatibility
   withDatabase,
 };
+
+export default DatabaseUtils;
