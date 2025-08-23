@@ -6,8 +6,8 @@ import {
   createOrderInternal,
   findOrderByPublicId,
   confirmOrderInternal,
-  serializeOrder,
 } from "@/service/orderService";
+import { serializeForClient } from "@/service/databaseService";
 import { OrderCreationPublicData } from "@/types/common.types";
 import { failure, Result, success, fromPromise } from "@/utils/fp";
 
@@ -127,23 +127,6 @@ export const makeOrder = async (
 // const getOrderInternal = async (
 //   orderId: string
 // ): Promise<Record<string, unknown> | null> => {
-//   try {
-//     logOrderRetrieval();
-
-//     const order = await findOrderWithPopulation(orderId);
-//     const result = validateOrderExists(order);
-//     if (result._tag === "Failure") {
-//       logOrderError(result.error);
-//       return null;
-//     }
-
-//     return serializeOrder(result.value);
-//   } catch (error) {
-//     logOrderError(LOG_MESSAGES.GET_ORDER_ERROR);
-//     return null;
-//   }
-// };
-
 /**
  * Fetches an order with populated data and serializes it - Fixed for publicId consistency
  * @param orderPublicId - The public identifier for the order
@@ -168,7 +151,7 @@ export const getOrderInternal = async (
       return failure(err);
     }
 
-    return success(serializeOrder(orderResult.value));
+    return success(serializeForClient(orderResult.value));
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     logOrderError(err.message);

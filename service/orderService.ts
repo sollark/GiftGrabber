@@ -70,33 +70,6 @@ const ORDER_CONFIG = {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Serializes a Mongoose document to a plain object.
- * @param doc - The document to serialize.
- * @returns Plain object representation.
- */
-export const serializeDocument = <T>(doc: T): Record<string, unknown> => {
-  if (!doc) return {};
-
-  if (isMongooseDocument(doc)) {
-    const obj = doc.toObject();
-    // Remove Mongoose-specific properties
-    const { _id, __v, ...cleanObj } = obj as any;
-    return cleanObj as Record<string, unknown>;
-  }
-
-  return doc as Record<string, unknown>;
-};
-
-/**
- * Serializes an Order document.
- * @param order - The order to serialize.
- * @returns Serialized order object.
- */
-export const serializeOrder = (order: Order): Record<string, unknown> => {
-  return serializeDocument(order);
-};
-
 // ============================================================================
 // VALIDATION FUNCTIONS
 // ============================================================================
@@ -334,8 +307,7 @@ export const findPersonById = async (
  */
 export default {
   // Shared utilities
-  serializeDocument,
-  serializeOrder,
+  // Validation functions
   validateOrderExists,
   validateOrderForConfirmation,
 

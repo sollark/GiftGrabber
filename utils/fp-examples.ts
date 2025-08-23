@@ -39,7 +39,11 @@ interface OrderModel {
 }
 
 const mockEvent: EventModel = {
-  create: async (data: any) => ({ ...data, _id: "mock-id" }),
+  create: async (data: any) => ({
+    ...data,
+    publicId: "mock-public-id",
+    _id: "mock-id",
+  }),
 };
 
 const mockOrder: OrderModel = {
@@ -71,7 +75,7 @@ export const createEventSafely = withDatabaseResult(async (eventData: any) => {
  */
 export const findOrderSafely = async (orderId: string): Promise<Maybe<any>> => {
   const result = await safeQuery(() =>
-    mockOrder.findOne({ _id: orderId }).exec()
+    mockOrder.findOne({ publicId: orderId }).exec()
   );
 
   return result._tag === "Success"
@@ -250,7 +254,10 @@ export function useOrderCreationFlow(eventId: string) {
         localStorage.removeItem("orderDraft");
       }
       // Would redirect to success page in real app
-      console.log(`Order created: ${result.value._id}`);
+      console.log(
+        `Order created: ${result.value.publicId || result.value._id}`
+      );
+    } else {
     }
   };
 
@@ -383,7 +390,7 @@ const checkGiftAvailability = async (
  * Mock function for order confirmation
  */
 const sendOrderConfirmation = async (order: any): Promise<void> => {
-  console.log(`Sending confirmation for order ${order._id}`);
+  console.log(`Sending confirmation for order ${order.publicId || order._id}`);
 };
 
 /**

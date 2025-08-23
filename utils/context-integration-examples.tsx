@@ -678,7 +678,7 @@ export const OrderApprovalDashboard: React.FC = () => {
   return (
     <div className="approval-dashboard">
       <div className="order-summary">
-        <h3>Order #{orderValue._id}</h3>
+        <h3>Order #{orderValue.publicId || orderValue.orderId}</h3>
         <p>Status: {orderValue.status}</p>
         <p>Created: {orderValue.createdAt?.toDateString()}</p>
       </div>

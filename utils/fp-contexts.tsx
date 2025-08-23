@@ -383,8 +383,13 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   const useActions = () => {
     const context = useContext();
 
-    const createAction = useCallback(
-      (type: string, payload?: any): A =>
+    // Memoize action creators to prevent infinite loops in useEffect dependencies
+    const actions = useMemo(() => {
+      if (context._tag !== "Some") {
+        return none;
+      }
+
+      const createAction = (type: string, payload?: any): A =>
         ({
           type,
           payload,
@@ -392,29 +397,22 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
             timestamp: Date.now(),
             source: name,
           },
-        } as A),
-      []
-    );
+        } as A);
 
-    const dispatchSafe = useCallback(
-      (action: A): Result<void, Error> => {
-        if (context._tag === "Some") {
-          try {
-            context.value.dispatch(action);
-            return success(undefined);
-          } catch (error) {
-            return failure(
-              error instanceof Error ? error : new Error(String(error))
-            );
-          }
+      const dispatchSafe = (action: A): Result<void, Error> => {
+        try {
+          context.value.dispatch(action);
+          return success(undefined);
+        } catch (error) {
+          return failure(
+            error instanceof Error ? error : new Error(String(error))
+          );
         }
-        return failure(new Error(`${name} context not available`));
-      },
-      [context]
-    );
+      };
 
-    const dispatchAsync = useCallback(
-      async (actionCreator: () => Promise<A>): Promise<Result<void, Error>> => {
+      const dispatchAsync = async (
+        actionCreator: () => Promise<A>
+      ): Promise<Result<void, Error>> => {
         try {
           const action = await actionCreator();
           return dispatchSafe(action);
@@ -423,19 +421,18 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
             error instanceof Error ? error : new Error(String(error))
           );
         }
-      },
-      [dispatchSafe]
-    );
+      };
 
-    return context._tag === "Some"
-      ? some({
-          dispatch: context.value.dispatch,
-          dispatchSafe,
-          dispatchAsync,
-          createAction,
-          getState: context.value.getState,
-        })
-      : none;
+      return some({
+        dispatch: context.value.dispatch,
+        dispatchSafe,
+        dispatchAsync,
+        createAction,
+        getState: context.value.getState,
+      });
+    }, [context._tag === "Some" ? context.value.dispatch : null]);
+
+    return actions;
   };
 
   return {

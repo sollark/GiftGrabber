@@ -57,6 +57,42 @@ import {
 } from "@/database/optimizedQueries";
 
 // ============================================================================
+// CENTRALIZED SERIALIZATION UTILITIES
+// ============================================================================
+
+/**
+ * Transforms any Mongoose document to a plain object safe for client components
+ * Removes MongoDB-specific fields (_id, __v) and handles nested objects/arrays
+ */
+export const serializeForClient = <T = any>(data: any): T => {
+  if (!data) return data;
+
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map(serializeForClient) as T;
+  }
+
+  // Handle Mongoose documents
+  if (data.toObject && typeof data.toObject === "function") {
+    data = data.toObject();
+  }
+
+  // Handle plain objects
+  if (data && typeof data === "object") {
+    const { _id, __v, ...cleanObj } = data;
+    const result: any = {};
+
+    for (const [key, value] of Object.entries(cleanObj)) {
+      result[key] = serializeForClient(value);
+    }
+
+    return result as T;
+  }
+
+  return data as T;
+};
+
+// ============================================================================
 // CORE PERSON OPERATIONS
 
 /**
@@ -262,7 +298,8 @@ export class EventService {
 
     // Return empty array if event not found or no approvers
     const event = result.value as any;
-    return success(event?.approverList || []);
+    const approverList = event?.approverList || [];
+    return success(serializeForClient<Person[]>(approverList));
   }
 
   /**
@@ -283,7 +320,8 @@ export class EventService {
 
     // Return empty array if event not found or no applicants
     const event = result.value as any;
-    return success(event?.applicantList || []);
+    const applicantList = event?.applicantList || [];
+    return success(serializeForClient<Person[]>(applicantList));
   }
 
   /**
@@ -296,7 +334,12 @@ export class EventService {
       { eventId },
       PUBLIC_FIELD_SELECTIONS.EVENT
     );
-    return fromPromise(populateEvent(query).exec());
+    const result = await fromPromise(populateEvent(query).exec());
+
+    if (result._tag === "Success") {
+      return success(serializeForClient<Event>(result.value));
+    }
+    return result;
   }
 
   /**

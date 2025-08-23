@@ -181,16 +181,3 @@ export const fetchAllEvents = async (): Promise<Result<Event[], Error>> => {
     return failure(error instanceof Error ? error : new Error(String(error)));
   }
 };
-
-/**
- * Helper to serialize any object for safe JSON transmission.
- * @param data - The data to serialize.
- * @returns Serialized object.
- */
-export const parseEventData = (data: any): any => {
-  // Remove any Mongoose-specific properties and ensure clean serialization
-  if (data && typeof data.toObject === "function") {
-    return data.toObject();
-  }
-  return JSON.parse(JSON.stringify(data));
-};

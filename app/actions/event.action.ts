@@ -45,8 +45,8 @@ import {
   fetchEventApplicants,
   getEventWithDetails,
   fetchAllEvents,
-  parseEventData,
 } from "@/service/eventService";
+import { serializeForClient } from "@/service/databaseService";
 import { withDatabase, withDatabaseResult } from "@/lib/withDatabase";
 import { Result, isSuccess, failure } from "@/utils/fp";
 
@@ -205,7 +205,7 @@ const getEventDetailsInternal = async (
   console.log(LOG_MESSAGES.USING_PUBLIC_ID);
   const result = await getEventWithDetails(eventId);
   if (isSuccess(result)) {
-    return parseEventData(result.value);
+    return serializeForClient<Event>(result.value);
   } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_DETAILS);
     logEventError(
@@ -230,7 +230,7 @@ const getAllEventsInternal = async (): Promise<Event[]> => {
   console.log(LOG_MESSAGES.USING_PUBLIC_ID);
   const result = await fetchAllEvents();
   if (isSuccess(result)) {
-    return result.value.map((event) => parseEventData(event));
+    return result.value.map((event) => serializeForClient<Event>(event));
   } else {
     logEventError(ERROR_MESSAGES.GET_ALL_EVENTS);
     logEventError(

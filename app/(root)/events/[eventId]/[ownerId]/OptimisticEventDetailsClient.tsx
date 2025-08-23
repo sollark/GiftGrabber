@@ -137,38 +137,42 @@ export default function OptimisticEventDetailsClient({
     const loadData = async () => {
       setError(null); // Clear previous errors
 
-      // Set event ID immediately in context
-      if (eventActions._tag === "Some") {
-        eventActions.value.dispatchSafe({
-          type: "SET_EVENT_ID",
-          payload: eventId,
-        });
+      // Early exit if contexts are not available
+      if (
+        eventActions._tag === "None" ||
+        approverActions._tag === "None" ||
+        giftActions._tag === "None"
+      ) {
+        setError("Context not available. Please refresh the page.");
+        setIsLoading(false);
+        setInitialLoadComplete(true);
+        return;
       }
+
+      // Set event ID immediately in context
+      eventActions.value.dispatchSafe({
+        type: "SET_EVENT_ID",
+        payload: eventId,
+      });
 
       try {
         const event = await getEventDetails(eventId);
         if (event) {
           // EventContext only stores eventId - not the full event object
-          if (eventActions._tag === "Some") {
-            eventActions.value.dispatchSafe({
-              type: "SET_EVENT_ID",
-              payload: eventId, // Only pass the eventId string
-            });
-          }
+          eventActions.value.dispatchSafe({
+            type: "SET_EVENT_ID",
+            payload: eventId, // Only pass the eventId string
+          });
 
-          if (approverActions._tag === "Some") {
-            approverActions.value.dispatchSafe({
-              type: "SET_EVENT_APPROVERS",
-              payload: { approverList: event.approverList || [] },
-            });
-          }
+          approverActions.value.dispatchSafe({
+            type: "SET_EVENT_APPROVERS",
+            payload: { approverList: event.approverList || [] },
+          });
 
-          if (giftActions._tag === "Some") {
-            giftActions.value.dispatchSafe({
-              type: "SET_GIFT_LIST",
-              payload: event.giftList || [],
-            });
-          }
+          giftActions.value.dispatchSafe({
+            type: "SET_GIFT_LIST",
+            payload: event.giftList || [],
+          });
         } else {
           setError("Event not found");
         }
@@ -183,8 +187,17 @@ export default function OptimisticEventDetailsClient({
       }
     };
 
-    loadData();
-  }, [eventId, eventActions, approverActions, giftActions]);
+    // Only run once when the component mounts or eventId changes
+    if (!initialLoadComplete) {
+      loadData();
+    }
+  }, [
+    eventId,
+    initialLoadComplete,
+    eventActions,
+    approverActions,
+    giftActions,
+  ]); // Now using stable action references
 
   /**
    * Resets loading state and retries data fetching on error
