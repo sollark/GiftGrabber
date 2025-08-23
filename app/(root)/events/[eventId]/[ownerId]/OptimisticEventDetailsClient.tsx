@@ -21,16 +21,8 @@
 "use client";
 
 import React from "react";
-import { useEventSelector, useEventActions } from "@/app/contexts/EventContext";
-import {
-  useApproverActions,
-  useApproverSelector,
-} from "@/app/contexts/ApproverContext";
+import { useEventSelector } from "@/app/contexts/EventContext";
 import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
-import {
-  useGiftActions,
-  useGiftSelector,
-} from "@/app/contexts/gift/GiftContext";
 import ApproverList from "@/components/approver/ApproverList";
 import ApplicantList from "@/components/applicant/ApplicantList";
 import GiftList from "@/components/gift/GiftList";
@@ -76,36 +68,27 @@ export default function OptimisticEventDetailsClient({
   ownerId,
 }: OptimisticEventDetailsClientProps) {
   const eventData = useEventSelector((state) => state.data);
-  const eventActions = useEventActions();
-  const approverActions = useApproverActions();
-  const giftActions = useGiftActions();
 
-  // Get data from appropriate contexts
+  // Local state for server data instead of dispatching to contexts
+  const [serverApproverList, setServerApproverList] = React.useState<any[]>([]);
+  const [serverGiftList, setServerGiftList] = React.useState<any[]>([]);
+
+  // Get data from appropriate contexts (for ApplicantList which may come from other sources)
   const applicantListMaybe = useApplicantSelector(
     (state) => state.data.applicantList
   );
-  const approverListMaybe = useApproverSelector(
-    (state) => state.data.approverList
-  );
-  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Extract data from Maybe types with fallbacks
+  // Use server data instead of context data for approvers and gifts
   const applicantList = React.useMemo(
     () => (applicantListMaybe._tag === "Some" ? applicantListMaybe.value : []),
     [applicantListMaybe]
   );
-  const giftList = React.useMemo(
-    () => (giftListMaybe._tag === "Some" ? giftListMaybe.value : []),
-    [giftListMaybe]
-  );
-  const approverList = React.useMemo(
-    () => (approverListMaybe._tag === "Some" ? approverListMaybe.value : []),
-    [approverListMaybe]
-  );
+  const giftList = serverGiftList;
+  const approverList = serverApproverList;
 
   // Determine loading states for different components
   const shouldShowGiftLoading =
@@ -137,42 +120,16 @@ export default function OptimisticEventDetailsClient({
     const loadData = async () => {
       setError(null); // Clear previous errors
 
-      // Early exit if contexts are not available
-      if (
-        eventActions._tag === "None" ||
-        approverActions._tag === "None" ||
-        giftActions._tag === "None"
-      ) {
-        setError("Context not available. Please refresh the page.");
-        setIsLoading(false);
-        setInitialLoadComplete(true);
-        return;
-      }
-
-      // Set event ID immediately in context
-      eventActions.value.dispatchSafe({
-        type: "SET_EVENT_ID",
-        payload: eventId,
-      });
+      // No need to check for context availability since we're not dispatching to them
+      // EventProvider already sets the eventId in initial state
 
       try {
         const event = await getEventDetails(eventId);
         if (event) {
-          // EventContext only stores eventId - not the full event object
-          eventActions.value.dispatchSafe({
-            type: "SET_EVENT_ID",
-            payload: eventId, // Only pass the eventId string
-          });
-
-          approverActions.value.dispatchSafe({
-            type: "SET_EVENT_APPROVERS",
-            payload: { approverList: event.approverList || [] },
-          });
-
-          giftActions.value.dispatchSafe({
-            type: "SET_GIFT_LIST",
-            payload: event.giftList || [],
-          });
+          // Update local state instead of dispatching to contexts
+          // This minimizes context updates and prevents unnecessary re-renders
+          setServerApproverList(event.approverList || []);
+          setServerGiftList(event.giftList || []);
         } else {
           setError("Event not found");
         }
@@ -191,13 +148,7 @@ export default function OptimisticEventDetailsClient({
     if (!initialLoadComplete) {
       loadData();
     }
-  }, [
-    eventId,
-    initialLoadComplete,
-    eventActions,
-    approverActions,
-    giftActions,
-  ]); // Now using stable action references
+  }, [eventId, initialLoadComplete]);
 
   /**
    * Resets loading state and retries data fetching on error

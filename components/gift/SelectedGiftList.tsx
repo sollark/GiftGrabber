@@ -26,6 +26,7 @@
 import React, { FC, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Box } from "@mui/material";
+import { getMaybeOrElse } from "@/utils/fp";
 
 import { makeOrder } from "@/app/actions/order.action";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
@@ -44,6 +45,21 @@ import GiftComponent from "./GiftComponent";
 import QRcode from "@/ui/data-display/QRcode";
 import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import ErrorMessage from "@/ui/form/ErrorMessage";
+
+/**
+ * Safely extracts array value from Maybe type with fallback to empty array
+ * @param maybeArray - Maybe containing an array
+ * @returns Array value or empty array if None or invalid
+ */
+const extractArrayFromMaybe = function <T>(
+  maybeArray: ReturnType<typeof useGiftSelector>
+): T[] {
+  return getMaybeOrElse<T[]>([])(
+    maybeArray._tag === "Some" && Array.isArray(maybeArray.value)
+      ? maybeArray
+      : ({ _tag: "None" } as any)
+  );
+};
 
 // Component constants
 const GIFT_LIST_STYLES = {
@@ -95,11 +111,7 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
   }, [pathname]);
 
   const applicantGifts = useMemo(
-    () =>
-      applicantGiftsMaybe._tag === "Some" &&
-      Array.isArray(applicantGiftsMaybe.value)
-        ? applicantGiftsMaybe.value
-        : [],
+    () => extractArrayFromMaybe<Gift>(applicantGiftsMaybe),
     [applicantGiftsMaybe]
   );
 

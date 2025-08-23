@@ -1,4 +1,4 @@
-import { FC, useMemo, memo } from "react";
+import { FC, useMemo } from "react";
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import OrderGifts from "./OrderGifts";
@@ -14,9 +14,19 @@ const formatPersonName = (person: {
 }): string => `${person.firstName} ${person.lastName}`;
 
 /**
- * Functional OrderDetails component.
- * Displays detailed order information including applicant, approver, and gifts.
- * Uses memo and strict typing for composability and performance.
+ * Functional OrderDetails component for displaying detailed order information.
+ *
+ * @returns JSX.Element containing order details or null if no order exists
+ *
+ * Responsibilities:
+ * - Displays order date, applicant, and approver information
+ * - Integrates with OrderGifts component for complete order view
+ * - Uses OrderContext and ApproverContext for state management
+ *
+ * Performance:
+ * - Uses memoized calculations for derived state
+ * - Leverages React's built-in rendering optimizations
+ * - No React.memo needed due to stable context subscriptions
  */
 const OrderDetails: FC = () => {
   const orderStatus = useOrderStatus();
@@ -82,4 +92,4 @@ const OrderDetails: FC = () => {
   );
 };
 
-export default memo(OrderDetails);
+export default OrderDetails;
