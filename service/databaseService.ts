@@ -44,31 +44,20 @@ import EventModel, { Event } from "@/database/models/event.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
+import { PUBLIC_FIELD_SELECTIONS } from "./databaseConstants";
 import {
   populateEventApplicants,
   populateEventApprovers,
   populateEvent,
-  populateEventGifts,
 } from "./mongoPopulationService";
-// Import optimized queries - Issue D Fix
 import {
   findPersonsByPublicIds,
-  findGiftsByPublicIds,
-  findEventsPaginated,
   executeParallelQueries,
+  findEventsPaginated,
 } from "@/database/optimizedQueries";
 
-/**
- * Standard field selections that include publicId but exclude _id
- */
-export const PUBLIC_FIELD_SELECTIONS = {
-  PERSON: "publicId firstName lastName employeeId personId sourceFormat",
-  EVENT:
-    "publicId eventId name email ownerId eventQRCodeBase64 ownerIdQRCodeBase64",
-  GIFT: "publicId owner applicant order",
-  ORDER:
-    "publicId createdAt applicant gifts orderId confirmationRQCode confirmedByApprover confirmedAt status",
-} as const;
+// ============================================================================
+// CORE PERSON OPERATIONS
 
 /**
  * Population configurations that use publicId

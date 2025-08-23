@@ -18,7 +18,7 @@ import EventModel, { Event } from "@/database/models/event.model";
 import PersonModel, { Person } from "@/database/models/person.model";
 import GiftModel, { Gift } from "@/database/models/gift.model";
 import OrderModel, { Order } from "@/database/models/order.model";
-import { PUBLIC_FIELD_SELECTIONS } from "../service/databaseService";
+import { PUBLIC_FIELD_SELECTIONS } from "../service/databaseConstants";
 
 // ============================================================================
 // BATCH QUERY OPTIMIZATIONS

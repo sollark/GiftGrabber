@@ -1,29 +1,41 @@
 import ControlledFileInput from "@/ui/form/ControlledFileInput";
 import FormatDetectionInfo from "@/ui/data-display/FormatDetectionInfo";
 import { ExcelFormatType } from "@/types/excel.types";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useFormContext } from "react-hook-form";
 import { parseExcelFile } from "@/utils/excel_utils";
 import { FORM_CONFIG } from "@/config/eventFormConfig";
 
 /**
  * Props for the FormFileSection component
  */
-// interface FormFileSectionProps {
-//   onFormatDetected?: (formatInfo: {
-//     applicantFormat?: ExcelFormatType;
-//     approverFormat?: ExcelFormatType;
-//     detectedLanguage?: string;
-//   }) => void;
-// }
+interface FormFileSectionProps {
+  /**
+   * Callback fired when file format detection encounters an error
+   * @param error Error message describing the file processing failure
+   */
+  onFormatError?: (error: string) => void;
+  /**
+   * Callback fired when file format detection succeeds
+   * @param formatInfo Detected format information including type and language
+   */
+  onFormatSuccess?: (formatInfo: {
+    applicantFormat?: ExcelFormatType;
+    approverFormat?: ExcelFormatType;
+    detectedLanguage?: string;
+    totalRecords?: number;
+    validRecords?: number;
+  }) => void;
+}
 
 /**
- * Component for rendering file input fields with format detection
+ * Component for rendering file input fields with format detection and error propagation
  */
-const FormFileSection: React.FC = (
-  {
-    // onFormatDetected,
-  }
-) => {
+const FormFileSection: React.FC<FormFileSectionProps> = ({
+  onFormatError,
+  onFormatSuccess,
+}) => {
+  const { watch } = useFormContext();
   const [formatInfo, setFormatInfo] = useState<{
     applicantFormat?: ExcelFormatType;
     approverFormat?: ExcelFormatType;
@@ -35,10 +47,16 @@ const FormFileSection: React.FC = (
 
   const [isDetecting, setIsDetecting] = useState(false);
 
+  // Watch for file changes in the form
+  const applicantsFile = watch("applicantsFile");
+  const approversFile = watch("approversFile");
+
   /**
-   * Handles file selection and format detection
+   * Handles file format detection when files change in the form
+   * @param file The selected Excel file to process
+   * @param fieldName The form field name ('applicantsFile' or 'approversFile')
    */
-  const handleFileChange = useCallback(
+  const detectFileFormat = useCallback(
     async (file: File, fieldName: string) => {
       if (!file) return;
 
@@ -51,7 +69,6 @@ const FormFileSection: React.FC = (
         });
 
         const newFormatInfo = {
-          ...formatInfo,
           [fieldName === "applicantsFile"
             ? "applicantFormat"
             : "approverFormat"]: detectionResult.formatType,
@@ -60,25 +77,43 @@ const FormFileSection: React.FC = (
           validRecords: detectionResult.validRecords,
         };
 
-        setFormatInfo(newFormatInfo);
-        // onFormatDetected?.(newFormatInfo);
+        setFormatInfo((prev) => ({ ...prev, ...newFormatInfo }));
+        onFormatSuccess?.(newFormatInfo);
       } catch (error) {
+        const errorMessage = `Format detection failed for ${fieldName}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`;
+
         console.error("Format detection failed:", error);
-        setFormatInfo({
-          ...formatInfo,
+        setFormatInfo((prev) => ({
+          ...prev,
           processingWarnings: [
-            ...(formatInfo.processingWarnings || []),
-            `Format detection failed for ${fieldName}: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            ...(prev.processingWarnings || []),
+            errorMessage,
           ],
-        });
+        }));
+
+        onFormatError?.(errorMessage);
       } finally {
         setIsDetecting(false);
       }
     },
-    [formatInfo]
+    [onFormatError, onFormatSuccess]
   );
+
+  // Effect to detect format when applicants file changes
+  useEffect(() => {
+    if (applicantsFile instanceof File) {
+      detectFileFormat(applicantsFile, "applicantsFile");
+    }
+  }, [applicantsFile, detectFileFormat]);
+
+  // Effect to detect format when approvers file changes
+  useEffect(() => {
+    if (approversFile instanceof File) {
+      detectFileFormat(approversFile, "approversFile");
+    }
+  }, [approversFile, detectFileFormat]);
 
   return (
     <div>
@@ -88,7 +123,6 @@ const FormFileSection: React.FC = (
         type="file"
         variant="outlined"
         inputProps={FORM_CONFIG.INPUT_STYLES}
-        onChange={(file: File) => handleFileChange(file, "applicantsFile")}
       />
       <ControlledFileInput
         name="approversFile"
@@ -97,7 +131,6 @@ const FormFileSection: React.FC = (
         variant="outlined"
         inputProps={FORM_CONFIG.INPUT_STYLES}
         required={false}
-        onChange={(file: File) => handleFileChange(file, "approversFile")}
       />
 
       {isDetecting && (

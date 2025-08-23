@@ -29,13 +29,16 @@ export const EventSchema = z.object({
       message: "File type must be .xls or .xlsx",
     }
   ),
-  approversFile: z.instanceof(File).refine(
-    (file) => {
-      const ext = file.name.split(".").pop();
-      return ext === "xls" || ext === "xlsx";
-    },
-    {
-      message: "File type must be .xls or .xlsx",
-    }
-  ),
+  approversFile: z
+    .instanceof(File)
+    .refine(
+      (file) => {
+        const ext = file.name.split(".").pop();
+        return ext === "xls" || ext === "xlsx";
+      },
+      {
+        message: "File type must be .xls or .xlsx",
+      }
+    )
+    .optional(),
 });

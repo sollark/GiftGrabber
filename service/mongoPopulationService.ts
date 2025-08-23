@@ -4,7 +4,7 @@
  * All Person fields now include publicId and exclude _id for security
  */
 
-import { PUBLIC_FIELD_SELECTIONS } from "./databaseService";
+import { PUBLIC_FIELD_SELECTIONS } from "./databaseConstants";
 
 /**
  * Standard Person field selection for consistent population across all functions

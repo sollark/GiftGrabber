@@ -1,7 +1,7 @@
 /**
  * page.tsx - Event Creation Page
  *
- * Purpose: Server-side page component for event creation workflow
+ * Purpose: Client-side page component for event creation workflow
  *
  * Main Responsibilities:
  * - Provides the main interface for creating new gift exchange events
@@ -16,12 +16,18 @@
  * - Entry point for Excel import and event configuration workflows
  */
 
+"use client";
+
 import CreateEventForm from "@/components/event/CreateEventForm";
 import { Section } from "@/ui/layout";
 import { FC } from "react";
+import { BaseEventProvider } from "@/app/contexts/EventContext";
+import { BaseApplicantProvider } from "@/app/contexts/ApplicantContext";
+import { BaseApproverProvider } from "@/app/contexts/ApproverContext";
 
 /**
  * Event creation page component with form and layout structure
+ * Wrapped with necessary context providers for form functionality
  *
  * @returns JSX.Element containing section layout with event creation form
  *
@@ -32,10 +38,16 @@ import { FC } from "react";
  */
 const CreatePage: FC = () => {
   return (
-    <Section>
-      <Section.Title>Create New Event</Section.Title>
-      <CreateEventForm />
-    </Section>
+    <BaseEventProvider>
+      <BaseApplicantProvider>
+        <BaseApproverProvider>
+          <Section>
+            <Section.Title>Create New Event</Section.Title>
+            <CreateEventForm />
+          </Section>
+        </BaseApproverProvider>
+      </BaseApplicantProvider>
+    </BaseEventProvider>
   );
 };
 
