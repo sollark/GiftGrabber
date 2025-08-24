@@ -122,41 +122,65 @@ export { convertExcelToJson, excelToTable };
 // ============================================================================
 
 /**
- * Generic deep equality comparison for any type.
- * Handles primitives, objects, arrays, dates, null/undefined.
+ * Optimized deep equality comparison for any type.
+ * Enhanced for MongoDB ObjectIds and React performance.
  * @param a - First value to compare
  * @param b - Second value to compare
  * @returns boolean - True if values are deeply equal
  */
 export function deepEqual<T>(a: T, b: T): boolean {
+  // Fast path for identical references
   if (a === b) return true;
 
   // Handle null and undefined
   if (a == null || b == null) return a === b;
 
-  // Handle Date
+  // Handle different types
+  if (typeof a !== typeof b) return false;
+
+  // Handle Date objects
   if (a instanceof Date && b instanceof Date) {
     return a.getTime() === b.getTime();
   }
 
-  // Handle Array
+  // Handle Array comparison
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
-    return a.every((val, i) => deepEqual(val, b[i]));
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
   }
 
-  // Handle Object
+  // Handle Object comparison (includes MongoDB ObjectIds)
   if (typeof a === "object" && typeof b === "object") {
+    // Special handling for MongoDB ObjectIds
+    if (
+      a &&
+      b &&
+      typeof (a as any)._id === "object" &&
+      typeof (b as any)._id === "object" &&
+      (a as any)._id?.toString &&
+      (b as any)._id?.toString
+    ) {
+      // Compare ObjectIds by their string representation
+      if ((a as any)._id.toString() !== (b as any)._id.toString()) return false;
+    }
+
     const keysA = Object.keys(a as object);
     const keysB = Object.keys(b as object);
 
     if (keysA.length !== keysB.length) return false;
 
-    return keysA.every((key) => deepEqual((a as any)[key], (b as any)[key]));
+    for (const key of keysA) {
+      if (!keysB.includes(key)) return false;
+      if (!deepEqual((a as any)[key], (b as any)[key])) return false;
+    }
+    return true;
   }
 
-  // Fallback (numbers, strings, booleans, etc.)
-  return a === b;
+  // Fallback for primitives (numbers, strings, booleans, etc.)
+  return false;
 }
 
 // ============================================================================
