@@ -3,7 +3,7 @@ import { FC } from "react";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import SortableFilterableTable, {
   TableColumn,
-} from "@/components/ui/SortableFilterableTable";
+} from "@/ui/table/SortableFilterableTable";
 
 type ApproverListProps = {
   personArray: Person[];
@@ -38,20 +38,6 @@ const ApproverList: FC<ApproverListProps> = ({
       sortable: true,
       filterable: true,
       getValue: (person: Person) => person.lastName || "",
-    },
-    {
-      key: "fullName",
-      label: "Full Name",
-      sortable: true,
-      filterable: true,
-      getValue: (person: Person) =>
-        `${person.firstName || ""} ${person.lastName || ""}`.trim(),
-      render: (person: Person) => (
-        <span className="font-medium">
-          {`${person.firstName || ""} ${person.lastName || ""}`.trim() ||
-            "Unknown"}
-        </span>
-      ),
     },
   ];
 

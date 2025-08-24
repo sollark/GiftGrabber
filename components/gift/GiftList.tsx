@@ -3,7 +3,7 @@ import { Gift } from "@/database/models/gift.model";
 import ErrorMessage from "@/ui/form/ErrorMessage";
 import SortableFilterableTable, {
   TableColumn,
-} from "@/components/ui/SortableFilterableTable";
+} from "@/ui/table/SortableFilterableTable";
 
 interface GiftListProps {
   giftList: Gift[];
@@ -34,20 +34,23 @@ const GiftList: React.FC<GiftListProps> = ({
   const columns: TableColumn<Gift>[] = React.useMemo(
     () => [
       {
-        key: "owner",
-        label: "Owner",
+        key: "ownerFirstName",
+        label: "Owner First Name",
         sortable: true,
         filterable: true,
-        getValue: (gift: Gift) =>
-          gift.owner
-            ? `${gift.owner.firstName} ${gift.owner.lastName}`
-            : "Unknown Owner",
+        getValue: (gift: Gift) => gift.owner?.firstName || "",
         render: (gift: Gift) => (
-          <span>
-            {gift.owner
-              ? `${gift.owner.firstName} ${gift.owner.lastName}`
-              : "Unknown Owner"}
-          </span>
+          <span>{gift.owner?.firstName || "Unknown"}</span>
+        ),
+      },
+      {
+        key: "ownerLastName",
+        label: "Owner Last Name",
+        sortable: true,
+        filterable: true,
+        getValue: (gift: Gift) => gift.owner?.lastName || "",
+        render: (gift: Gift) => (
+          <span>{gift.owner?.lastName || "Unknown"}</span>
         ),
       },
       {

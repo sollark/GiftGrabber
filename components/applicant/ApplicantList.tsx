@@ -3,7 +3,7 @@ import { FC } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import SortableFilterableTable, {
   TableColumn,
-} from "@/components/ui/SortableFilterableTable";
+} from "@/ui/table/SortableFilterableTable";
 
 /**
  * ApplicantList component
@@ -49,20 +49,6 @@ const ApplicantList: FC<ApplicantListProps> = ({
       sortable: true,
       filterable: true,
       getValue: (person: Person) => person.lastName || "",
-    },
-    {
-      key: "fullName",
-      label: "Full Name",
-      sortable: true,
-      filterable: true,
-      getValue: (person: Person) =>
-        `${person.firstName || ""} ${person.lastName || ""}`.trim(),
-      render: (person: Person) => (
-        <span className="font-medium">
-          {`${person.firstName || ""} ${person.lastName || ""}`.trim() ||
-            "Unknown"}
-        </span>
-      ),
     },
   ];
 

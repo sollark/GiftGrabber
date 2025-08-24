@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Person } from "@/database/models/person.model";
-import { Gift } from "@/database/models/gift.model";
+import "./SortableFilterableTable.css";
 
 export type SortDirection = "asc" | "desc" | null;
 
@@ -151,26 +150,42 @@ function SortableFilterableTable<T = any>({
   const getSortIndicator = (column: TableColumn<T>) => {
     if (!column.sortable) return null;
     if (sortColumn !== column.key) {
-      return <span className="text-gray-400 ml-1">↕</span>;
+      return (
+        <span className="sortable-table-sort-indicator sortable-table-sort-indicator-default">
+          ↕
+        </span>
+      );
     }
     if (sortDirection === "asc") {
-      return <span className="text-blue-600 ml-1">↑</span>;
+      return (
+        <span className="sortable-table-sort-indicator sortable-table-sort-indicator-active">
+          ↑
+        </span>
+      );
     }
     if (sortDirection === "desc") {
-      return <span className="text-blue-600 ml-1">↓</span>;
+      return (
+        <span className="sortable-table-sort-indicator sortable-table-sort-indicator-active">
+          ↓
+        </span>
+      );
     }
-    return <span className="text-gray-400 ml-1">↕</span>;
+    return (
+      <span className="sortable-table-sort-indicator sortable-table-sort-indicator-default">
+        ↕
+      </span>
+    );
   };
 
   if (isLoading) {
     return (
-      <div className={`space-y-4 ${className}`}>
-        {title && <h3 className="text-lg font-medium">{title}</h3>}
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="space-y-2">
+      <div className={`sortable-table-container ${className}`}>
+        {title && <h3 className="sortable-table-title">{title}</h3>}
+        <div className="sortable-table-loading">
+          <div className="sortable-table-loading-title"></div>
+          <div className="sortable-table-loading-rows">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-8 bg-gray-200 rounded"></div>
+              <div key={i} className="sortable-table-loading-row"></div>
             ))}
           </div>
         </div>
@@ -179,25 +194,25 @@ function SortableFilterableTable<T = any>({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`sortable-table-container ${className}`}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {title && <h3 className="text-lg font-medium">{title}</h3>}
+      <div className="sortable-table-header">
+        {title && <h3 className="sortable-table-title">{title}</h3>}
 
         {/* Search filter */}
         {columns.some((col) => col.filterable) && (
-          <div className="relative">
+          <div className="sortable-table-search-container">
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="sortable-table-search-input"
             />
             {filterText && (
               <button
                 onClick={() => setFilterText("")}
-                className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                className="sortable-table-search-clear"
               >
                 ✕
               </button>
@@ -208,24 +223,29 @@ function SortableFilterableTable<T = any>({
 
       {/* Table */}
       {sortedData.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
+        <div className="sortable-table-empty">
           {filterText ? `No results found for "${filterText}"` : emptyMessage}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse bg-white border border-gray-200 rounded-lg">
+        <div className="sortable-table-wrapper">
+          <table className="sortable-table">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="sortable-table-header-row">
                 {columns.map((column) => (
                   <th
                     key={column.key}
-                    className={`text-left py-3 px-4 font-medium text-gray-900 border-b border-gray-200 ${
-                      column.sortable ? "cursor-pointer hover:bg-gray-100" : ""
+                    className={`sortable-table-header-cell ${
+                      column.sortable
+                        ? "sortable-table-header-cell-sortable"
+                        : ""
                     }`}
-                    style={{ width: column.width }}
+                    style={{
+                      width: column.width,
+                      cursor: column.sortable ? "pointer" : "default",
+                    }}
                     onClick={() => handleSort(column)}
                   >
-                    <div className="flex items-center">
+                    <div className="sortable-table-header-content">
                       {column.label}
                       {getSortIndicator(column)}
                     </div>
@@ -237,10 +257,10 @@ function SortableFilterableTable<T = any>({
               {sortedData.map((item, index) => (
                 <tr
                   key={getRowKey(item, index)}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="sortable-table-body-row"
                 >
                   {columns.map((column) => (
-                    <td key={column.key} className="py-3 px-4">
+                    <td key={column.key} className="sortable-table-body-cell">
                       {column.render
                         ? column.render(item, index)
                         : String((item as any)[column.key] || "")}
@@ -255,7 +275,7 @@ function SortableFilterableTable<T = any>({
 
       {/* Results count */}
       {sortedData.length > 0 && (
-        <div className="text-sm text-gray-500">
+        <div className="sortable-table-results">
           Showing {sortedData.length} of {data.length}{" "}
           {data.length === 1 ? "item" : "items"}
           {filterText && ` matching "${filterText}"`}

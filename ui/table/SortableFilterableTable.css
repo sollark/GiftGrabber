@@ -1,0 +1,175 @@
+/* SortableFilterableTable Component Styles */
+
+/* Main container */
+.sortable-table-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Header section */
+.sortable-table-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .sortable-table-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.sortable-table-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+/* Search input */
+.sortable-table-search-container {
+  position: relative;
+}
+
+.sortable-table-search-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.sortable-table-search-input:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  border-color: transparent;
+}
+
+.sortable-table-search-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.sortable-table-search-clear:hover {
+  color: #4b5563;
+}
+
+/* Loading state */
+.sortable-table-loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.sortable-table-loading-title {
+  height: 1rem;
+  background-color: #e5e7eb;
+  border-radius: 0.25rem;
+  width: 33.333333%;
+  margin-bottom: 1rem;
+}
+
+.sortable-table-loading-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sortable-table-loading-row {
+  height: 2rem;
+  background-color: #e5e7eb;
+  border-radius: 0.25rem;
+}
+
+/* Empty state */
+.sortable-table-empty {
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+/* Table container */
+.sortable-table-wrapper {
+  overflow-x: auto;
+}
+
+.sortable-table {
+  min-width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+/* Table header */
+.sortable-table-header-row {
+  background-color: #f9fafb;
+}
+
+.sortable-table-header-cell {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sortable-table-header-cell-sortable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sortable-table-header-cell-sortable:hover {
+  background-color: #f3f4f6;
+}
+
+.sortable-table-header-content {
+  display: flex;
+  align-items: center;
+}
+
+/* Sort indicators */
+.sortable-table-sort-indicator {
+  margin-left: 0.25rem;
+}
+
+.sortable-table-sort-indicator-default {
+  color: #9ca3af;
+}
+
+.sortable-table-sort-indicator-active {
+  color: #2563eb;
+}
+
+/* Table body */
+.sortable-table-body-row {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.sortable-table-body-row:hover {
+  background-color: #f9fafb;
+}
+
+.sortable-table-body-cell {
+  padding: 0.75rem 1rem;
+}
+
+/* Results counter */
+.sortable-table-results {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
