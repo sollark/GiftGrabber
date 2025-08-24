@@ -1,14 +1,16 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
-import ListSkeleton from "@/components/ui/ListSkeleton";
+import SortableFilterableTable, {
+  TableColumn,
+} from "@/components/ui/SortableFilterableTable";
 
 /**
  * ApplicantList component
- * Renders a list of applicants using context as the primary source, with an optional fallback prop.
+ * Renders a sortable and filterable list of applicants using context as the primary source, with an optional fallback prop.
  * - Uses context for applicant list, or falls back to the provided personArray prop.
- * - Displays a simple list of applicant names.
- * - Shows loading skeleton when data is being fetched.
+ * - Displays applicants in a searchable, sortable table format.
+ * - Shows loading state when data is being fetched.
  *
  * Props:
  *   personArray: Person[] - Optional fallback array of Person objects.
@@ -32,31 +34,50 @@ const ApplicantList: FC<ApplicantListProps> = ({
       ? applicantList.value
       : personArray;
 
-  // Show loading skeleton when loading and no data
-  if (isLoading && list.length === 0) {
-    return <ListSkeleton title="Applicants" rows={4} columns={1} />;
-  }
+  // Define table columns for applicants
+  const columns: TableColumn<Person>[] = [
+    {
+      key: "firstName",
+      label: "First Name",
+      sortable: true,
+      filterable: true,
+      getValue: (person: Person) => person.firstName || "",
+    },
+    {
+      key: "lastName",
+      label: "Last Name",
+      sortable: true,
+      filterable: true,
+      getValue: (person: Person) => person.lastName || "",
+    },
+    {
+      key: "fullName",
+      label: "Full Name",
+      sortable: true,
+      filterable: true,
+      getValue: (person: Person) =>
+        `${person.firstName || ""} ${person.lastName || ""}`.trim(),
+      render: (person: Person) => (
+        <span className="font-medium">
+          {`${person.firstName || ""} ${person.lastName || ""}`.trim() ||
+            "Unknown"}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div>
-      <h3>Applicants</h3>
-      {list.length === 0 ? (
-        <div className="text-gray-500 text-sm">No applicants available</div>
-      ) : (
-        <ul>
-          {list.map((applicant: Person, index: number) => (
-            <li
-              key={
-                applicant.publicId ||
-                `${applicant.firstName}-${applicant.lastName}-${index}`
-              }
-            >
-              {`${applicant.firstName} ${applicant.lastName}`}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <SortableFilterableTable<Person>
+      data={list}
+      columns={columns}
+      isLoading={isLoading && list.length === 0}
+      title="Applicants"
+      emptyMessage="No applicants available"
+      searchPlaceholder="Search applicants by name..."
+      rowKey={(person, index) =>
+        person.publicId || `${person.firstName}-${person.lastName}-${index}`
+      }
+    />
   );
 };
 

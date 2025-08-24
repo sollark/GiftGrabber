@@ -1,7 +1,9 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
-import ListSkeleton from "@/components/ui/ListSkeleton";
+import SortableFilterableTable, {
+  TableColumn,
+} from "@/components/ui/SortableFilterableTable";
 
 type ApproverListProps = {
   personArray: Person[];
@@ -21,31 +23,50 @@ const ApproverList: FC<ApproverListProps> = ({
       ? approverList.value
       : personArray;
 
-  // Show loading skeleton when loading and no data
-  if (isLoading && list.length === 0) {
-    return <ListSkeleton title="Approvers" rows={2} columns={1} />;
-  }
+  // Define table columns for approvers
+  const columns: TableColumn<Person>[] = [
+    {
+      key: "firstName",
+      label: "First Name",
+      sortable: true,
+      filterable: true,
+      getValue: (person: Person) => person.firstName || "",
+    },
+    {
+      key: "lastName",
+      label: "Last Name",
+      sortable: true,
+      filterable: true,
+      getValue: (person: Person) => person.lastName || "",
+    },
+    {
+      key: "fullName",
+      label: "Full Name",
+      sortable: true,
+      filterable: true,
+      getValue: (person: Person) =>
+        `${person.firstName || ""} ${person.lastName || ""}`.trim(),
+      render: (person: Person) => (
+        <span className="font-medium">
+          {`${person.firstName || ""} ${person.lastName || ""}`.trim() ||
+            "Unknown"}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div>
-      <h3>Approvers</h3>
-      {list.length === 0 ? (
-        <div className="text-gray-500 text-sm">No approvers available</div>
-      ) : (
-        <ul>
-          {list.map((approver: Person, index: number) => (
-            <li
-              key={
-                approver.publicId ||
-                `${approver.firstName}-${approver.lastName}-${index}`
-              }
-            >
-              {`${approver.firstName} ${approver.lastName}`}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <SortableFilterableTable<Person>
+      data={list}
+      columns={columns}
+      isLoading={isLoading && list.length === 0}
+      title="Approvers"
+      emptyMessage="No approvers available"
+      searchPlaceholder="Search approvers by name..."
+      rowKey={(person, index) =>
+        person.publicId || `${person.firstName}-${person.lastName}-${index}`
+      }
+    />
   );
 };
 
