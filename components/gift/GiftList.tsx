@@ -1,6 +1,7 @@
 import React from "react";
 import { Gift } from "@/database/models/gift.model";
 import ListSkeleton from "@/components/ui/ListSkeleton";
+import ErrorMessage from "@/ui/form/ErrorMessage";
 
 interface GiftListProps {
   giftList: Gift[];
@@ -54,12 +55,7 @@ const GiftList: React.FC<GiftListProps> = ({
   );
   // Show error state if there's an error
   if (error) {
-    return (
-      <div>
-        <h3>Gifts</h3>
-        <div className="text-red-600 text-sm">Error loading gifts: {error}</div>
-      </div>
-    );
+    return <ErrorMessage message={"Error loading gifts: " + error} />;
   }
 
   // Show loading only if actively loading AND no data available AND expected to load

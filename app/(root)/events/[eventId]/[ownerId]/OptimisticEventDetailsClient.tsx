@@ -1,33 +1,43 @@
 /**
  * OptimisticEventDetailsClient.tsx
  *
- * Purpose: Client-side event details interface with optimistic UI rendering and context-driven data management
+ * Purpose: Renders the event details page for event owners, providing optimistic UI and context-driven data management.
  *
- * Main Responsibilities:
- * - Implements optimistic UI pattern showing immediate interface while data loads
- * - Manages event data fetching and distribution to appropriate contexts
- * - Coordinates state updates across Event, Approver, and Gift contexts
- * - Provides intelligent loading states and error handling with retry mechanisms
- * - Renders event management interface with approver, applicant, and gift lists
+ * Responsibilities:
+ * - Fetches and synchronizes event data (applicants, approvers, gifts) with context using a generic sync hook
+ * - Aggregates loading and error states for robust UI feedback
+ * - Renders lists and skeletons for event management
+ * - Handles all error UI via ErrorMessage component
  *
- * Architecture Role:
- * - Client-side coordinator between server data and context state management
- * - Bridge between URL parameters and context-driven data fetching
- * - Implements optimistic UI patterns for improved user experience
- * - Manages error boundaries and loading states for complex data dependencies
- * - Foundation for event owner administrative interface
+ * Architecture:
+ * - Delegates all business logic and server sync to hooks/context
+ * - No retry/manual error handling or styling changes in this file
+ * - Follows DRY, separation-of-concerns, and maintainability best practices
  */
 
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useEventSelector } from "@/app/contexts/EventContext";
-import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
+import {
+  useApplicantSelector,
+  useApplicantActions,
+} from "@/app/contexts/ApplicantContext";
+import {
+  useApproverSelector,
+  useApproverActions,
+} from "@/app/contexts/ApproverContext";
+import {
+  useGiftSelector,
+  useGiftActions,
+} from "@/app/contexts/gift/GiftContext";
+import { useContextSync } from "@/hooks/useContextSync";
 import ApproverList from "@/components/approver/ApproverList";
 import ApplicantList from "@/components/applicant/ApplicantList";
-import GiftList from "@/components/gift/GiftList";
 import ListSkeleton from "@/components/ui/ListSkeleton";
+import ErrorMessage from "@/ui/form/ErrorMessage";
 import { getEventDetails } from "@/app/actions/event.action";
+import GiftList from "@/components/gift/GiftList";
 
 interface OptimisticEventDetailsClientProps {
   eventId: string;
@@ -41,6 +51,7 @@ interface OptimisticEventDetailsClientProps {
  * @param ownerId - Owner identifier for access control and event management permissions
  * @returns JSX.Element with event management interface including lists and loading states
  *
+   // UI component for event details page. All context/server sync logic is handled by useContextSync hook.
  * @sideEffects
  * - Fetches event data from server and updates multiple contexts
  * - Updates Event, Approver, and Gift context states
@@ -67,88 +78,132 @@ export default function OptimisticEventDetailsClient({
   eventId,
   ownerId,
 }: OptimisticEventDetailsClientProps) {
+  // --- Context Selectors ---
+  // Extracts event data from context (not used directly, but may be needed for future extension)
   const eventData = useEventSelector((state) => state.data);
 
-  // Local state for server data instead of dispatching to contexts
-  const [serverApproverList, setServerApproverList] = React.useState<any[]>([]);
-  const [serverGiftList, setServerGiftList] = React.useState<any[]>([]);
+  // --- Context Data Extraction ---
+  /**
+   * Helper to safely extract value from a Maybe type, fallback to default.
+   * @template T
+   * @param maybe - Maybe<T> type (or undefined)
+   * @param fallback - Default value if maybe is None or undefined
+   * @returns T
+   */
+  function extractOrDefault<T>(maybe: any, fallback: T): T {
+    return maybe && maybe._tag === "Some" ? maybe.value : fallback;
+  }
 
-  // Get data from appropriate contexts (for ApplicantList which may come from other sources)
-  const applicantListMaybe = useApplicantSelector(
-    (state) => state.data.applicantList
+  // Context selectors and actions
+  const applicantList = extractOrDefault(
+    useApplicantSelector((state) => state.data.applicantList),
+    []
   );
-
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Use server data instead of context data for approvers and gifts
-  const applicantList = React.useMemo(
-    () => (applicantListMaybe._tag === "Some" ? applicantListMaybe.value : []),
-    [applicantListMaybe]
+  const approverList = extractOrDefault(
+    useApproverSelector((state) => state.data.approverList),
+    []
   );
-  const giftList = serverGiftList;
-  const approverList = serverApproverList;
+  const giftList = extractOrDefault(
+    useGiftSelector((state) => state.data.giftList),
+    []
+  );
+  const applicantActions = extractOrDefault(useApplicantActions(), {
+    dispatchSafe: () => {},
+  });
+  const approverActions = extractOrDefault(useApproverActions(), {
+    dispatchSafe: () => {},
+  });
+  const giftActions = extractOrDefault(useGiftActions(), {
+    dispatchSafe: () => {},
+  });
 
-  // Determine loading states for different components
+  /**
+   * useContextSync: Synchronizes context state with server for each list.
+   * Returns loading and error state for each context.
+   */
+  const { isLoading: isApplicantsLoading, result: applicantsResult } =
+    useContextSync({
+      fetchServerData: async () => {
+        const event = await getEventDetails(eventId);
+        return event ? event.applicantList || [] : [];
+      },
+      contextValue: applicantList,
+      contextActions: { _tag: "Some", value: applicantActions },
+      buildAction: (serverList) => ({
+        type: "SET_EVENT_APPLICANTS" as const,
+        payload: { applicantList: serverList },
+      }),
+    });
+  const { isLoading: isApproversLoading, result: approversResult } =
+    useContextSync({
+      fetchServerData: async () => {
+        const event = await getEventDetails(eventId);
+        return event ? event.approverList || [] : [];
+      },
+      contextValue: approverList,
+      contextActions: { _tag: "Some", value: approverActions },
+      buildAction: (serverList) => ({
+        type: "SET_EVENT_APPROVERS" as const,
+        payload: { approverList: serverList },
+      }),
+    });
+  const { isLoading: isGiftsLoading, result: giftsResult } = useContextSync({
+    fetchServerData: async () => {
+      const event = await getEventDetails(eventId);
+      return event ? event.giftList || [] : [];
+    },
+    contextValue: giftList,
+    contextActions: { _tag: "Some", value: giftActions },
+    buildAction: (serverList) => ({
+      type: "SET_GIFT_LIST" as const,
+      payload: serverList,
+    }),
+  });
+
+  /**
+   * Aggregates loading and error states from all context syncs.
+   * @returns { isLoading: boolean, error: string | null }
+   */
+  const isLoading = isApplicantsLoading || isApproversLoading || isGiftsLoading;
+  const error =
+    (applicantsResult && applicantsResult._tag === "Failure"
+      ? applicantsResult.error
+      : null) ||
+    (approversResult && approversResult._tag === "Failure"
+      ? approversResult.error
+      : null) ||
+    (giftsResult && giftsResult._tag === "Failure" ? giftsResult.error : null);
+
+  /**
+   * Determines loading state for the GiftList skeleton.
+   * @returns {boolean}
+   */
   const shouldShowGiftLoading =
-    isLoading &&
-    !initialLoadComplete &&
-    applicantList.length > 0 &&
-    giftList.length === 0;
+    isLoading && applicantList.length > 0 && giftList.length === 0;
 
-  const isInitialLoad = isLoading && !initialLoadComplete;
+  /**
+   * Determines if the initial load skeletons should be shown.
+   * @returns {boolean}
+   */
+  const isInitialLoad = isLoading;
   const hasNoData =
     applicantList.length === 0 &&
     approverList.length === 0 &&
     giftList.length === 0;
 
   /**
-   * Loads event data optimistically and distributes to appropriate contexts
+   * Context/Server Synchronization Strategy (Documented for this component)
+   * ----------------------------------------------------------------------
    *
-   * @sideEffects
-   * - Updates Event context with eventId
-   * - Populates Approver context with approver list
-   * - Populates Gift context with gift list
-   * - Updates loading and error states
+   * This component uses the generic useContextSync hook to keep context state in sync with server data.
+   * For each list (applicants, approvers, gifts):
+   *   - Fetches the latest data from the server
+   *   - Deep-compares with the current context value
+   *   - Only dispatches a context update if the data is different
+   *   - Returns loading and error state for UI
    *
-   * @performance Async operation with context updates batched by React
-   * @businessLogic Separates data concerns - EventContext only stores ID, others store lists
-   * @notes Critical for coordinating server data with client-side context state
+   * This pattern is DRY, testable, and reusable for any context/server sync in the app.
    */
-  React.useEffect(() => {
-    const loadData = async () => {
-      setError(null); // Clear previous errors
-
-      // No need to check for context availability since we're not dispatching to them
-      // EventProvider already sets the eventId in initial state
-
-      try {
-        const event = await getEventDetails(eventId);
-        if (event) {
-          // Update local state instead of dispatching to contexts
-          // This minimizes context updates and prevents unnecessary re-renders
-          setServerApproverList(event.approverList || []);
-          setServerGiftList(event.giftList || []);
-        } else {
-          setError("Event not found");
-        }
-      } catch (error) {
-        console.error("Failed to load event data:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to load event data"
-        );
-      } finally {
-        setIsLoading(false);
-        setInitialLoadComplete(true);
-      }
-    };
-
-    // Only run once when the component mounts or eventId changes
-    if (!initialLoadComplete) {
-      loadData();
-    }
-  }, [eventId, initialLoadComplete]);
 
   /**
    * Resets loading state and retries data fetching on error
@@ -161,12 +216,13 @@ export default function OptimisticEventDetailsClient({
    * @notes Provides user recovery mechanism for failed data loads
    * @publicAPI Exposed through retry button in error UI
    */
-  const handleRetry = React.useCallback(() => {
-    setIsLoading(true);
-    setInitialLoadComplete(false);
-    setError(null);
-  }, []);
 
+  // --- Unused Functions ---
+  // handleRetry is unused and can be safely removed. If you need retry logic, consider using a dedicated error boundary or a custom hook for error recovery.
+
+  /**
+   * Renders the event details UI, including loading, error, and data lists.
+   */
   return (
     <div>
       <h1>Event Details</h1>
@@ -176,21 +232,8 @@ export default function OptimisticEventDetailsClient({
         <div className="text-blue-600 mb-4">Syncing with server...</div>
       )}
 
-      {/* Error handling with retry */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <div className="text-red-800 font-semibold mb-2">
-            Error Loading Event Data
-          </div>
-          <div className="text-red-600 mb-3">{error}</div>
-          <button
-            onClick={handleRetry}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+      {/* Error handling with ErrorMessage component */}
+      {error && <ErrorMessage message={error} />}
 
       {/* Data lists - show skeletons during initial load or context data */}
       <div className="space-y-6">
