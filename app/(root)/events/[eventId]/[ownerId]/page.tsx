@@ -23,6 +23,7 @@
 import { useEffect, useState } from "react";
 import { EventProvider } from "@/app/contexts/EventContext";
 import { ApproverProvider } from "@/app/contexts/ApproverContext";
+import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
 import { GiftProvider } from "@/app/contexts/gift/GiftContext";
 import OptimisticEventDetailsClient from "./OptimisticEventDetailsClient";
 
@@ -86,9 +87,11 @@ export default function EventDetails({
   return (
     <EventProvider eventId={eventId}>
       <ApproverProvider approverList={[]}>
-        <GiftProvider giftList={[]}>
-          <OptimisticEventDetailsClient eventId={eventId} ownerId={ownerId} />
-        </GiftProvider>
+        <ApplicantProvider applicantList={[]}>
+          <GiftProvider giftList={[]}>
+            <OptimisticEventDetailsClient eventId={eventId} ownerId={ownerId} />
+          </GiftProvider>
+        </ApplicantProvider>
       </ApproverProvider>
     </EventProvider>
   );

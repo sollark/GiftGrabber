@@ -18,7 +18,10 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useEventSelector } from "@/app/contexts/EventContext";
+import {
+  useEventSelector,
+  useEventActions,
+} from "@/app/contexts/EventContext";
 import {
   useApplicantSelector,
   useApplicantActions,
@@ -80,48 +83,35 @@ export default function OptimisticEventDetailsClient({
   // --- Context Selectors ---
   // Extract data from contexts using stable selectors
   const eventData = useEventSelector((state) => state.data);
+  const rawEventActions = useEventActions();
 
-  // --- Context Data Extraction with Memoization ---
+  // --- Context Data Extraction with Stable References ---
   /**
    * Helper to safely extract value from a Maybe type, fallback to default.
-   * Memoized to prevent unnecessary re-renders.
    */
-  const extractOrDefault = useMemo(() => {
-    return function <T>(maybe: any, fallback: T): T {
-      return maybe && maybe._tag === "Some" ? maybe.value : fallback;
-    };
-  }, []);
+  const extractOrDefault = <T,>(maybe: any, fallback: T): T => {
+    return maybe && maybe._tag === "Some" ? maybe.value : fallback;
+  };
 
-  // Context selectors - extracted first, then memoized
-  const rawApplicantList = useApplicantSelector(
-    (state) => state.data.applicantList
-  );
-  const rawApproverList = useApproverSelector(
-    (state) => state.data.approverList
-  );
+  // Context selectors - extract once per render
+  const rawApplicantList = useApplicantSelector((state) => state.data.applicantList);
+  const rawApproverList = useApproverSelector((state) => state.data.approverList);
   const rawGiftList = useGiftSelector((state) => state.data.giftList);
   const rawApplicantActions = useApplicantActions();
   const rawApproverActions = useApproverActions();
   const rawGiftActions = useGiftActions();
 
-  // Memoized extracted values
-  const applicantList = useMemo(
-    () => extractOrDefault(rawApplicantList, []),
-    [extractOrDefault, rawApplicantList]
-  );
+  // Extract values using stable function
+  const applicantList = extractOrDefault(rawApplicantList, []);
+  const approverList = extractOrDefault(rawApproverList, []);
+  const giftList = extractOrDefault(rawGiftList, []);
+  const eventDetails = extractOrDefault(eventData, { eventId, name: "", email: "" });
 
-  const approverList = useMemo(
-    () => extractOrDefault(rawApproverList, []),
-    [extractOrDefault, rawApproverList]
-  );
-
-  const giftList = useMemo(
-    () => extractOrDefault(rawGiftList, []),
-    [extractOrDefault, rawGiftList]
-  );
-
-  // Context actions - memoized for stability
+  // Create stable context actions object - memoized by actual action functions
   const contextActions = useMemo(() => {
+    const eventActions = extractOrDefault(rawEventActions, {
+      dispatchSafe: () => {},
+    });
     const applicantActions = extractOrDefault(rawApplicantActions, {
       dispatchSafe: () => {},
     });
@@ -133,12 +123,13 @@ export default function OptimisticEventDetailsClient({
     });
 
     return {
+      eventActions: { _tag: "Some" as const, value: eventActions },
       applicantActions: { _tag: "Some" as const, value: applicantActions },
       approverActions: { _tag: "Some" as const, value: approverActions },
       giftActions: { _tag: "Some" as const, value: giftActions },
     };
   }, [
-    extractOrDefault,
+    rawEventActions,
     rawApplicantActions,
     rawApproverActions,
     rawGiftActions,
@@ -192,7 +183,10 @@ export default function OptimisticEventDetailsClient({
    */
   return (
     <div>
-      <h1>Event Details</h1>
+      <h1>{eventDetails.name || "Event Details"}</h1>
+      {eventDetails.email && (
+        <p className="text-gray-600 mb-4">Contact: {eventDetails.email}</p>
+      )}
 
       {/* Loading indicator */}
       {isLoading && (

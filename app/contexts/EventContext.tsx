@@ -50,21 +50,24 @@ import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * EventState: Shape of the event context state.
- * Only stores eventId - no other event data should be stored here.
+ * Stores eventId and optional event details (name, email).
  */
 export interface EventState
   extends FunctionalState<{
     eventId: string;
+    name?: string;
+    email?: string;
   }> {}
 
 /**
  * EventAction: Supported actions for event state transitions.
  * - SET_EVENT_ID: Set the current eventId (string only)
+ * - SET_EVENT_DETAILS: Set event details (name, email, eventId)
  * - RESET_EVENT: Reset state to initial
  */
 export interface EventAction extends FunctionalAction {
-  type: "SET_EVENT_ID" | "RESET_EVENT";
-  payload?: string; // Only string eventId allowed
+  type: "SET_EVENT_ID" | "SET_EVENT_DETAILS" | "RESET_EVENT";
+  payload?: string | { name: string; email: string; eventId: string };
 }
 
 // ============================================================================
@@ -131,7 +134,29 @@ const eventReducer = (
       return success({
         ...state,
         data: {
+          ...state.data,
           eventId: action.payload,
+        },
+      });
+    }
+    case "SET_EVENT_DETAILS": {
+      // Validate payload has name, email, and eventId
+      if (
+        typeof action.payload !== "object" ||
+        !action.payload ||
+        typeof (action.payload as any).name !== "string" ||
+        typeof (action.payload as any).email !== "string" ||
+        typeof (action.payload as any).eventId !== "string"
+      ) {
+        return failure(new Error("Event details must include name, email, and eventId"));
+      }
+      const { name, email, eventId } = action.payload as { name: string; email: string; eventId: string };
+      return success({
+        ...state,
+        data: {
+          eventId,
+          name,
+          email,
         },
       });
     }

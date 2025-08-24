@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { getEventDetails } from "@/app/actions/event.action";
 import { Result, success, failure } from "@/utils/fp";
 
@@ -6,13 +6,7 @@ import { Result, success, failure } from "@/utils/fp";
  * useEventDataSync
  *
  * Custom hook to fetch event details once and distribute to multiple contexts.
- * This prevents redundant API calls while maintaining individual context loading states.
- *
- * Best Practices:
- * - Single source of truth for event data fetching
- * - Proper error handling with Result types
- * - Memoized context actions to prevent unnecessary re-renders
- * - Clear separation of concerns between data fetching and context updates
+ * Uses ref-based stability to prevent duplicate dispatches.
  *
  * @param eventId - The event ID to fetch data for
  * @param contextActions - Object containing all context action dispatchers
@@ -21,6 +15,10 @@ import { Result, success, failure } from "@/utils/fp";
 export function useEventDataSync(
   eventId: string,
   contextActions: {
+    eventActions?: {
+      _tag: string;
+      value: { dispatchSafe: (action: any) => void };
+    };
     applicantActions: {
       _tag: string;
       value: { dispatchSafe: (action: any) => void };
@@ -37,90 +35,108 @@ export function useEventDataSync(
 ) {
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState<Result<true, string> | null>(null);
-  const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const hasInitialLoadRef = useRef(false);
+  const lastSyncedEventRef = useRef<string | null>(null);
 
-  // Memoize context actions to ensure stable references
-  const stableContextActions = useMemo(
-    () => ({
-      applicant: contextActions.applicantActions,
-      approver: contextActions.approverActions,
-      gift: contextActions.giftActions,
-    }),
-    [
-      contextActions.applicantActions._tag,
-      contextActions.applicantActions.value.dispatchSafe,
-      contextActions.approverActions._tag,
-      contextActions.approverActions.value.dispatchSafe,
-      contextActions.giftActions._tag,
-      contextActions.giftActions.value.dispatchSafe,
-    ]
-  );
+  // Store context actions in refs for stable references
+  const contextActionsRef = useRef(contextActions);
+  contextActionsRef.current = contextActions;
 
   const syncEventData = useCallback(async () => {
+    // Prevent duplicate syncs for the same event
+    if (lastSyncedEventRef.current === eventId && hasInitialLoadRef.current) {
+      return;
+    }
+
+    console.log(`🔄 useEventDataSync: Starting sync for eventId: ${eventId}`);
     setResult(null);
     setIsLoading(true);
 
     try {
       const event = await getEventDetails(eventId);
+      console.log("📦 Event data received:", event);
 
       if (event) {
-        // Dispatch to all contexts simultaneously with proper error boundaries
-        try {
-          if (stableContextActions.applicant._tag === "Some") {
-            stableContextActions.applicant.value.dispatchSafe({
-              type: "SET_EVENT_APPLICANTS" as const,
-              payload: { applicantList: event.applicantList || [] },
-            });
-          }
-        } catch (err) {
-          console.warn("Failed to update applicant context:", err);
+        const actions = contextActionsRef.current;
+
+        // Dispatch event details to Event Context if available
+        if (actions.eventActions && actions.eventActions._tag === "Some") {
+          console.log(
+            "📤 Dispatching event details to event context:",
+            event.name,
+            event.email
+          );
+          actions.eventActions.value.dispatchSafe({
+            type: "SET_EVENT_DETAILS" as const,
+            payload: { name: event.name, email: event.email, eventId },
+          });
         }
 
-        try {
-          if (stableContextActions.approver._tag === "Some") {
-            stableContextActions.approver.value.dispatchSafe({
-              type: "SET_EVENT_APPROVERS" as const,
-              payload: { approverList: event.approverList || [] },
-            });
-          }
-        } catch (err) {
-          console.warn("Failed to update approver context:", err);
+        // Dispatch to applicant context
+        if (actions.applicantActions._tag === "Some") {
+          console.log(
+            "📤 Dispatching to applicant context:",
+            event.applicantList?.length || 0,
+            "items"
+          );
+          actions.applicantActions.value.dispatchSafe({
+            type: "SET_EVENT_APPLICANTS" as const,
+            payload: { applicantList: event.applicantList || [] },
+          });
         }
 
-        try {
-          if (stableContextActions.gift._tag === "Some") {
-            stableContextActions.gift.value.dispatchSafe({
-              type: "SET_GIFT_LIST" as const,
-              payload: event.giftList || [],
-            });
-          }
-        } catch (err) {
-          console.warn("Failed to update gift context:", err);
+        // Dispatch to approver context
+        if (actions.approverActions._tag === "Some") {
+          console.log(
+            "📤 Dispatching to approver context:",
+            event.approverList?.length || 0,
+            "items"
+          );
+          actions.approverActions.value.dispatchSafe({
+            type: "SET_EVENT_APPROVERS" as const,
+            payload: { approverList: event.approverList || [] },
+          });
+        }
+
+        // Dispatch to gift context
+        if (actions.giftActions._tag === "Some") {
+          console.log(
+            "📤 Dispatching to gift context:",
+            event.giftList?.length || 0,
+            "items"
+          );
+          actions.giftActions.value.dispatchSafe({
+            type: "SET_GIFT_LIST" as const,
+            payload: event.giftList || [],
+          });
         }
       }
 
+      lastSyncedEventRef.current = eventId;
       setResult(success(true));
+      console.log("✅ useEventDataSync: Sync completed successfully");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch event data";
       setResult(failure(errorMessage));
+      console.error("❌ useEventDataSync: Sync failed:", errorMessage);
     } finally {
       setIsLoading(false);
-      setHasInitialLoad(true);
+      hasInitialLoadRef.current = true;
     }
-  }, [eventId, stableContextActions]);
+  }, [eventId]);
 
-  // Initial load effect
+  // Initial load effect - only runs once per eventId
   useEffect(() => {
-    if (!hasInitialLoad) {
+    if (!hasInitialLoadRef.current || lastSyncedEventRef.current !== eventId) {
       syncEventData();
     }
-  }, [syncEventData, hasInitialLoad]);
+  }, [syncEventData]);
 
   return {
     isLoading,
     result,
     refetch: syncEventData,
-    hasData: hasInitialLoad,
+    hasData: hasInitialLoadRef.current,
   };
 }
