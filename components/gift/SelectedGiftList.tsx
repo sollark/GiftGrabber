@@ -27,8 +27,8 @@ import React, { FC, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Box } from "@mui/material";
 import { getMaybeOrElse } from "@/utils/fp";
+import { processCompleteOrder } from "@/utils/orderProcessing";
 
-import { makeOrder } from "@/app/actions/order.action";
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import {
@@ -36,7 +36,7 @@ import {
   useGiftActions,
 } from "@/app/contexts/gift/GiftContext";
 import { Gift } from "@/database/models/gift.model";
-import { generateOrderId, getQRcodeBuffer } from "@/utils/utils";
+import { generateOrderId } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import ListSkeleton from "@/components/ui/ListSkeleton";
@@ -150,55 +150,8 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
   );
 
   /**
-   * Generates a base64-encoded QR code string from the QR code DOM reference
-   *
-   * @returns Promise<string> - Base64 QR code string
-   * @throws Error if QR code generation fails
-   */
-  const generateQRCodeData = useCallback(async (): Promise<string> => {
-    const orderQRCodeBuffer = await getQRcodeBuffer(orderQRCodeRef);
-    if (!orderQRCodeBuffer) {
-      throw new Error(MESSAGES.QR_CODE_ERROR);
-    }
-    return orderQRCodeBuffer.toString("base64");
-  }, []);
-
-  /**
-   * Submits the order with applicant data, gifts, and QR code
-   *
-   * @param qrCodeData - Base64-encoded QR code string for the order
-   * @returns Promise<boolean> - True if order creation succeeds
-   * @throws Error if order creation fails
-   */
-  const submitOrder = useCallback(
-    async (qrCodeData: string): Promise<boolean> => {
-      if (!applicant) {
-        throw new Error(MESSAGES.NO_APPLICANT_ERROR);
-      }
-
-      const orderPublicId = await makeOrder(
-        // Now returns publicId string
-        applicant.publicId,
-        applicantGifts.map((gift) => gift.publicId),
-        orderId,
-        qrCodeData
-      );
-
-      if (!orderPublicId) {
-        // Check if publicId is returned
-        throw new Error("Order creation failed");
-      }
-
-      // Store the order publicId for potential future use
-      console.log(`Order created with publicId: ${orderPublicId}`);
-      return true;
-    },
-    [applicant, applicantGifts, orderId]
-  );
-
-  /**
-   * Orchestrates the complete order processing workflow using safe async patterns
-   * Provides loading states and error handling
+   * Orchestrates the complete order processing workflow using extracted utilities
+   * Provides loading states and error handling with functional patterns
    */
   const {
     data: orderResult,
@@ -212,28 +165,34 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
         throw new Error(MESSAGES.NO_APPLICANT_ERROR);
       }
 
-      // Step 1: Generate QR code
-      const qrCodeData = await generateQRCodeData();
+      // Use extracted utility for complete order processing
+      const result = await processCompleteOrder(
+        applicant,
+        applicantGifts,
+        orderId,
+        orderQRCodeRef
+      );
 
-      // Step 2: Submit order
-      const success = await submitOrder(qrCodeData);
-      if (!success) {
-        throw new Error("Order submission failed");
+      if (result._tag === "Failure") {
+        throw result.error;
       }
 
-      // Step 3: Navigate to order page
+      // Navigate to order page on success
       router.push(`/events/${eventId}/orders/${orderId}`);
 
-      return true;
+      return result.value; // Return order public ID
     },
     {
-      deps: [applicant, eventId, orderId],
+      deps: [applicant, applicantGifts, eventId, orderId],
       maxRetries: 1,
     }
   );
 
   /**
    * Initiates the order processing workflow
+   *
+   * @returns void
+   * @sideEffects Triggers order processing async operation
    */
   const processOrder = useCallback(() => {
     if (!applicant || isProcessingOrder) return;
@@ -244,6 +203,8 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
    * Handles removal of a gift from the applicant's gift list
    *
    * @param gift - The gift object to remove from the list
+   * @returns void
+   * @sideEffects Updates gift context by removing the specified gift
    */
   const handleRemoveGift = useCallback(
     (gift: Gift) => removeGiftAction(gift.publicId),
