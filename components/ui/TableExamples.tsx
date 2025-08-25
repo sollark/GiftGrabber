@@ -353,6 +353,8 @@ export const ComplexDataTableExample: React.FC = () => {
   );
 };
 
+// LoggerDemo has been moved to examples/LoggerExamples.tsx
+
 export default {
   PersonTableExample,
   AdvancedGiftTableExample,

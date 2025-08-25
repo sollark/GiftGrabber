@@ -1,6 +1,6 @@
 import { ErrorMessage } from "@hookform/error-message";
 import { MuiFileInput } from "mui-file-input";
-import { FC, memo } from "react";
+import { FC } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 
 /**
@@ -47,8 +47,8 @@ const ControlledFileInput: FC<ControlledFileInputProps> = ({
           className={FILE_INPUT_CONFIG.CSS_CLASS}
           label={label}
           placeholder={label}
-          InputProps={{
-            inputProps: {
+          slotProps={{
+            htmlInput: {
               accept: FILE_INPUT_CONFIG.ACCEPTED_FORMATS,
             },
           }}
