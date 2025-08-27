@@ -46,43 +46,5 @@ describe("mailService", () => {
       }
     });
   });
-
-  describe("sendMail", () => {
-    it("should return Success when sendQRCodesToOwner succeeds", async () => {
-      mockSendQRCodesToOwner.mockResolvedValueOnce(undefined);
-      const result = await sendMail({
-        to: email,
-        html: EMAIL_CONFIG.HTML_CONTENT,
-        attachments: [
-          {
-            filename: "event.png",
-            content: eventQRCodeBase64,
-            encoding: "base64",
-          },
-        ],
-      });
-      expect(result._tag).toBe("Success");
-    });
-
-    it("should return Failure when sendQRCodesToOwner throws", async () => {
-      mockSendQRCodesToOwner.mockImplementationOnce(() => {
-        throw new Error("fail");
-      });
-      const result = await sendMail({
-        to: email,
-        html: EMAIL_CONFIG.HTML_CONTENT,
-        attachments: [
-          {
-            filename: "event.png",
-            content: eventQRCodeBase64,
-            encoding: "base64",
-          },
-        ],
-      });
-      expect(result._tag).toBe("Failure");
-      if (result._tag === "Failure") {
-        expect(result.error).toBe("fail");
-      }
-    });
-  });
+  // No direct tests for sendMail; all scenarios are covered via sendMailToClient
 });

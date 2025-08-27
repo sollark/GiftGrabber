@@ -5,6 +5,7 @@
  */
 
 import { sendQRCodesToOwner } from "@/app/actions/email.action";
+import logger from "@/lib/logger";
 import { Result, success, failure } from "@/utils/fp";
 import { ERROR_MESSAGES } from "@/config/eventFormConfig";
 
@@ -58,10 +59,13 @@ export const sendMailToClient = async (
       attachments: createEmailAttachments(eventQRCodeBase64, ownerQRCodeBase64),
     });
     if (mailResult._tag === "Failure") {
+      logger.error(`Failed to send mail to ${email}: ${mailResult.error}`);
       return { _tag: "Failure", error: mailResult.error };
     }
+    logger.info(`Mail sent successfully to ${email}`);
     return { _tag: "Success", value: null };
   } catch (error) {
+    logger.error(`Exception sending mail to ${email}: ${error}`);
     return {
       _tag: "Failure",
       error:
@@ -90,6 +94,7 @@ export const sendMail = async ({
       html,
       attachments,
     });
+    logger.info(`Mail sent successfully to ${to}`);
     return success(null);
   } catch (error) {
     const errorMsg =
@@ -98,6 +103,7 @@ export const sendMail = async ({
         : typeof error === "string"
         ? error
         : "Unknown error sending mail";
+    logger.error(`Failed to send mail to ${to}: ${errorMsg}`);
     return failure(errorMsg);
   }
 };
