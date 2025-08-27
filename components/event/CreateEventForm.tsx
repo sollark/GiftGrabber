@@ -52,7 +52,7 @@ import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/utils/qrcodeUtils";
 import { useEventFormContexts } from "@/utils/context-composers";
-import { success, failure, flatMap } from "@/utils/fp";
+import { success, failure } from "@/utils/fp";
 import {
   FORM_CONFIG,
   BASE_URL,

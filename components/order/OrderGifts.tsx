@@ -17,7 +17,7 @@
 "use client";
 import React, { FC } from "react";
 import { useOrderContext } from "@/app/contexts/order/OrderContext";
-import MultistepNavigator from "../../ui/navigation/MultistepNavigator";
+import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
 import Applicant from "../applicant/Applicant";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";
 import GiftInfo from "../gift/GiftInfo";

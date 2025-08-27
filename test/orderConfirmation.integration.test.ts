@@ -2,9 +2,13 @@ import { Types } from "mongoose";
 import OrderModel from "../database/models/order.model";
 import GiftModel from "../database/models/gift.model";
 import PersonModel from "../database/models/person.model";
+
+import { connectToDatabase } from "../database/connect";
 import { makeOrder, confirmOrder, getOrder } from "../app/actions/order.action";
 
 describe("Order Confirmation Integration", () => {
+  // Increase timeout for slow DB operations
+  jest.setTimeout(30000);
   let applicant: any;
   let approver: any;
   let gifts: any[];
@@ -12,16 +16,19 @@ describe("Order Confirmation Integration", () => {
   let confirmationRQCode: string;
 
   beforeAll(async () => {
+    // Ensure DB connection is established before running tests
+    await connectToDatabase();
+
     // Create test applicant and approver with proper schema (publicId auto-generated)
     applicant = await PersonModel.create({
       firstName: "Test",
       lastName: "Applicant",
-      sourceFormat: "BASIC_NAME", // Required field from Person schema
+      sourceFormat: "basic_name", // Use valid enum value
     });
     approver = await PersonModel.create({
       firstName: "Test",
       lastName: "Approver",
-      sourceFormat: "BASIC_NAME", // Required field from Person schema
+      sourceFormat: "basic_name", // Use valid enum value
     });
 
     // Create test gifts with proper owner references
