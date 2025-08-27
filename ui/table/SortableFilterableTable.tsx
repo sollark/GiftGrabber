@@ -1,3 +1,18 @@
+/**
+ * SortableFilterableTable.tsx
+ *
+ * Purpose: Provides a highly modular, reusable, and type-safe table component for rendering, sorting, and filtering tabular data in React applications.
+ *
+ * Main Responsibilities:
+ * - Orchestrates data display, sorting, filtering, and UI composition for tabular data.
+ * - Delegates sorting and filtering logic to hooks, and UI elements to subcomponents.
+ * - Supports custom rendering, loading states, and flexible configuration.
+ *
+ * Architectural Role:
+ * - Acts as a UI composition layer, abstracting common table behaviors into composable components and hooks.
+ * - Designed for extensibility, separation of concerns, and performance via React hooks and memoization.
+ */
+
 import React from "react";
 import "./SortableFilterableTable.css";
 
@@ -47,6 +62,8 @@ export interface SortableFilterableTableProps<T = any> {
  * @param searchPlaceholder - Placeholder text for search input
  * @param className - Additional CSS classes
  * @param rowKey - Function to generate unique keys for table rows
+ *
+ * @returns {JSX.Element} The rendered table UI.
  */
 
 function SortableFilterableTable<T = any>({
@@ -60,13 +77,10 @@ function SortableFilterableTable<T = any>({
   rowKey,
 }: SortableFilterableTableProps<T>) {
   const { filterText, setFilterText, filteredData } = useFilter(data, columns);
-  const {
-    sortColumn,
-    sortDirection,
-    sortedData,
-    handleSort,
-    getSortIndicator,
-  } = useSort(filteredData, columns);
+  const { sortedData, handleSort, getSortIndicator } = useSort(
+    filteredData,
+    columns
+  );
 
   // Default row key generator
   const getRowKey = React.useMemo(() => {
@@ -76,6 +90,19 @@ function SortableFilterableTable<T = any>({
       return asAny.publicId || asAny._id || asAny.id || `row-${index}`;
     };
   }, [rowKey]);
+
+  /**
+   * getRowKey (internal helper)
+   *
+   * Generates a unique key for each table row, using a custom rowKey function if provided,
+   * or falling back to common ID fields or the row index.
+   *
+   * @param {T} item - The data item for the row.
+   * @param {number} index - The index of the row.
+   * @returns {string} Unique key for the row.
+   * @sideeffects None
+   * @notes Ensures React key stability for dynamic data.
+   */
 
   if (isLoading) {
     return <TableLoading title={title} className={className} />;
