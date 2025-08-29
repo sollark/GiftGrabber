@@ -1,5 +1,5 @@
 "use server";
-
+import logger from "@/lib/logger";
 import { Order } from "@/database/models/order.model";
 import { withDatabase } from "@/lib/withDatabase";
 import {
@@ -133,11 +133,15 @@ export const makeOrder = async (
  * @returns Result<Record<string, unknown>, Error> - Success with serialized order or Failure with Error
  */
 export const getOrderInternal = async (
-  orderPublicId: string // Renamed from orderId to orderPublicId for clarity
+  orderPublicId: string
 ): Promise<Result<Record<string, unknown>, Error>> => {
+  logger.info("[FETCH] getOrderInternal", {
+    orderPublicId,
+    timestamp: Date.now(),
+  });
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-    const orderResult = await findOrderByPublicId(orderPublicId); // Now parameter name matches usage
+    const orderResult = await findOrderByPublicId(orderPublicId);
 
     if (orderResult._tag === "Failure") {
       const err = new Error(orderResult.error);
@@ -151,6 +155,16 @@ export const getOrderInternal = async (
       return failure(err);
     }
 
+    logger.info("[FETCH:RESULT] getOrderInternal", {
+      orderPublicId,
+      order: orderResult.value
+        ? {
+            publicId: orderResult.value.publicId,
+            status: orderResult.value.status,
+          }
+        : null,
+      timestamp: Date.now(),
+    });
     return success(serializeForClient(orderResult.value));
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

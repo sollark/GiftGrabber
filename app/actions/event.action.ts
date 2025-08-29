@@ -1,3 +1,5 @@
+"use server";
+import logger from "@/lib/logger";
 /**
  * event.action.ts
  *
@@ -33,8 +35,6 @@
  * - Consistent Result<T, E> pattern for error handling
  * - Type-safe operations with proper validation
  */
-
-"use server";
 
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
@@ -144,9 +144,18 @@ export const createEvent = async (
 export const getEventApplicantsInternal = async (
   eventId: string
 ): Promise<Person[]> => {
+  logger.info("[FETCH] getEventApplicantsInternal", {
+    eventId,
+    timestamp: Date.now(),
+  });
   console.log(LOG_MESSAGES.USING_PUBLIC_ID);
   const result = await fetchEventApplicants(eventId);
   if (isSuccess(result)) {
+    logger.info("[FETCH:RESULT] getEventApplicantsInternal", {
+      eventId,
+      count: Array.isArray(result.value) ? result.value.length : undefined,
+      timestamp: Date.now(),
+    });
     return result.value;
   } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPLICANTS);
@@ -173,9 +182,18 @@ export const getEventApplicants = withDatabase(getEventApplicantsInternal);
 const getEventApproversInternal = async (
   eventId: string
 ): Promise<Person[]> => {
+  logger.info("[FETCH] getEventApproversInternal", {
+    eventId,
+    timestamp: Date.now(),
+  });
   console.log(LOG_MESSAGES.USING_PUBLIC_ID);
   const result = await fetchEventApprovers(eventId);
   if (isSuccess(result)) {
+    logger.info("[FETCH:RESULT] getEventApproversInternal", {
+      eventId,
+      count: Array.isArray(result.value) ? result.value.length : undefined,
+      timestamp: Date.now(),
+    });
     return result.value;
   } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_APPROVERS);
@@ -201,10 +219,21 @@ export const getEventApprovers = withDatabase(getEventApproversInternal);
 const getEventDetailsInternal = async (
   eventId: string
 ): Promise<Event | null> => {
+  logger.info("[FETCH] getEventDetailsInternal", {
+    eventId,
+    timestamp: Date.now(),
+  });
   console.log(LOG_MESSAGES.GET_EVENT_DETAILS, eventId);
   console.log(LOG_MESSAGES.USING_PUBLIC_ID);
   const result = await getEventWithDetails(eventId);
   if (isSuccess(result)) {
+    logger.info("[FETCH:RESULT] getEventDetailsInternal", {
+      eventId,
+      event: result.value
+        ? { id: result.value.publicId, name: result.value.name }
+        : null,
+      timestamp: Date.now(),
+    });
     return serializeForClient<Event>(result.value);
   } else {
     logEventError(ERROR_MESSAGES.GET_EVENT_DETAILS);
@@ -227,9 +256,14 @@ export const getEventDetails = withDatabase(getEventDetailsInternal);
  * @returns Promise<Event[]> - Array of events with publicId fields
  */
 const getAllEventsInternal = async (): Promise<Event[]> => {
+  logger.info("[FETCH] getAllEventsInternal", { timestamp: Date.now() });
   console.log(LOG_MESSAGES.USING_PUBLIC_ID);
   const result = await fetchAllEvents();
   if (isSuccess(result)) {
+    logger.info("[FETCH:RESULT] getAllEventsInternal", {
+      count: Array.isArray(result.value) ? result.value.length : undefined,
+      timestamp: Date.now(),
+    });
     return result.value.map((event) => serializeForClient<Event>(event));
   } else {
     logEventError(ERROR_MESSAGES.GET_ALL_EVENTS);

@@ -1,10 +1,10 @@
 "use client";
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { useState, useEffect } from "react";
 import { getEventDetails } from "@/app/actions/event.action";
 import ApplicantPageClient from "./ApplicantPageClient";
-import { Event } from "@/database/models/event.model";
 
 export default function ApplicantPage({
   params,
@@ -12,19 +12,28 @@ export default function ApplicantPage({
   params: Promise<{ eventId: string }>;
 }) {
   const [eventId, setEventId] = useState<string | null>(null);
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
 
+  // Resolve eventId from params (still async)
   useEffect(() => {
-    params.then(({ eventId }) => {
-      setEventId(eventId);
-      getEventDetails(eventId)
-        .then(setEvent)
-        .finally(() => setLoading(false));
-    });
+    params.then(({ eventId }) => setEventId(eventId));
   }, [params]);
 
-  if (loading) return <div>Loading...</div>;
+  // Creates a cache key for event data fetching
+  const createEventCacheKey = (eventId: string): string => `events/${eventId}`;
+
+  // Fetch event data with SWR (string key style)
+  const {
+    data: event,
+    error,
+    isLoading,
+  } = useSWR(
+    () => (eventId ? createEventCacheKey(eventId) : null),
+    () => (eventId ? getEventDetails(eventId) : undefined),
+    { revalidateOnFocus: false }
+  );
+
+  if (isLoading || !eventId) return <div>Loading...</div>;
+  if (error) return <div>Error loading event</div>;
   if (!event) return <div>Event not found</div>;
 
   return <ApplicantPageClient event={event} />;

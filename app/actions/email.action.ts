@@ -1,3 +1,5 @@
+"use server";
+import logger from "@/lib/logger";
 /**
  * email.action.ts
  *
@@ -17,8 +19,6 @@
  * - Provides typed interfaces for email composition and attachment handling
  * - Enables email-based event sharing and order confirmation notifications
  */
-
-"use server";
 
 import { sendEmail } from "@/lib/email";
 
@@ -90,13 +90,28 @@ interface EmailParameters {
  * @publicAPI Server action called from event creation forms and workflows
  */
 export const sendQRCodesToOwner = async (data: EmailPayload): Promise<void> => {
+  logger.info("[EMAIL] sendQRCodesToOwner", {
+    to: data.to,
+    timestamp: Date.now(),
+  });
   logEmailSending(data.to);
 
   try {
     const emailParameters = createEmailParameters(data);
     await sendEmailToRecipient(emailParameters);
+    logger.info("[EMAIL:RESULT] sendQRCodesToOwner", {
+      to: data.to,
+      status: "sent",
+      timestamp: Date.now(),
+    });
     logEmailSuccess();
   } catch (error) {
+    logger.error("[EMAIL:RESULT] sendQRCodesToOwner", {
+      to: data.to,
+      status: "failed",
+      error,
+      timestamp: Date.now(),
+    });
     logEmailError(error);
   }
 };
