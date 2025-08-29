@@ -166,13 +166,13 @@ export const useApproverActions = contextResult.useActions;
 // ENHANCED PROVIDER WITH PROPS
 // ============================================================================
 
-interface ApproverProviderProps {
-  approverList: Person[];
+type ApproverProviderProps = {
+  approverList?: Person[];
   children: React.ReactNode;
-}
+};
 
 const ApproverProviderComponent: React.FC<ApproverProviderProps> = ({
-  approverList,
+  approverList = [],
   children,
 }) => {
   const initialData = React.useMemo(

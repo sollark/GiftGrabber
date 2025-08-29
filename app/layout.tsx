@@ -20,6 +20,10 @@
 
 import "@/styles/main.css";
 import type { Metadata } from "next";
+import { EventProvider } from "@/app/contexts/EventContext";
+import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
+import { ApproverProvider } from "@/app/contexts/ApproverContext";
+import { GiftProvider } from "@/app/contexts/gift/GiftContext";
 
 export const metadata: Metadata = {
   title: "Gift Grabber",
@@ -72,11 +76,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Wrap all pages in global context providers to preserve state across navigation
+  // This fixes context loss when navigating between CreateEventForm and OptimisticEventDetailsClient
+  // Providers are imported from their respective modules
+  // If providers require initial data, enhance them to hydrate from storage in future steps
   return (
     <html lang="en">
       <body className="app flex flex-col min-h-screen">
         {/* <div className='background' /> */}
-        {children}
+        <EventProvider>
+          <ApplicantProvider>
+            <ApproverProvider>
+              <GiftProvider>{children}</GiftProvider>
+            </ApproverProvider>
+          </ApplicantProvider>
+        </EventProvider>
       </body>
     </html>
   );

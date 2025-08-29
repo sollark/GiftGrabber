@@ -246,13 +246,13 @@ export const useApplicantActions = contextResult.useActions;
  * @param children - React children
  */
 
-interface ApplicantProviderProps {
-  applicantList: Person[];
+type ApplicantProviderProps = {
+  applicantList?: Person[];
   children: React.ReactNode;
-}
+};
 
 const ApplicantProviderComponent: React.FC<ApplicantProviderProps> = ({
-  applicantList,
+  applicantList = [],
   children,
 }) => {
   const initialData = React.useMemo(

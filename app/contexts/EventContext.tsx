@@ -148,9 +148,15 @@ const eventReducer = (
         typeof (action.payload as any).email !== "string" ||
         typeof (action.payload as any).eventId !== "string"
       ) {
-        return failure(new Error("Event details must include name, email, and eventId"));
+        return failure(
+          new Error("Event details must include name, email, and eventId")
+        );
       }
-      const { name, email, eventId } = action.payload as { name: string; email: string; eventId: string };
+      const { name, email, eventId } = action.payload as {
+        name: string;
+        email: string;
+        eventId: string;
+      };
       return success({
         ...state,
         data: {
@@ -281,21 +287,21 @@ export const useEventActions = contextResult.useActions;
 // ============================================================================
 
 /**
- * EventProviderProps: Props for the EventProvider component.
- */
-interface EventProviderProps {
-  eventId: string;
-  children: React.ReactNode;
-}
-
-/**
  * EventProviderComponent
  * Provider component for EventContext, initializes state with eventId.
  * @param eventId - Initial event ID
  * @param children - React children
  */
+type EventProviderProps = {
+  eventId?: string;
+  children: React.ReactNode;
+};
+/**
+ * EventProviderComponent
+ * Provider component for EventContext, initializes state with eventId (optional).
+ */
 const EventProviderComponent: React.FC<EventProviderProps> = ({
-  eventId,
+  eventId = "",
   children,
 }) => {
   const initialData = React.useMemo(

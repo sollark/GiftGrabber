@@ -213,10 +213,10 @@ export const useGiftSelector = contextResult.useSelector as <
 
 export const useGiftActions = contextResult.useActions;
 
-interface GiftProviderProps {
-  giftList: Gift[];
+type GiftProviderProps = {
+  giftList?: Gift[];
   children: React.ReactNode;
-}
+};
 
 /**
  * GiftProvider: Supplies gift context to child components.
@@ -226,7 +226,7 @@ interface GiftProviderProps {
  * but not both. Do not duplicate data sources.
  */
 const GiftProviderComponent: React.FC<GiftProviderProps> = ({
-  giftList,
+  giftList = [],
   children,
 }) => {
   const initialData = React.useMemo(

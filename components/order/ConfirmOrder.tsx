@@ -22,7 +22,7 @@ import { getEventApprovers } from "@/app/actions/event.action";
 import { getOrder } from "@/app/actions/order.action";
 import { OrderProvider } from "@/app/contexts/order/OrderContext";
 import { Order } from "@/database/models/order.model";
-import { FC, useMemo } from "react";
+import { FC } from "react";
 import useSWR from "swr";
 import Approver from "../approver/Approver";
 import { ConfirmOrderButton } from "@/ui/primitives";
