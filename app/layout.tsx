@@ -19,7 +19,7 @@
  */
 
 import "@/styles/main.css";
-import type { Metadata } from "next";
+import { Metadata } from "next";
 import AppProviders from "../utils/context-composers";
 
 export const metadata: Metadata = {
