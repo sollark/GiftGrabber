@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import useSWR from "swr";
 import { useState, useEffect } from "react";

@@ -97,7 +97,6 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
 
   // Context state selectors
   const { selectedApplicant } = useApplicantSelection();
-  const { approverList } = useApproverSelection();
   const applicantGiftsMaybe = useGiftSelector(
     (state) => state.data.applicantGifts
   );

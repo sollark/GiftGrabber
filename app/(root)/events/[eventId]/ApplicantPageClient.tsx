@@ -1,48 +1,62 @@
 "use client";
+/**
+ * ApplicantPageClient.tsx
+ *
+ * Purpose: Renders the applicant event details and order workflow for a specific event.
+ *
+ * Responsibilities:
+ * - Receives minimal event data (publicId, name, email) as props
+ * - Sets up the OrderProvider context for order-related state
+ * - Displays the event name and the OrderGifts component
+ * - Does not handle applicant/approver/gift data (empty arrays used)
+ *
+ */
 import { Section } from "@/ui/layout";
 import OrderGifts from "@/components/order/OrderGifts";
-import { OrderProvider } from "@/app/contexts/order/OrderContext";
 import { OrderStatus } from "@/types/common.types";
-import type { Event } from "@/database/models/event.model";
 
+// Only these fields are expected in event:
+// - publicId: string
+// - name: string
+// - email: string
 interface ApplicantPageClientProps {
-  event: Event;
+  event: {
+    publicId: string;
+    name: string;
+    email: string;
+  };
 }
 
 /**
- * Client component for rendering applicant event details and gifts with proper OrderContext setup.
+ * ApplicantPageClient
  *
- * @param event - Event data containing gifts and applicants for order initialization
- * @returns JSX.Element with OrderProvider wrapping OrderGifts for proper context access
+ * Renders the event name and sets up the order context for the applicant workflow.
  *
- * Architecture:
- * - Sets up OrderProvider with event-based order data
- * - Provides event gifts and applicants as order context data
- * - Enables OrderGifts to access OrderContext without errors
+ * @param event - Minimal event data (publicId, name, email)
+ * @returns JSX.Element containing the event title and order workflow
  */
 export default function ApplicantPageClient({
   event,
 }: ApplicantPageClientProps) {
-  // Create order data from event for OrderProvider initialization
+  // Prepare order context data (no gifts/applicants/approvers available)
   const orderData = {
     publicId: `order-${Date.now()}`,
     createdAt: new Date(),
-    applicant: null as any, // Will be selected by user in the workflow
-    gifts: event.giftList || [],
+    applicant: null as any, // To be selected by user in workflow
+    gifts: [],
     orderId: `order-${Date.now()}`,
     confirmationRQCode: "",
     confirmedByApprover: null,
     status: OrderStatus.PENDING,
   };
 
-  // Use event applicants as approver list for order approval workflow
-  const approverList = event.approverList || event.applicantList || [];
+  // No approver/applicant data available, so use empty array
+  const approverList: any[] = [];
+
   return (
     <Section>
       <Section.Title>{event.name}</Section.Title>
-      <OrderProvider order={orderData} approverList={approverList}>
-        <OrderGifts />
-      </OrderProvider>
+      <OrderGifts />
     </Section>
   );
 }

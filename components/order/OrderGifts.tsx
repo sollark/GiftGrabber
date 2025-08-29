@@ -1,3 +1,4 @@
+"use client";
 /**
  * OrderGifts.tsx
  *
@@ -14,7 +15,6 @@
  * - Requires OrderContext to be properly set up in parent components
  */
 
-"use client";
 import React, { FC } from "react";
 import { useOrderContext } from "@/app/contexts/order/OrderContext";
 import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
