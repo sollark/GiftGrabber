@@ -32,6 +32,7 @@
 
 import React from "react";
 import { Person } from "@/database/models/person.model";
+import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import {
   createFunctionalContext,
   FunctionalAction,
@@ -40,7 +41,6 @@ import {
   validationMiddleware,
 } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
-import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { isPersonInList } from "@/utils/utils";
 
@@ -166,11 +166,12 @@ const applicantReducer = (
           selectedApplicant: none,
         },
       });
-
     default:
       return failure(new Error(`Unknown action type: ${action.type}`));
   }
 };
+
+// CONTEXT CREATION is below, after applicantValidation is defined
 
 // ============================================================================
 // VALIDATION MIDDLEWARE
@@ -233,6 +234,11 @@ export const useApplicantSelector = contextResult.useSelector as <
   selector: (state: ApplicantState) => TSelected
 ) => Maybe<TSelected>;
 
+/**
+ * useApplicantActions
+ * Hook to access action creators and safe/async dispatchers for the ApplicantContext.
+ * @returns Maybe<{ dispatch, dispatchSafe, dispatchAsync, createAction, getState }>
+ */
 export const useApplicantActions = contextResult.useActions;
 
 // ============================================================================

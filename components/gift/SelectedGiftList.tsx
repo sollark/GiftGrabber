@@ -30,7 +30,6 @@ import { getMaybeOrElse } from "@/utils/fp";
 import { processCompleteOrder } from "@/utils/orderProcessing";
 
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
-import { useApproverSelection } from "@/app/contexts/ApproverContext";
 import {
   useGiftSelector,
   useGiftActions,
@@ -45,6 +44,7 @@ import GiftComponent from "./GiftComponent";
 import QRcode from "@/ui/data-display/QRcode";
 import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import ErrorMessage from "@/ui/form/ErrorMessage";
+import { BaseTable, BaseTableColumn } from "@/ui/table";
 
 /**
  * Safely extracts array value from Maybe type with fallback to empty array
@@ -77,7 +77,11 @@ const MESSAGES = {
 /**
  * GiftList Component Props
  */
-interface GiftListProps {
+/**
+ * Props for GiftList component
+ * @property isLoading - Whether the component is in a loading state
+ */
+export interface GiftListProps {
   isLoading?: boolean;
 }
 
@@ -216,17 +220,24 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
    * @param gift - The gift object to render
    * @returns JSX.Element - Gift item with remove functionality
    */
-  const renderGiftItem = useCallback(
-    (gift: Gift, index: number) => (
-      <li key={gift.publicId || `gift-${index}`}>
-        <div className="flex flex-row" style={GIFT_LIST_STYLES.giftItem}>
-          <GiftComponent gift={gift} />
+
+  // Define columns for BaseTable
+  const columns: BaseTableColumn<Gift>[] = useMemo(
+    () => [
+      {
+        header: "Gift",
+        accessor: (gift) => <GiftComponent gift={gift} />,
+      },
+      {
+        header: "",
+        accessor: (gift) => (
           <SecondaryButton onClick={() => handleRemoveGift(gift)}>
             Remove
           </SecondaryButton>
-        </div>
-      </li>
-    ),
+        ),
+        className: "w-32 text-right",
+      },
+    ],
     [handleRemoveGift]
   );
 
@@ -235,24 +246,21 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
    *
    * @returns JSX.Element - Either the gift list or no-gifts message
    */
-  const renderGiftsList = useCallback(() => {
+
+  const renderGiftsTable = useCallback(() => {
     if (isLoading && applicantGifts.length === 0) {
       return <ListSkeleton title="Selected Gifts" rows={2} columns={2} />;
     }
     if (!hasGifts) {
       return <p>{MESSAGES.NO_GIFTS}</p>;
     }
-    return (
-      <ul>
-        {applicantGifts.map((gift, index) => renderGiftItem(gift, index))}
-      </ul>
-    );
-  }, [isLoading, hasGifts, applicantGifts, renderGiftItem]);
+    return <BaseTable columns={columns} data={applicantGifts} />;
+  }, [isLoading, hasGifts, applicantGifts, columns]);
 
   return (
     <Box sx={GIFT_LIST_STYLES.container}>
       <h3>{applicantDisplayName} gifts:</h3>
-      {renderGiftsList()}
+      {renderGiftsTable()}
       <StyledButton
         onClick={processOrder}
         disabled={!applicant || isProcessingOrder}

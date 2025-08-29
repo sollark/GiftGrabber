@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { getEventDetails } from "@/app/actions/event.action";
+import { getEvent, getEventDetails } from "@/app/actions/event.action";
 import { Result, success, failure } from "@/utils/fp";
 
 /**
@@ -53,7 +53,7 @@ export function useEventDataSync(
     setIsLoading(true);
 
     try {
-      const event = await getEventDetails(eventId);
+      const event = await getEvent(eventId);
       console.log("📦 Event data received:", event);
 
       if (event) {

@@ -197,14 +197,29 @@ export const some = <T>(value: T): Some<T> => ({
   value,
 });
 
+/**
+ * Represents a value that is absent (None) in the Maybe type system.
+ * Used for safe null/undefined handling in functional flows.
+ * @publicAPI
+ */
 export const none: None = { _tag: "None" };
 
 export const fromNullable = <T>(value: T | null | undefined): Maybe<T> =>
   value != null ? some(value) : none;
 
+/**
+ * Returns true if the given Maybe is a Some (contains a value).
+ * @param maybe - The Maybe to check
+ * @returns boolean
+ */
 export const isSome = <T>(maybe: Maybe<T>): maybe is Some<T> =>
   maybe._tag === "Some";
 
+/**
+ * Returns true if the given Maybe is a None (contains no value).
+ * @param maybe - The Maybe to check
+ * @returns boolean
+ */
 export const isNone = <T>(maybe: Maybe<T>): maybe is None =>
   maybe._tag === "None";
 
@@ -218,6 +233,11 @@ export const flatMapMaybe =
   (maybe: Maybe<T>): Maybe<U> =>
     isSome(maybe) ? fn(maybe.value) : none;
 
+/**
+ * Returns the value inside a Maybe, or a default if None.
+ * @param defaultValue - The value to return if Maybe is None
+ * @returns function that takes a Maybe and returns the value or default
+ */
 export const getMaybeOrElse =
   <T>(defaultValue: T) =>
   (maybe: Maybe<T>): T =>
