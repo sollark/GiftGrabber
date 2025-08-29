@@ -37,6 +37,26 @@
  *   - Top-level page component in the event creation workflow.
  *   - Integrates with service, utility, and UI modules for modularity.
  */
+
+/**
+ * @file CreateEventForm.tsx
+ * @description
+ * Comprehensive form component for event creation with Excel import, QR generation, and email integration.
+ * Handles the complete event creation workflow, including form input, file upload, QR code generation, validation, email delivery, and context/database updates.
+ *
+ * Responsibilities:
+ * - Renders the event creation form and manages user input
+ * - Validates and processes form data
+ * - Generates unique event and owner IDs
+ * - Generates and displays QR codes for the event and owner
+ * - Sends confirmation emails and creates the event in the backend
+ * - Integrates with service, utility, and UI modules for modularity
+ * - Coordinates multiple context providers for form state management
+ *
+ * Constraints:
+ * - No new UI elements or styling changes
+ * - No new features; only code quality, structure, and maintainability improvements
+ */
 "use client";
 
 import { createEvent } from "@/app/actions/event.action";
@@ -51,7 +71,7 @@ import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/utils/qrcodeUtils";
-import { useEventFormContexts } from "@/utils/context-composers";
+import { useAppContexts } from "@/utils/context-composers";
 import { success, failure } from "@/utils/fp";
 import {
   FORM_CONFIG,
@@ -66,16 +86,17 @@ import { sendMailToClient } from "@/service/mailService";
  * Renders the event creation form, handles submission, and coordinates all event creation logic.
  * Side effects: Navigates, updates state, triggers backend calls, sends email.
  */
+
 const CreateEventForm: FC = () => {
+  // --- State and Contexts ---
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [fileProcessingErrors, setFileProcessingErrors] = useState<string[]>(
     []
   );
+  const contextActions = useAppContexts();
 
-  // Use composed context hook for better separation of concerns
-  const contextActions = useEventFormContexts();
-
+  // --- IDs and URLs ---
   const eventId = useMemo(generateEventId, []);
   const ownerId = useMemo(generateOwnerId, []);
   const urls = useMemo(
@@ -86,120 +107,27 @@ const CreateEventForm: FC = () => {
     [eventId, ownerId]
   );
 
-  // Initialize QR code refs for capturing QR code elements
+  // --- QR Code Refs ---
   /**
    * Ref for the event QR code element (for image capture).
-   * @type {React.RefObject<HTMLDivElement>}
    */
+  // These refs must be RefObject<HTMLDivElement> (not HTMLDivElement | null)
   const eventQRCodeRef = useRef<HTMLDivElement>(
     null
   ) as React.RefObject<HTMLDivElement>;
   /**
    * Ref for the owner QR code element (for image capture).
-   * @type {React.RefObject<HTMLDivElement>}
    */
   const ownerQRCodeRef = useRef<HTMLDivElement>(
     null
   ) as React.RefObject<HTMLDivElement>;
 
-  // Form processing helpers
+  // --- Helper: Aggregate error messages for display ---
   /**
-   * Processes and validates form data with consistent Result pattern
-   * @param data Form input data containing event name, email, and files
-   * @returns Promise<Result<ProcessFormDataOutput, string>> - Success with processed data or Failure with error message
+   * Aggregates all error messages for display.
+   * @returns {string} Combined error message string or empty string if no errors.
    */
-  const processAndValidateForm = useCallback(
-    async (data: {
-      eventName: string;
-      eventEmail: string;
-      applicantsFile: File;
-      approversFile?: File;
-    }) => {
-      return await processFormData(data, ERROR_MESSAGES);
-    },
-    []
-  );
-
-  /**
-   * Generates QR codes from DOM refs with consistent Result pattern
-   * @returns Promise<Result<GenerateQRCodesOutput, string>> - Success with QR code data or Failure with error message
-   */
-  const generateAndValidateQRCodes = useCallback(async () => {
-    return await generateQRCodes(eventQRCodeRef, ownerQRCodeRef);
-  }, []);
-
-  /**
-   * Saves processed data to contexts with consistent Result pattern
-   * @param processedData The validated form data to save to contexts
-   * @returns Promise<Result<void, string>> - Success with void or Failure with error message
-   */
-  const saveToContexts = useCallback(
-    async (processedData: any) => {
-      if (contextActions._tag === "None") {
-        return failure("Context not available. Please refresh the page.");
-      }
-
-      const {
-        event: eventActions,
-        applicant: applicantActions,
-        approver: approverActions,
-      } = contextActions.value;
-
-      // Save event id to EventContext (only the eventId string)
-      const eventResult = eventActions.dispatchSafe({
-        type: "SET_EVENT_ID",
-        payload: eventId, // Pass eventId string directly, not object
-      });
-      if (eventResult._tag === "Failure") {
-        return failure("Failed to save event data");
-      }
-
-      // Save applicant list to ApplicantContext
-      const applicantResult = applicantActions.dispatchSafe({
-        type: "SET_EVENT_APPLICANTS",
-        payload: { applicantList: processedData.applicantList },
-      });
-      if (applicantResult._tag === "Failure") {
-        return failure("Failed to save applicant data");
-      }
-
-      // Save approver list to ApproverContext
-      const approverResult = approverActions.dispatchSafe({
-        type: "SET_EVENT_APPROVERS",
-        payload: { approverList: processedData.approverList },
-      });
-      if (approverResult._tag === "Failure") {
-        return failure("Failed to save approver data");
-      }
-
-      return success(undefined);
-    },
-    [contextActions, eventId]
-  );
-
-  // File processing error handlers
-  /**
-   * Handles file processing errors by aggregating them for display
-   * @param error Error message from file format detection
-   */
-  const handleFileError = useCallback((error: string) => {
-    setFileProcessingErrors((prev) => [...prev, error]);
-  }, []);
-
-  /**
-   * Handles successful file processing by clearing related errors
-   * @param formatInfo Successfully detected format information
-   */
-  const handleFileSuccess = useCallback((formatInfo: any) => {
-    // Clear file processing errors on successful detection
-    setFileProcessingErrors([]);
-  }, []);
-
-  /**
-   * Aggregates all error messages for display
-   * @returns Combined error message string or empty string if no errors
-   */
-  const getAggregatedErrorMessage = useCallback(() => {
+  const getAggregatedErrorMessage = useCallback((): string => {
     const errors = [
       ...(errorMessage ? [errorMessage] : []),
       ...fileProcessingErrors,
@@ -207,15 +135,100 @@ const CreateEventForm: FC = () => {
     return errors.join("; ");
   }, [errorMessage, fileProcessingErrors]);
 
-  // Main form submission handler - orchestrates the workflow
+  // --- File Processing Error Handlers ---
   /**
-   * handleSubmit
-   * Public API (passed to Form).
-   * Orchestrates the event creation workflow using consistent Result pattern.
-   * @param data Form data from user input
+   * Handles file processing errors by aggregating them for display.
+   * @param error Error message from file format detection.
+   */
+  const handleFileError = useCallback((error: string) => {
+    setFileProcessingErrors((prev) => [...prev, error]);
+  }, []);
+
+  /**
+   * Handles successful file processing by clearing related errors.
+   * @param formatInfo Successfully detected format information.
+   */
+  const handleFileSuccess = useCallback((_formatInfo: any) => {
+    setFileProcessingErrors([]);
+  }, []);
+
+  // --- Form Processing Helpers ---
+  /**
+   * Processes and validates form data with consistent Result pattern.
+   * @param data Form input data containing event name, email, and files.
+   * @returns Promise<Result<ProcessFormDataOutput, string>>
+   */
+  const processAndValidateForm = useCallback(
+    async (data: {
+      eventName: string;
+      eventEmail: string;
+      applicantsFile: File;
+      approversFile?: File;
+    }) => processFormData(data, ERROR_MESSAGES),
+    []
+  );
+
+  /**
+   * Generates QR codes from DOM refs with consistent Result pattern.
+   * @returns Promise<Result<GenerateQRCodesOutput, string>>
+   */
+  const generateAndValidateQRCodes = useCallback(
+    async () => generateQRCodes(eventQRCodeRef, ownerQRCodeRef),
+    []
+  );
+
+  /**
+   * Saves processed data to contexts with consistent Result pattern.
+   * @param processedData The validated form data to save to contexts.
+   * @returns Promise<Result<void, string>>
+   */
+  const saveToContexts = useCallback(
+    async (processedData: any) => {
+      const {
+        event: eventActions,
+        applicant: applicantActions,
+        approver: approverActions,
+      } = contextActions;
+      // All are Maybe types, so check _tag and use .value
+      if (
+        eventActions._tag !== "Some" ||
+        applicantActions._tag !== "Some" ||
+        approverActions._tag !== "Some"
+      ) {
+        return failure("Context not available. Please refresh the page.");
+      }
+      // Save event id to EventContext
+      const eventResult = eventActions.value.dispatchSafe({
+        type: "SET_EVENT_ID",
+        payload: eventId,
+      });
+      if (eventResult._tag === "Failure")
+        return failure("Failed to save event data");
+      // Save applicant list to ApplicantContext
+      const applicantResult = applicantActions.value.dispatchSafe({
+        type: "SET_EVENT_APPLICANTS",
+        payload: { applicantList: processedData.applicantList },
+      });
+      if (applicantResult._tag === "Failure")
+        return failure("Failed to save applicant data");
+      // Save approver list to ApproverContext
+      const approverResult = approverActions.value.dispatchSafe({
+        type: "SET_EVENT_APPROVERS",
+        payload: { approverList: processedData.approverList },
+      });
+      if (approverResult._tag === "Failure")
+        return failure("Failed to save approver data");
+      return success(undefined);
+    },
+    [contextActions, eventId]
+  );
+
+  // --- Main Form Submission Handler ---
+  /**
+   * Handles form submission and orchestrates the event creation workflow.
+   * @param data Form data from user input.
    * @returns {Promise<void>} (async)
    * Side effects: Updates error state, triggers backend and email services, navigates on success.
-   * Notes: Memoized with useCallback to avoid unnecessary rerenders.
    */
   const handleSubmit = useCallback(
     async (data: {
@@ -224,10 +237,8 @@ const CreateEventForm: FC = () => {
       applicantsFile: File;
       approversFile?: File;
     }) => {
-      // Clear any existing errors
       setErrorMessage("");
       setFileProcessingErrors([]);
-
       // Step 1: Process and validate form data
       const processedResult = await processAndValidateForm(data);
       if (processedResult._tag === "Failure") {
@@ -235,7 +246,6 @@ const CreateEventForm: FC = () => {
         return;
       }
       const processedData = processedResult.value;
-
       // Step 2: Generate QR codes
       const qrResult = await generateAndValidateQRCodes();
       if (qrResult._tag === "Failure") {
@@ -243,14 +253,12 @@ const CreateEventForm: FC = () => {
         return;
       }
       const qrCodes = qrResult.value;
-
       // Step 3: Save to contexts
       const contextResult = await saveToContexts(processedData);
       if (contextResult._tag === "Failure") {
         setErrorMessage(contextResult.error);
         return;
       }
-
       // Step 4: Send confirmation email
       const mailResult = await sendMailToClient(
         processedData.email,
@@ -261,9 +269,8 @@ const CreateEventForm: FC = () => {
         setErrorMessage(mailResult.error);
         return;
       }
-
       // Step 5: Create event in database
-      const success = await createEvent({
+      const successResult = await createEvent({
         name: processedData.name,
         email: processedData.email,
         eventId,
@@ -273,8 +280,7 @@ const CreateEventForm: FC = () => {
         applicantList: processedData.applicantList,
         approverList: processedData.approverList,
       });
-
-      if (success) {
+      if (successResult) {
         router.push(`/events/${eventId}/${ownerId}`);
       } else {
         setErrorMessage(ERROR_MESSAGES.EVENT_CREATION_ERROR);
@@ -290,6 +296,7 @@ const CreateEventForm: FC = () => {
     ]
   );
 
+  // --- Render ---
   return (
     <>
       <Form

@@ -1,3 +1,4 @@
+"use client";
 /**
  * page.tsx - Event Creation Page
  *

@@ -1,3 +1,4 @@
+"use client";
 /**
  * ApplicantContext.tsx
  *

@@ -1,3 +1,4 @@
+"use client";
 /**
  * @file fp-contexts.tsx
  *
@@ -12,7 +13,6 @@
  * - Sits at the core utility/infrastructure layer, supporting all domain and UI contexts.
  * - Promotes separation of concerns, testability, and maintainability for stateful logic across the app.
  */
-"use client";
 /**
  * Functional programming context utilities for React.
  */

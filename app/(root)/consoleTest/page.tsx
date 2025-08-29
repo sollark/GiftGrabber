@@ -1,3 +1,4 @@
+"use client";
 import LoggerDemo from "@/examples/LoggerExamples";
 import { FC } from "react";
 

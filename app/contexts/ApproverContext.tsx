@@ -1,3 +1,4 @@
+"use client";
 /**
  * ApproverContext: Functional context for managing approver state and actions.
  * Follows functional programming principles: immutability, pure functions, composable hooks.

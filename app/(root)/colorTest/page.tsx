@@ -1,10 +1,11 @@
-import { tokens } from '@/ui/colorTokens'
-import { Box } from '@mui/material'
-import { FC } from 'react'
+"use client";
+import { tokens } from "@/ui/colorTokens";
+import { Box } from "@mui/material";
+import { FC } from "react";
 
 const ColorTestPage: FC = () => {
-  const lightColorTokens = tokens('light')
-  const darkColorTokens = tokens('dark')
+  const lightColorTokens = tokens("light");
+  const darkColorTokens = tokens("dark");
 
   const renderColorBoxes = (colorTokens: ReturnType<typeof tokens>) => (
     <div>
@@ -18,10 +19,11 @@ const ColorTestPage: FC = () => {
                 backgroundColor: color,
                 width: 100,
                 height: 100,
-                display: 'inline-block',
+                display: "inline-block",
                 margin: 1,
-              }}>
-              <p style={{ color: '#fff', padding: '10px' }}>
+              }}
+            >
+              <p style={{ color: "#fff", padding: "10px" }}>
                 {shade}: {color}
               </p>
             </Box>
@@ -29,7 +31,7 @@ const ColorTestPage: FC = () => {
         </div>
       ))}
     </div>
-  )
+  );
 
   return (
     <div>
@@ -38,7 +40,7 @@ const ColorTestPage: FC = () => {
       <h1>Dark Mode</h1>
       {renderColorBoxes(darkColorTokens)}
     </div>
-  )
-}
+  );
+};
 
-export default ColorTestPage
+export default ColorTestPage;

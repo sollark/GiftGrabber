@@ -1,5 +1,4 @@
 /**
- * layout.tsx
  *
  * Purpose: Root layout component for the GiftGrabber Next.js application
  *
@@ -19,33 +18,6 @@
  */
 
 import "@/styles/main.css";
-import { Metadata } from "next";
-import AppProviders from "../utils/context-composers";
-
-export const metadata: Metadata = {
-  title: "Gift Grabber",
-  description:
-    "Employee gifting platform for a seamless workplace gift-sharing experience.",
-  icons: [
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "32x32",
-      url: "/assets/favicons/favicon-32x32.png",
-    },
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "16x16",
-      url: "/assets/favicons/favicon-16x16.png",
-    },
-    {
-      rel: "apple-touch-icon",
-      url: "/assets/favicons/apple-touch-icon.png",
-    },
-    { rel: "manifest", url: "/assets/favicons/site.webmanifest" },
-  ],
-};
 
 /**
  * Root layout component providing HTML structure and global styling for all pages
@@ -54,7 +26,8 @@ export const metadata: Metadata = {
  * @returns JSX.Element containing HTML document structure with global styles and metadata
  *
  * @sideEffects
- * - Imports global CSS styles that apply to entire application
+  // Wrap all pages in global context providers to preserve state across navigation
+  "use client"; // Moved 'use client' directive to the top
  * - Sets document language to English for accessibility and SEO
  *
  * @performance
@@ -73,16 +46,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  "use client";
   // Wrap all pages in global context providers to preserve state across navigation
   // This fixes context loss when navigating between CreateEventForm and OptimisticEventDetailsClient
   // Providers are imported from their respective modules
   // If providers require initial data, enhance them to hydrate from storage in future steps
   return (
     <html lang="en">
-      <body className="app flex flex-col min-h-screen">
-        {/* <div className='background' /> */}
-        <AppProviders>{children}</AppProviders>
-      </body>
+      <body className="app flex flex-col min-h-screen">{children}</body>
     </html>
   );
 }

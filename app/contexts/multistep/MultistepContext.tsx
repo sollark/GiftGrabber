@@ -1,3 +1,4 @@
+"use client";
 /**
  * MultistepContext.tsx
  * Purpose: Provides the main React context for multistep workflows (e.g., forms, wizards).

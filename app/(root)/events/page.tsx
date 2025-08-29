@@ -1,3 +1,4 @@
+"use client";
 import { Section } from "@/ui/layout";
 import { FC } from "react";
 

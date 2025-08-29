@@ -1,3 +1,4 @@
+"use client";
 /**
  * GiftContext: Isolated context for gift management logic
  * Provides immutable state management and action-based updates for gifts

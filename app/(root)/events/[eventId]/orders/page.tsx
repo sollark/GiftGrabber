@@ -1,7 +1,8 @@
-import { FC } from 'react'
+"use client";
+import { FC } from "react";
 
 const OrderPage: FC = () => {
-  return <div>OrderPage</div>
-}
+  return <div>OrderPage</div>;
+};
 
-export default OrderPage
+export default OrderPage;

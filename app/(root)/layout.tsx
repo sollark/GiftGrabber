@@ -1,4 +1,5 @@
 import { Footer, Header, Main } from "@/ui/layout";
+import AppProviders from "@/utils/context-composers";
 import { FC, ReactNode } from "react";
 
 type AppLayoutProps = {
@@ -7,11 +8,13 @@ type AppLayoutProps = {
 
 const AppLayout: FC<AppLayoutProps> = ({ children }: AppLayoutProps) => {
   return (
-    <>
-      <Header />
-      <Main>{children}</Main>
-      <Footer />
-    </>
+    <AppProviders>
+      <>
+        <Header />
+        <Main>{children}</Main>
+        <Footer />
+      </>
+    </AppProviders>
   );
 };
 
