@@ -20,10 +20,7 @@
 
 import "@/styles/main.css";
 import type { Metadata } from "next";
-import { EventProvider } from "@/app/contexts/EventContext";
-import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
-import { ApproverProvider } from "@/app/contexts/ApproverContext";
-import { GiftProvider } from "@/app/contexts/gift/GiftContext";
+import AppProviders from "../utils/context-composers";
 
 export const metadata: Metadata = {
   title: "Gift Grabber",
@@ -84,13 +81,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="app flex flex-col min-h-screen">
         {/* <div className='background' /> */}
-        <EventProvider>
-          <ApplicantProvider>
-            <ApproverProvider>
-              <GiftProvider>{children}</GiftProvider>
-            </ApproverProvider>
-          </ApplicantProvider>
-        </EventProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
