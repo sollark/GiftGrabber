@@ -1,7 +1,7 @@
 /**
- * GiftList.tsx
+ * SelectedGiftList.tsx
  *
- * This file defines the GiftList component, which manages and displays a list of gifts for an applicant.
+ * This file defines the SelectedGiftList component, which manages and displays a list of gifts for an applicant.
  *
  * Responsibilities:
  * - Display a list of gifts for the selected applicant
@@ -75,18 +75,18 @@ const MESSAGES = {
 } as const;
 
 /**
- * GiftList Component Props
+ * SelectedGiftList Component Props
  */
 /**
- * Props for GiftList component
+ * Props for SelectedGiftList component
  * @property isLoading - Whether the component is in a loading state
  */
-export interface GiftListProps {
+export interface SelectedGiftListProps {
   isLoading?: boolean;
 }
 
 /**
- * GiftList Component
+ * SelectedGiftList Component
  *
  * Renders a list of gifts for the selected applicant with removal functionality
  * and order processing capabilities. Integrates with multiple contexts to manage
@@ -95,7 +95,7 @@ export interface GiftListProps {
  * @param isLoading - Whether the component is in a loading state
  * @returns JSX.Element - The gift list interface with order processing
  */
-const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
+const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   const router = useRouter();
   const orderQRCodeRef = useRef<HTMLDivElement>(null!);
 
@@ -275,4 +275,4 @@ const GiftList: FC<GiftListProps> = ({ isLoading = false }) => {
   );
 };
 
-export default GiftList;
+export default SelectedGiftList;

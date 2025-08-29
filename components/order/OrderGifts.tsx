@@ -21,7 +21,7 @@ import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
 import Applicant from "../applicant/Applicant";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";
 import GiftInfo from "../gift/GiftInfo";
-import GiftList from "../gift/SelectedGiftList";
+import SelectedGiftList from "../gift/SelectedGiftList";
 
 // ============================================================================
 // WORKFLOW COMPONENTS
@@ -44,7 +44,7 @@ const WorkflowSteps: FC = () => (
     <>
       <SelectUnclaimedGift />
       <GiftInfo />
-      <GiftList />
+      <SelectedGiftList />
     </>
   </MultistepNavigator>
 );
