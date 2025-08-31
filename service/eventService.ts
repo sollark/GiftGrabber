@@ -1,3 +1,4 @@
+import { Gift } from "@/database/models/gift.model";
 import { failure, success, Result } from "@/utils/fp";
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
@@ -9,15 +10,25 @@ import {
 } from "./databaseService";
 
 /**
- * Event Service - Refactored to use PublicId strategy
- *
- * This service now uses the new DatabaseService layer which ensures:
- * - All queries use publicId
- * - _id is kept internal to the database layer
- * - Consistent field selection across all operations
- * - Type-safe operations with Result<T, E> pattern
- * - Direct service imports for better maintainability
+ * Fetches all gifts for a given event by eventId (publicId).
+ * Returns Result<Gift[], Error> for functional error handling.
+ * @param eventId - The unique identifier for the event
+ * @returns Promise<Result<Gift[], Error>>
  */
+export const fetchEventGifts = async (
+  eventId: string
+): Promise<Result<Gift[], Error>> => {
+  try {
+    const result = await GiftService.findByEventId(eventId);
+    if (result._tag === "Success") {
+      return success(result.value);
+    } else {
+      return failure(result.error);
+    }
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
+};
 
 /**
  * Validates that an event exists.

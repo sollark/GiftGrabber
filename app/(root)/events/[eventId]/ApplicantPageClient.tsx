@@ -14,6 +14,8 @@
 import { Section } from "@/ui/layout";
 import OrderGifts from "@/components/order/OrderGifts";
 import { OrderStatus } from "@/types/common.types";
+import { useEventSelector } from "@/app/contexts/EventContext";
+import { isSome } from "@/utils/fp";
 
 // Only these fields are expected in event:
 // - publicId: string
@@ -35,9 +37,10 @@ interface ApplicantPageClientProps {
  * @param event - Minimal event data (publicId, name, email)
  * @returns JSX.Element containing the event title and order workflow
  */
-export default function ApplicantPageClient({
-  event,
-}: ApplicantPageClientProps) {
+export default function ApplicantPageClient() {
+  const eventMaybe = useEventSelector((state) => state.data);
+  const event = isSome(eventMaybe) ? eventMaybe.value : undefined;
+
   // Prepare order context data (no gifts/applicants/approvers available)
   const orderData = {
     publicId: `order-${Date.now()}`,
@@ -55,7 +58,7 @@ export default function ApplicantPageClient({
 
   return (
     <Section>
-      <Section.Title>{event.name}</Section.Title>
+      <Section.Title>{event?.name || "Event"}</Section.Title>
       <OrderGifts />
     </Section>
   );

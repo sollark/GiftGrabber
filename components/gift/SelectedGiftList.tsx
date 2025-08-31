@@ -45,20 +45,7 @@ import ErrorMessage from "@/ui/form/ErrorMessage";
 import { BaseTableColumn } from "@/ui/table/BaseTable";
 import { ControlledBaseTable } from "@/ui/table/ControlledBaseTable";
 
-/**
- * Safely extracts array value from Maybe type with fallback to empty array
- * @param maybeArray - Maybe containing an array
- * @returns Array value or empty array if None or invalid
- */
-const extractArrayFromMaybe = function <T>(
-  maybeArray: ReturnType<typeof useGiftSelector>
-): T[] {
-  return getMaybeOrElse<T[]>([])(
-    maybeArray._tag === "Some" && Array.isArray(maybeArray.value)
-      ? maybeArray
-      : ({ _tag: "None" } as any)
-  );
-};
+// Use getMaybeOrElse from utils/fp to safely extract array from Maybe type
 
 // Component constants
 const GIFT_LIST_STYLES = {
@@ -109,11 +96,9 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     return match ? match[1] : "";
   }, [pathname]);
 
-  /**
-   * Extract the list of gifts for the selected applicant from context (safe fallback to empty array).
-   */
+  // Extract the list of gifts for the selected applicant from context (safe fallback to empty array)
   const applicantGifts = useMemo(
-    () => extractArrayFromMaybe<Gift>(applicantGiftsMaybe),
+    () => getMaybeOrElse<Gift[]>([])(applicantGiftsMaybe),
     [applicantGiftsMaybe]
   );
 

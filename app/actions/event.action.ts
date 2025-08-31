@@ -1,179 +1,4 @@
 /**
- * createEvent (Public API) - Refactored for PublicId Strategy
- *
- * Server action for creating new events with applicants and gifts.
- * Now ensures all related entities get publicIds and no _id exposure.
- * @param event EventCreationData - Event data from form
- * @returns Result<boolean, string> - Result with success status or error message
- * @sideEffects Creates database records with publicIds, sends confirmation emails
- */
-export const createEvent = async (
-  event: EventCreationData
-): Promise<Result<boolean, string>> => {
-  logger.info("[CREATE] createEvent", {
-    name: event.name,
-    timestamp: Date.now(),
-  });
-  const result = await withDatabaseResult(createEventInternal)(event);
-  return result._tag === "Success"
-    ? result.value // This should already be Result<boolean, string>
-    : failure(result.error.message);
-};
-
-/**
- * Fetches event applicants list with populated applicant data using publicIds.
- * Optimized to fetch only applicant data without full event object.
- * @param eventId - The unique identifier for the event
- * @returns Promise<Person[]> - Array of applicant persons with publicIds
- */
-const getEventApplicantsInternal = async (
-  eventId: string
-): Promise<Person[]> => {
-  logger.info("[FETCH] getEventApplicantsInternal", {
-    eventId,
-    timestamp: Date.now(),
-  });
-  const result = await fetchEventApplicants(eventId);
-  if (isSuccess(result)) {
-    logger.info("[FETCH:RESULT] getEventApplicantsInternal", {
-      eventId,
-      count: Array.isArray(result.value) ? result.value.length : undefined,
-      timestamp: Date.now(),
-    });
-    return result.value;
-  } else {
-    logger.error("[FETCH:ERROR] getEventApplicantsInternal", {
-      eventId,
-      error: result.error,
-      timestamp: Date.now(),
-    });
-    return [];
-  }
-};
-
-/**
- * Action: Gets event applicants with publicId-based populated data
- */
-export const getEventApplicants = withDatabase(getEventApplicantsInternal);
-
-/**
- * Fetches event approvers list with populated approver data using publicIds.
- * Optimized to fetch only approver data without full event object.
- * @param eventId - The unique identifier for the event
- * @returns Promise<Person[]> - Array of approver persons with publicIds
- */
-const getEventApproversInternal = async (
-  eventId: string
-): Promise<Person[]> => {
-  logger.info("[FETCH] getEventApproversInternal", {
-    eventId,
-    timestamp: Date.now(),
-  });
-  const result = await fetchEventApprovers(eventId);
-  if (isSuccess(result)) {
-    logger.info("[FETCH:RESULT] getEventApproversInternal", {
-      eventId,
-      count: Array.isArray(result.value) ? result.value.length : undefined,
-      timestamp: Date.now(),
-    });
-    return result.value;
-  } else {
-    logger.error("[FETCH:ERROR] getEventApproversInternal", {
-      eventId,
-      error: result.error,
-      timestamp: Date.now(),
-    });
-    return [];
-  }
-};
-
-/**
- * Action: Gets event approvers with publicId-based data
- */
-export const getEventApprovers = withDatabase(getEventApproversInternal);
-
-/**
- * Fetches all events with minimal data using publicIds.
- * @returns Promise<Event[]> - Array of events with publicId fields
- */
-const getAllEventsInternal = async (): Promise<Event[]> => {
-  logger.info("[FETCH] getAllEventsInternal", { timestamp: Date.now() });
-  const result = await fetchAllEvents();
-  if (isSuccess(result)) {
-    logger.info("[FETCH:RESULT] getAllEventsInternal", {
-      count: Array.isArray(result.value) ? result.value.length : undefined,
-      timestamp: Date.now(),
-    });
-    return result.value.map((event) => serializeForClient<Event>(event));
-  } else {
-    logger.error("[FETCH:ERROR] getAllEventsInternal", {
-      error: result.error,
-      timestamp: Date.now(),
-    });
-    return [];
-  }
-};
-
-/**
- * Action: Gets all events with publicId-based data
- */
-export const getAllEvents = withDatabase(getAllEventsInternal);
-
-/**
- * Validation helper for publicIds
- * @param publicId - The publicId to validate
- * @returns boolean - Whether the publicId is valid
- */
-const isValidPublicIdInternal = (publicId: string): boolean => {
-  // Basic validation - publicIds should be non-empty strings
-  // Could be enhanced with format validation for nanoid
-  return typeof publicId === "string" && publicId.length > 0;
-};
-
-/**
- * Exported server action wrapper for publicId validation
- */
-export const isValidPublicId = withDatabase(
-  async (publicId: string): Promise<boolean> => {
-    return isValidPublicIdInternal(publicId);
-  }
-);
-
-/**
- * Safe event data serializer that removes any remaining _id fields
- * @param event - Event data to sanitize
- * @returns Event data with only publicId fields
- */
-const sanitizeEventDataInternal = (event: any): any => {
-  if (!event) return null;
-  // Recursively remove any _id fields and ensure publicId presence
-  const sanitized = JSON.parse(JSON.stringify(event));
-  const removeId = (obj: any): any => {
-    if (Array.isArray(obj)) {
-      return obj.map(removeId);
-    }
-    if (obj && typeof obj === "object") {
-      const { _id, __v, ...rest } = obj;
-      const result: any = {};
-      for (const [key, value] of Object.entries(rest)) {
-        result[key] = removeId(value);
-      }
-      return result;
-    }
-    return obj;
-  };
-  return removeId(sanitized);
-};
-
-/**
- * Exported server action wrapper for event data sanitization
- */
-export const sanitizeEventData = withDatabase(
-  async (event: any): Promise<any> => {
-    return sanitizeEventDataInternal(event);
-  }
-);
-/**
  * event.action.ts
  *
  * Server actions for event management using publicId strategy.
@@ -193,10 +18,12 @@ import {
   fetchEventApplicants,
   getEventWithDetails,
   fetchAllEvents,
+  fetchEventGifts,
 } from "@/service/eventService";
 import { serializeForClient } from "@/service/databaseService";
 import { withDatabase, withDatabaseResult } from "@/lib/withDatabase";
-import { Result, isSuccess, failure } from "@/utils/fp";
+import { Result, isSuccess, failure, success } from "@/utils/fp";
+import { Gift } from "@/database/models/gift.model";
 
 // --- Types ---
 
@@ -211,6 +38,37 @@ export interface EventCreationData {
   applicantList: NewPerson[];
   approverList: NewPerson[];
 }
+
+// --- Event Actions (Public API) ---
+
+/**
+ * Creates a new event with applicants and gifts, ensuring all related entities get publicIds.
+ * @param event - EventCreationData from form
+ * @returns Result<boolean, string> - Success or error message
+ */
+export const createEvent = async (
+  event: EventCreationData
+): Promise<Result<boolean, string>> => {
+  logger.info("[CREATE] createEvent", {
+    name: event.name,
+    timestamp: Date.now(),
+  });
+  const result = await withDatabaseResult(createEventInternal)(event);
+  if (result._tag === "Success") {
+    logger.info("[CREATE:SUCCESS] createEvent", {
+      name: event.name,
+      timestamp: Date.now(),
+    });
+    return success(true);
+  } else {
+    logger.error("[CREATE:FAILURE] createEvent", {
+      name: event.name,
+      error: result.error,
+      timestamp: Date.now(),
+    });
+    return failure(result.error.message);
+  }
+};
 
 /**
  * Fetches the full event object as it is in the database (no field selection or transformation).
@@ -228,14 +86,12 @@ export const getEvent = withDatabase(
         timestamp: Date.now(),
       });
       return result.value;
-    } else if (result._tag === "Failure") {
+    } else {
       logger.error("[FETCH:ERROR] getEvent", {
         eventId,
         error: result.error,
         timestamp: Date.now(),
       });
-      return null;
-    } else {
       return null;
     }
   }
@@ -274,7 +130,192 @@ export const getEventDetails = withDatabase(
       });
       return null;
     } else {
+      logger.error("[FETCH:ERROR] getEventDetails", {
+        eventId,
+        error: "Unknown error",
+        timestamp: Date.now(),
+      });
       return null;
     }
+  }
+);
+
+/**
+ * Fetches event applicants list with populated applicant data using publicIds.
+ * Returns Result<Person[], string> for functional error handling.
+ * @param eventId - The unique identifier for the event
+ * @returns Promise<Result<Person[], string>>
+ */
+export const getEventApplicants = withDatabase(
+  async (eventId: string): Promise<Result<Person[], string>> => {
+    logger.info("[FETCH] getEventApplicants", {
+      eventId,
+      timestamp: Date.now(),
+    });
+    const result = await fetchEventApplicants(eventId);
+    if (isSuccess(result)) {
+      logger.info("[FETCH:RESULT] getEventApplicants", {
+        eventId,
+        count: Array.isArray(result.value) ? result.value.length : undefined,
+        timestamp: Date.now(),
+      });
+      return success(result.value);
+    } else {
+      logger.error("[FETCH:ERROR] getEventApplicants", {
+        eventId,
+        error: result.error,
+        timestamp: Date.now(),
+      });
+      return failure(result.error?.message || "Failed to fetch applicants");
+    }
+  }
+);
+
+/**
+ * Fetches event approvers list with populated approver data using publicIds.
+ * Returns Result<Person[], string> for functional error handling.
+ * @param eventId - The unique identifier for the event
+ * @returns Promise<Result<Person[], string>>
+ */
+export const getEventApprovers = withDatabase(
+  async (eventId: string): Promise<Result<Person[], string>> => {
+    logger.info("[FETCH] getEventApprovers", {
+      eventId,
+      timestamp: Date.now(),
+    });
+    const result = await fetchEventApprovers(eventId);
+    if (isSuccess(result)) {
+      logger.info("[FETCH:RESULT] getEventApprovers", {
+        eventId,
+        count: Array.isArray(result.value) ? result.value.length : undefined,
+        timestamp: Date.now(),
+      });
+      return success(result.value);
+    } else {
+      logger.error("[FETCH:ERROR] getEventApprovers", {
+        eventId,
+        error: result.error,
+        timestamp: Date.now(),
+      });
+      return failure(result.error?.message || "Failed to fetch approvers");
+    }
+  }
+);
+
+/**
+ * Fetches all events with minimal data using publicIds.
+ * Returns Result<Event[], string> for functional error handling.
+ * @returns Promise<Result<Event[], string>>
+ */
+export const getAllEvents = withDatabase(
+  async (): Promise<Result<Event[], string>> => {
+    logger.info("[FETCH] getAllEvents", { timestamp: Date.now() });
+    const result = await fetchAllEvents();
+    if (isSuccess(result)) {
+      logger.info("[FETCH:RESULT] getAllEvents", {
+        count: Array.isArray(result.value) ? result.value.length : undefined,
+        timestamp: Date.now(),
+      });
+      return success(
+        result.value.map((event) => serializeForClient<Event>(event))
+      );
+    } else {
+      logger.error("[FETCH:ERROR] getAllEvents", {
+        error: result.error,
+        timestamp: Date.now(),
+      });
+      return failure(result.error?.message || "Failed to fetch events");
+    }
+  }
+);
+
+/**
+ * Fetches all gifts for a given event using publicId.
+ * Returns Result<Gift[], string> for functional error handling.
+ * @param eventId - The unique identifier for the event
+ * @returns Promise<Result<Gift[], string>>
+ */
+
+export const getGifts = withDatabase(
+  async (eventId: string): Promise<Result<Gift[], string>> => {
+    logger.info("[FETCH] getGifts", {
+      eventId,
+      timestamp: Date.now(),
+    });
+    const result = await fetchEventGifts(eventId);
+    if (isSuccess(result)) {
+      logger.info("[FETCH:RESULT] getGifts", {
+        eventId,
+        count: Array.isArray(result.value) ? result.value.length : undefined,
+        timestamp: Date.now(),
+      });
+      return success(result.value);
+    } else {
+      logger.error("[FETCH:ERROR] getGifts", {
+        eventId,
+        error: result.error,
+        timestamp: Date.now(),
+      });
+      return failure(result.error?.message || "Failed to fetch gifts");
+    }
+  }
+);
+
+/**
+ * Validation helper for publicIds
+ * @param publicId - The publicId to validate
+ * @returns boolean - Whether the publicId is valid
+ * @note: This function is not used anywhere in this file. Consider removing or moving to a shared utility if not needed.
+ */
+const isValidPublicIdInternal = (publicId: string): boolean => {
+  // Basic validation - publicIds should be non-empty strings
+  // Could be enhanced with format validation for nanoid
+  return typeof publicId === "string" && publicId.length > 0;
+};
+
+/**
+ * Exported server action wrapper for publicId validation
+ * @note: This function is not used by any other exported action in this file. If not used elsewhere, consider removing.
+ */
+export const isValidPublicId = withDatabase(
+  async (publicId: string): Promise<boolean> => {
+    return isValidPublicIdInternal(publicId);
+  }
+);
+
+/**
+ * Safe event data serializer that removes any remaining _id fields
+ * @param event - Event data to sanitize
+ * @returns Event data with only publicId fields
+ * @note: This function is not used by any other exported action in this file. If not used elsewhere, consider removing.
+ */
+const sanitizeEventDataInternal = (event: any): any => {
+  if (!event) return null;
+  // Recursively remove any _id fields and ensure publicId presence
+  const sanitized = JSON.parse(JSON.stringify(event));
+  const removeId = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj.map(removeId);
+    }
+    if (obj && typeof obj === "object") {
+      const { _id, __v, ...rest } = obj;
+      const result: any = {};
+      for (const [key, value] of Object.entries(rest)) {
+        result[key] = removeId(value);
+      }
+      return result;
+    }
+    return obj;
+  };
+  return removeId(sanitized);
+};
+
+/**
+ * Exported server action wrapper for event data sanitization
+ * @note: This function is not used by any other exported action in this file. If not used elsewhere, consider removing.
+ */
+export const sanitizeEventData = withDatabase(
+  async (event: any): Promise<any> => {
+    return sanitizeEventDataInternal(event);
   }
 );
