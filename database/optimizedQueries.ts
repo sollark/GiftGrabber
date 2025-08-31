@@ -13,11 +13,10 @@
  */
 
 import { Result, success, failure, fromPromise } from "@/utils/fp";
-import { Types } from "mongoose";
-import EventModel, { Event } from "@/database/models/event.model";
-import PersonModel, { Person } from "@/database/models/person.model";
-import GiftModel, { Gift } from "@/database/models/gift.model";
-import OrderModel, { Order } from "@/database/models/order.model";
+import EventModel from "@/database/models/event.model";
+import PersonModel from "@/database/models/person.model";
+import GiftModel from "@/database/models/gift.model";
+import OrderModel from "@/database/models/order.model";
 import { PUBLIC_FIELD_SELECTIONS } from "../service/databaseConstants";
 
 // ============================================================================

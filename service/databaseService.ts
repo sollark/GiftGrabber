@@ -1,27 +1,39 @@
 /**
  * databaseService.ts
  *
- * Purpose: Centralized database abstraction layer with publicId security strategy
+ * Purpose:
+ *   Centralized database abstraction layer for all Person, Event, Gift, and Order operations.
+ *   Enforces publicId security, type-safe error handling, and consistent field selection.
  *
  * Main Responsibilities:
- * - Provides secure database operations using publicId instead of internal ObjectIds
- * - Implements Result<T, E> pattern for type-safe error handling across all operations
- * - Offers optimized query patterns with proper population and field selection
- * - Manages batch operations for Person, Gift, Event, and Order entities
- * - Encapsulates MongoDB-specific logic to protect business layer from database changes
+ *   - Exposes service classes (PersonService, EventService, GiftService, OrderService) as the public API for all business logic and server actions.
+ *   - Handles all CRUD, batch, and relationship operations for core entities.
+ *   - Implements the Result<T, E> pattern for predictable, type-safe error handling.
+ *   - Ensures all queries use publicId (never exposes MongoDB _id to business logic).
+ *   - Delegates to optimizedQueries.ts for batch, aggregation, and performance-critical queries (see notes below).
+ *   - Provides utility functions for serialization and ID conversion.
  *
- * Architecture Role:
- * - Security boundary preventing ObjectId exposure to external APIs
- * - Performance optimization layer with indexed queries and batch operations
- * - Error handling standardization across all database interactions
- * - Single source of truth for entity relationship management
- * - Foundation for all service layer operations requiring data persistence
+ * Architectural Role:
+ *   - The only layer that should access the database directly from business logic or API routes.
+ *   - Orchestrates and composes lower-level query utilities for performance and DRYness.
+ *   - Maintains security and business rules at the data access boundary.
  *
- * @businessLogic
- * - All public APIs use publicId for security (prevents enumeration attacks)
- * - Batch operations reduce database round trips for performance
- * - Population queries maintain referential integrity while selecting only necessary fields
- * - Result pattern eliminates throwing exceptions for predictable error handling
+ * When does it use optimizedQueries.ts?
+ *   - For batch operations (e.g., fetching many persons by publicId, paginated event queries, parallel lookups for event creation).
+ *   - For any query that would otherwise result in N+1 patterns or inefficient DB access.
+ *   - For aggregation, analytics, or complex data retrieval (delegated to optimizedQueries.ts).
+ *   - All such usage is explicit via imports at the top of the file.
+ *
+ * Business Logic Rules:
+ *   - All public APIs use publicId for security (prevents enumeration attacks).
+ *   - Batch operations are preferred for performance.
+ *   - Population queries select only necessary fields.
+ *   - No exceptions are thrown for predictable errors; all errors are returned as Result<T, Error>.
+ *
+ * Notes:
+ *   - This file should not be imported by lower-level utility files to avoid circular dependencies.
+ *   - All public API functions are static methods on the exported service classes.
+ *   - Internal helpers are marked as private or not exported.
  */
 
 /**
@@ -61,8 +73,13 @@ import {
 // ============================================================================
 
 /**
- * Transforms any Mongoose document to a plain object safe for client components
- * Removes MongoDB-specific fields (_id, __v) and handles nested objects/arrays
+ * Transforms any Mongoose document to a plain object safe for client components.
+ * Removes MongoDB-specific fields (_id, __v) and recursively serializes nested objects/arrays.
+ *
+ * @param data - any - The data to serialize (can be a document, array, or plain object)
+ * @returns T - The serialized, client-safe object
+ * @sideEffects None
+ * @publicAPI
  */
 export const serializeForClient = <T = any>(data: any): T => {
   if (!data) return data;
@@ -96,7 +113,9 @@ export const serializeForClient = <T = any>(data: any): T => {
 // CORE PERSON OPERATIONS
 
 /**
- * Population configurations that use publicId
+ * Population configurations for Mongoose populate() that use publicId and field selection.
+ * Used to ensure only publicId and safe fields are exposed in population.
+ * @publicAPI
  */
 export const POPULATION_CONFIG = {
   PERSON: {
@@ -133,19 +152,17 @@ export const POPULATION_CONFIG = {
 } as const;
 
 /**
- * Person Service - All operations use publicId
+ * PersonService
+ * Public API for all person-related database operations.
+ * All methods use publicId for security and batch performance.
  */
 export class PersonService {
   /**
-   * Retrieves a single person by their public identifier
-   *
-   * @param publicId - The public identifier string for the person to find
-   * @returns Promise<Result<Person | null, Error>> - Success with person or null if not found, or Failure with error
-   *
-   * @sideEffects Performs database read operation
-   * @performance O(1) with publicId index - single document lookup
-   * @notes Returns null instead of throwing when person not found for safe handling
-   * @publicAPI Core method used throughout application for person retrieval
+   * Retrieves a single person by their public identifier.
+   * @param publicId {string} - The person's publicId
+   * @returns Promise<Result<Person | null, Error>> - Success with person or null, or Failure with error
+   * @sideEffects DB read
+   * @publicAPI
    */
   static async findByPublicId(
     publicId: string
@@ -156,15 +173,11 @@ export class PersonService {
   }
 
   /**
-   * Creates a new person with auto-generated publicId
-   *
-   * @param personData - Person data without publicId (will be auto-generated)
-   * @returns Promise<Result<Person, Error>> - Success with created person including publicId, or Failure with error
-   *
-   * @sideEffects Creates new document in database, generates unique publicId via nanoid
-   * @performance O(1) for single document creation
-   * @notes publicId is automatically generated by the model's nanoid default
-   * @publicAPI Used for single person creation from forms or individual operations
+   * Creates a new person with auto-generated publicId.
+   * @param personData {Omit<Person, "publicId">} - Person data (publicId auto-generated)
+   * @returns Promise<Result<Person, Error>> - Success with created person, or Failure with error
+   * @sideEffects DB write
+   * @publicAPI
    */
   static async create(
     personData: Omit<Person, "publicId">
@@ -177,42 +190,36 @@ export class PersonService {
   }
 
   /**
+   * Batch creates multiple persons for optimal performance (Excel import, etc).
+   * @param personList {Omit<Person, "publicId">[]} - Array of person data
+   * @returns Promise<Result<string[], Error>> - Success with array of publicIds, or Failure with error
+   * @sideEffects DB write (batch)
+   * @publicAPI
+   */
+  /**
    * Batch creates multiple persons for optimal performance during Excel imports
-   *
    * @param personList - Array of person data objects without publicIds
    * @returns Promise<Result<string[], Error>> - Success with array of generated publicIds, or Failure with error
-   *
-   * @sideEffects
-   * - Creates multiple documents in database in single operation
-   * - Generates unique publicIds for each person via nanoid
-   *
-   * @performance
-   * - O(n) with single database round trip for batch insertion
-   * - Significantly faster than individual creates for bulk operations
-   * - Optimized for Excel import scenarios with hundreds of people
-   *
-   * @notes
-   * - Uses MongoDB insertMany for atomic batch operation
-   * - Essential for Excel import performance optimization
-   * - Returns only publicIds for memory efficiency in bulk operations
-   *
-   * @publicAPI Used by Excel import services and bulk data migration tools
    */
   static async createMany(
     personList: Omit<Person, "publicId">[]
   ): Promise<Result<string[], Error>> {
     try {
-      // Batch create operation instead of individual creates
       const docs = await PersonModel.insertMany(personList);
       const publicIds = docs.map((doc) => doc.publicId);
       return success(publicIds);
     } catch (error) {
-      return failure(error as Error);
+      return failure(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
   /**
-   * Batch find persons by publicIds - Issue D Fix (replaces N+1 pattern)
+   * Batch finds persons by publicIds using optimizedQueries.ts (avoids N+1).
+   * @param publicIds {string[]} - Array of publicIds
+   * @returns Promise<Result<Person[], Error>> - Success with array of persons, or Failure with error
+   * @sideEffects DB read (batch)
+   * @publicAPI
+   * @notes Uses findPersonsByPublicIds from optimizedQueries.ts for performance.
    */
   static async findManyByPublicIds(
     publicIds: string[]
@@ -221,7 +228,12 @@ export class PersonService {
   }
 
   /**
-   * Transform function to exclude _id and include publicId
+   * Internal helper to transform a document to public format (removes _id, __v).
+   * @param doc {any} - The Mongoose document
+   * @param ret {any} - The returned object
+   * @returns {any} - The transformed object
+   * @sideEffects None
+   * @private
    */
   private static transformToPublic = (doc: any, ret: any) => {
     delete ret._id;
@@ -231,11 +243,17 @@ export class PersonService {
 }
 
 /**
- * Event Service - All operations use publicId
+ * EventService
+ * Public API for all event-related database operations.
+ * Handles event creation, lookup, population, and batch operations.
  */
 export class EventService {
   /**
-   * Find event by business eventId (legacy field, will be migrated to publicId)
+   * Finds an event by its business eventId (legacy).
+   * @param eventId {string}
+   * @returns Promise<Result<Event | null, Error>>
+   * @sideEffects DB read
+   * @publicAPI
    */
   static async findByEventId(
     eventId: string
@@ -246,7 +264,11 @@ export class EventService {
   }
 
   /**
-   * Find event by publicId
+   * Finds an event by its publicId.
+   * @param publicId {string}
+   * @returns Promise<Result<Event | null, Error>>
+   * @sideEffects DB read
+   * @publicAPI
    */
   static async findByPublicId(
     publicId: string
@@ -257,7 +279,11 @@ export class EventService {
   }
 
   /**
-   * Find event with populated applicants by eventId
+   * Finds an event with populated applicants.
+   * @param eventId {string}
+   * @returns Promise<Result<Event | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async findWithApplicants(
     eventId: string
@@ -270,7 +296,11 @@ export class EventService {
   }
 
   /**
-   * Find event with populated approvers by eventId
+   * Finds an event with populated approvers.
+   * @param eventId {string}
+   * @returns Promise<Result<Event | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async findWithApprovers(
     eventId: string
@@ -283,10 +313,11 @@ export class EventService {
   }
 
   /**
-   * Get only approvers list for an event by eventId
-   * Optimized query that fetches only approverList field + populated approvers
-   * @param eventId - The unique identifier for the event
-   * @returns Promise<Result<Person[], Error>> - Array of approver persons with publicIds
+   * Gets only the approvers list for an event (populated).
+   * @param eventId {string}
+   * @returns Promise<Result<Person[], Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async getApprovers(eventId: string): Promise<Result<Person[], Error>> {
     const query = EventModel.findOne({ eventId }, { approverList: 1 });
@@ -303,10 +334,11 @@ export class EventService {
   }
 
   /**
-   * Get only applicants list for an event by eventId
-   * Optimized query that fetches only applicantList field + populated applicants
-   * @param eventId - The unique identifier for the event
-   * @returns Promise<Result<Person[], Error>> - Array of applicant persons with publicIds
+   * Gets only the applicants list for an event (populated).
+   * @param eventId {string}
+   * @returns Promise<Result<Person[], Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async getApplicants(
     eventId: string
@@ -325,7 +357,11 @@ export class EventService {
   }
 
   /**
-   * Find event with all populated relationships by eventId
+   * Finds an event with all relationships populated.
+   * @param eventId {string}
+   * @returns Promise<Result<Event | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async findWithAllDetails(
     eventId: string
@@ -343,8 +379,13 @@ export class EventService {
   }
 
   /**
-   * Create event with related documents
-   * @param eventData - Event data with arrays of publicIds for relationships
+   * Creates an event with related documents (applicants, approvers, gifts).
+   * Uses executeParallelQueries from optimizedQueries.ts for batch lookups.
+   * @param eventData {object} - Event data with arrays of publicIds
+   * @returns Promise<Result<Event, Error>>
+   * @sideEffects DB write, batch lookups
+   * @publicAPI
+   * @notes Uses executeParallelQueries from optimizedQueries.ts for performance.
    */
   static async create(eventData: {
     name: string;
@@ -415,10 +456,14 @@ export class EventService {
   }
 
   /**
-   * Get all events with pagination support - Issue D Fix (optimized)
-   * @param page - Page number (default: 1)
-   * @param limit - Results per page (default: 20)
+   * Gets all events with pagination (optimized).
+   * Uses findEventsPaginated from optimizedQueries.ts.
+   * @param page {number} - Page number
+   * @param limit {number} - Results per page
    * @returns Promise<Result<{ events: Event[]; total: number; page: number; pages: number }, Error>>
+   * @sideEffects DB read (batch)
+   * @publicAPI
+   * @notes Uses findEventsPaginated from optimizedQueries.ts for performance.
    */
   static async findAllPaginated(
     page: number = 1,
@@ -438,25 +483,34 @@ export class EventService {
   }
 
   /**
-   * Get all events (legacy method - consider using pagination)
-   * @deprecated Use findAllPaginated for better performance
+   * Gets all events (legacy, not optimized).
+   * @deprecated Use findAllPaginated for better performance.
+   * @returns Promise<Result<Event[], Error>>
+   * @sideEffects DB read
+   * @publicAPI
    */
-  static async findAll(): Promise<Result<any[], Error>> {
+  static async findAll(): Promise<Result<Event[], Error>> {
     console.warn(
       "⚠️  EventService.findAll is deprecated. Use findAllPaginated for better performance."
     );
     return fromPromise(
       EventModel.find({}, PUBLIC_FIELD_SELECTIONS.EVENT).lean().exec()
-    );
+    ) as Promise<Result<Event[], Error>>;
   }
 }
 
 /**
- * Gift Service - All operations use publicId
+ * GiftService
+ * Public API for all gift-related database operations.
+ * Handles gift creation, assignment, and batch queries.
  */
 export class GiftService {
   /**
-   * Find gift by publicId
+   * Finds a gift by its publicId.
+   * @param publicId {string}
+   * @returns Promise<Result<Gift | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async findByPublicId(
     publicId: string
@@ -469,13 +523,16 @@ export class GiftService {
   }
 
   /**
-   * Create gifts for applicants
+   * Creates gifts for a list of applicants.
+   * @param applicantPublicIds {string[]}
+   * @returns Promise<Result<string[], Error>>
+   * @sideEffects DB write (batch)
+   * @publicAPI
    */
   static async createForApplicants(
     applicantPublicIds: string[]
   ): Promise<Result<string[], Error>> {
     try {
-      // Convert publicIds to ObjectIds
       const applicantDocs = await PersonModel.find(
         { publicId: { $in: applicantPublicIds } },
         "_id"
@@ -492,19 +549,23 @@ export class GiftService {
       const giftPublicIds = giftDocs.map((doc) => doc.publicId);
       return success(giftPublicIds);
     } catch (error) {
-      return failure(error as Error);
+      return failure(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
   /**
-   * Update gift with applicant
+   * Assigns a gift to an applicant.
+   * @param giftPublicId {string}
+   * @param applicantPublicId {string}
+   * @returns Promise<Result<Gift, Error>>
+   * @sideEffects DB update
+   * @publicAPI
    */
   static async assignToApplicant(
     giftPublicId: string,
     applicantPublicId: string
   ): Promise<Result<Gift, Error>> {
     try {
-      // Get ObjectIds from publicIds
       const [giftDoc, applicantDoc] = await Promise.all([
         GiftModel.findOne({ publicId: giftPublicId }, "_id").exec(),
         PersonModel.findOne({ publicId: applicantPublicId }, "_id").exec(),
@@ -525,17 +586,42 @@ export class GiftService {
 
       return success(updatedGift!);
     } catch (error) {
-      return failure(error as Error);
+      return failure(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+
+  /**
+   * Finds all gifts for a given event by event publicId.
+   * @param eventId {string}
+   * @returns Promise<Result<Gift[], Error>>
+   * @sideEffects DB read
+   * @publicAPI
+   */
+  static async findByEventId(eventId: string): Promise<Result<Gift[], Error>> {
+    try {
+      const gifts = await GiftModel.find(
+        { event: eventId },
+        PUBLIC_FIELD_SELECTIONS.GIFT
+      ).exec();
+      return success(gifts);
+    } catch (error) {
+      return failure(error instanceof Error ? error : new Error(String(error)));
     }
   }
 }
 
 /**
- * Order Service - All operations use publicId
+ * OrderService
+ * Public API for all order-related database operations.
+ * Handles order creation, lookup, and batch queries.
  */
 export class OrderService {
   /**
-   * Find order by publicId
+   * Finds an order by its publicId.
+   * @param publicId {string}
+   * @returns Promise<Result<Order | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
    */
   static async findByPublicId(
     publicId: string
@@ -551,7 +637,11 @@ export class OrderService {
   }
 
   /**
-   * Create order
+   * Creates an order for an applicant and gifts.
+   * @param orderData {object} - Order creation data
+   * @returns Promise<Result<Order, Error>>
+   * @sideEffects DB write, batch lookups
+   * @publicAPI
    */
   static async create(orderData: {
     applicantPublicId: string;
@@ -602,8 +692,12 @@ export class OrderService {
 }
 
 /**
- * Utility function to convert publicIds to ObjectIds
- * Used internally when we need to query by relationships
+ * Converts a publicId to a MongoDB ObjectId for a given model.
+ * @param model {any} - The Mongoose model
+ * @param publicId {string}
+ * @returns Promise<Types.ObjectId | null>
+ * @sideEffects DB read
+ * @internal
  */
 export const getObjectIdFromPublicId = async (
   model: any,
@@ -614,7 +708,12 @@ export const getObjectIdFromPublicId = async (
 };
 
 /**
- * Utility function to convert multiple publicIds to ObjectIds
+ * Converts multiple publicIds to MongoDB ObjectIds for a given model.
+ * @param model {any} - The Mongoose model
+ * @param publicIds {string[]}
+ * @returns Promise<Types.ObjectId[]>
+ * @sideEffects DB read (batch)
+ * @internal
  */
 export const getObjectIdsFromPublicIds = async (
   model: any,
