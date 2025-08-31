@@ -28,7 +28,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { Box } from "@mui/material";
 import { getMaybeOrElse } from "@/utils/fp";
 import { processCompleteOrder } from "@/utils/orderProcessing";
-
 import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
 import {
   useGiftSelector,
@@ -39,12 +38,12 @@ import { generateOrderId } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import ListSkeleton from "@/components/ui/ListSkeleton";
-
 import GiftComponent from "./GiftComponent";
 import QRcode from "@/ui/data-display/QRcode";
 import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import ErrorMessage from "@/ui/form/ErrorMessage";
-import { BaseTable, BaseTableColumn } from "@/ui/table";
+import { BaseTableColumn } from "@/ui/table/BaseTable";
+import { ControlledBaseTable } from "@/ui/table/ControlledBaseTable";
 
 /**
  * Safely extracts array value from Maybe type with fallback to empty array
@@ -74,9 +73,6 @@ const MESSAGES = {
   ORDER_ERROR: "Error creating order:",
 } as const;
 
-/**
- * SelectedGiftList Component Props
- */
 /**
  * Props for SelectedGiftList component
  * @property isLoading - Whether the component is in a loading state
@@ -113,16 +109,25 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     return match ? match[1] : "";
   }, [pathname]);
 
+  /**
+   * Extract the list of gifts for the selected applicant from context (safe fallback to empty array).
+   */
   const applicantGifts = useMemo(
     () => extractArrayFromMaybe<Gift>(applicantGiftsMaybe),
     [applicantGiftsMaybe]
   );
 
+  /**
+   * Remove gift action for ControlledBaseTable. Dispatches context action to remove a gift by publicId.
+   */
   const removeGiftAction = useMemo(
     () =>
       actions._tag === "Some"
-        ? (id: string) =>
-            actions.value.dispatchSafe({ type: "REMOVE_GIFT", payload: id })
+        ? (gift: Gift) =>
+            actions.value.dispatchSafe({
+              type: "REMOVE_GIFT",
+              payload: gift.publicId,
+            })
         : () => {},
     [actions]
   );
@@ -147,6 +152,9 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     [applicant?.firstName]
   );
 
+  /**
+   * Boolean indicating if the applicant has any gifts selected.
+   */
   const hasGifts = useMemo(
     () => applicantGifts.length > 0,
     [applicantGifts.length]
@@ -155,6 +163,10 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   /**
    * Orchestrates the complete order processing workflow using extracted utilities
    * Provides loading states and error handling with functional patterns
+   */
+  /**
+   * Orchestrates the complete order processing workflow using extracted utilities.
+   * Provides loading states and error handling with functional patterns.
    */
   const {
     data: orderResult,
@@ -167,7 +179,6 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
       if (!applicant) {
         throw new Error(MESSAGES.NO_APPLICANT_ERROR);
       }
-
       // Use extracted utility for complete order processing
       const result = await processCompleteOrder(
         applicant,
@@ -175,14 +186,11 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
         orderId,
         orderQRCodeRef
       );
-
       if (result._tag === "Failure") {
         throw result.error;
       }
-
       // Navigate to order page on success
       router.push(`/events/${eventId}/orders/${orderId}`);
-
       return result.value; // Return order public ID
     },
     {
@@ -202,17 +210,7 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     executeOrderProcess();
   }, [applicant, isProcessingOrder, executeOrderProcess]);
 
-  /**
-   * Handles removal of a gift from the applicant's gift list
-   *
-   * @param gift - The gift object to remove from the list
-   * @returns void
-   * @sideEffects Updates gift context by removing the specified gift
-   */
-  const handleRemoveGift = useCallback(
-    (gift: Gift) => removeGiftAction(gift.publicId),
-    [removeGiftAction]
-  );
+  // No longer needed: handleRemoveGift
 
   /**
    * Renders a single gift item with its component and remove button
@@ -221,7 +219,7 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
    * @returns JSX.Element - Gift item with remove functionality
    */
 
-  // Define columns for BaseTable
+  // Define columns for ControlledBaseTable
   const columns: BaseTableColumn<Gift>[] = useMemo(
     () => [
       {
@@ -231,22 +229,21 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
       {
         header: "",
         accessor: (gift) => (
-          <SecondaryButton onClick={() => handleRemoveGift(gift)}>
+          <SecondaryButton onClick={() => removeGiftAction(gift)}>
             Remove
           </SecondaryButton>
         ),
         className: "w-32 text-right",
       },
     ],
-    [handleRemoveGift]
+    [removeGiftAction]
   );
 
   /**
-   * Renders the complete gift list or empty state message
+   * Renders the complete gift list or empty state message using ControlledBaseTable
    *
    * @returns JSX.Element - Either the gift list or no-gifts message
    */
-
   const renderGiftsTable = useCallback(() => {
     if (isLoading && applicantGifts.length === 0) {
       return <ListSkeleton title="Selected Gifts" rows={2} columns={2} />;
@@ -254,8 +251,14 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     if (!hasGifts) {
       return <p>{MESSAGES.NO_GIFTS}</p>;
     }
-    return <BaseTable columns={columns} data={applicantGifts} />;
-  }, [isLoading, hasGifts, applicantGifts, columns]);
+    return (
+      <ControlledBaseTable<Gift>
+        initialData={applicantGifts}
+        columns={columns}
+        onRemove={removeGiftAction}
+      />
+    );
+  }, [isLoading, hasGifts, applicantGifts, columns, removeGiftAction]);
 
   return (
     <Box sx={GIFT_LIST_STYLES.container}>
