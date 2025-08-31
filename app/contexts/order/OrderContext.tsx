@@ -4,24 +4,57 @@
  * Responsibilities: Sets up context, provider, and exposes hooks/selectors/actions for order operations.
  * Architecture: Centralizes order state, connects reducer and middleware, and enables modular access to order logic.
  */
-// ...existing code...
 import React from "react";
-import { Order } from "@/database/models/order.model";
+import { newOrder, OrderStatus } from "@/types/common.types";
 import { Person } from "@/database/models/person.model";
+import { OrderState, OrderAction } from "./types";
+import { some, none } from "@/utils/fp";
 import {
   createFunctionalContext,
   loggingMiddleware,
   optimisticMiddleware,
   persistenceMiddleware,
 } from "@/utils/fp-contexts";
-import { OrderState, OrderAction } from "./types";
-import { createInitialState } from "./orderUtils";
 import { orderReducer } from "./orderReducer";
 import { orderValidation, optimisticRollbacks } from "./orderMiddleware";
 import { useOrderStatus } from "./useOrderStatus";
 import { useApproverSelection } from "./useApproverSelection";
 import { useOrderTracking } from "./useOrderTracking";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+
+// Utility to create initial OrderState for context
+function createInitialState(
+  order: newOrder,
+  approverList: Person[] = []
+): OrderState {
+  return {
+    data: {
+      order,
+      approverList,
+      selectedApprover: order.confirmedByApprover
+        ? some(order.confirmedByApprover)
+        : none,
+      orderHistory: [],
+      notifications: [],
+      optimisticUpdates: {},
+    },
+    loading: false,
+    error: none,
+    lastUpdated: Date.now(),
+    version: 0,
+  };
+}
+
+// Default order data for context initialization
+const defaultOrderData: newOrder = {
+  createdAt: new Date(),
+  applicant: null,
+  gifts: [],
+  orderId: `order-${Date.now()}`,
+  confirmationRQCode: "",
+  confirmedByApprover: null,
+  status: OrderStatus.PENDING,
+};
 
 // =======================
 // Custom Hook Exports
@@ -40,7 +73,7 @@ export { useOrderStatus, useApproverSelection, useOrderTracking };
  */
 const contextResult = createFunctionalContext<OrderState, OrderAction>({
   name: "Order",
-  initialState: createInitialState({} as Order, []),
+  initialState: createInitialState(defaultOrderData),
   reducer: orderReducer,
   middleware: [
     loggingMiddleware,
@@ -71,36 +104,30 @@ export const useOrderActions = contextResult.useActions;
 /**
  * Provider component for OrderContext.
  * Initializes context state with order and approver list.
- * @param {Order} order - The order object
+ * @param {newOrder} order - The order object
  * @param {Person[]} approverList - List of approver Person objects
  * @param {React.ReactNode} children - React children nodes
  * @returns {JSX.Element} Context provider wrapping children
  */
 interface OrderProviderProps {
-  order: Order;
-  approverList: Person[];
   children: React.ReactNode;
 }
 
 /**
  * Provider component for OrderContext.
  * Initializes context state with order and approver list.
- * @param {Order} order - The order object to initialize state.
+ * @param {newOrder} order - The order object to initialize state.
  * @param {Person[]} approverList - List of approvers.
  * @param {React.ReactNode} children - Child components.
  * @returns {JSX.Element} Context provider wrapping children.
  * Side effects: Initializes context state.
  * Public API.
  */
-const OrderProviderComponent: React.FC<OrderProviderProps> = ({
-  order,
-  approverList,
-  children,
-}) => {
+const OrderProviderComponent: React.FC<OrderProviderProps> = ({ children }) => {
   // Memoize initial state for performance
   const initialData = React.useMemo(
-    () => createInitialState(order, approverList),
-    [order, approverList]
+    () => createInitialState(defaultOrderData),
+    []
   );
   return (
     <BaseOrderProvider initialState={initialData}>{children}</BaseOrderProvider>

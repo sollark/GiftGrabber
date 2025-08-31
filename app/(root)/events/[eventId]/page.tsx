@@ -150,5 +150,16 @@ export default function ApplicantPage({
     return <div>Error loading event data</div>;
   if (!event) return <div>Event not found</div>;
 
+  // const order: Order = {
+  //   publicId: `order-${Date.now()}`,
+  //   createdAt: new Date(),
+  //   applicant: null,
+  //   gifts: [],
+  //   orderId: `order-${Date.now()}`,
+  //   confirmationRQCode: "",
+  //   confirmedByApprover: null,
+  //   status: OrderStatus.PENDING,
+  // };
+
   return <ApplicantPageClient />;
 }

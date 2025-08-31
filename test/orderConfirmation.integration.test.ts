@@ -68,7 +68,7 @@ describe("Order Confirmation Integration", () => {
       throw new Error("Order confirmation failed");
     }
     const confirmed = confirmedOrder as { publicId: string; status: string }; // Use publicId instead of _id
-    expect(confirmed.status).toBe("COMPLETE");
+    expect(confirmed.status).toBe("COMPLETED");
     expect(confirmed.publicId).toBe(orderPublicId); // Verify same order
 
     // Check gifts updated (optimized batch query - Issue D Fix)

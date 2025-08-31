@@ -10,11 +10,10 @@ import type { Person } from "@/database/models/person.model";
 import {
   OrderAction,
   OrderState,
-  LocalOrderStatus,
   OrderHistoryEntry,
   OrderNotification,
 } from "./types";
-import { getPersonName, convertOrderToEnhanced } from "./orderUtils";
+import { OrderStatus } from "@/types/common.types";
 
 /**
  * Reducer for order state.
@@ -39,7 +38,7 @@ export const orderReducer = (
         ...state,
         data: {
           ...state.data,
-          order: convertOrderToEnhanced(action.payload as Order),
+          order: action.payload as Order,
         },
       });
     case "UPDATE_ORDER":
@@ -97,7 +96,7 @@ export const orderReducer = (
           ...state.data,
           order: {
             ...state.data.order,
-            status: "confirmed" as LocalOrderStatus,
+            status: "confirmed" as OrderStatus,
             confirmedBy: confirmApprover,
             confirmedAt: new Date(),
           },
@@ -126,7 +125,7 @@ export const orderReducer = (
           ...state.data,
           order: {
             ...state.data.order,
-            status: "rejected" as LocalOrderStatus,
+            status: "rejected" as OrderStatus,
             rejectedBy: rejectApprover,
             rejectedAt: new Date(),
             rejectionReason: reason,
@@ -152,7 +151,7 @@ export const orderReducer = (
           ...state.data,
           order: {
             ...state.data.order,
-            status: "cancelled" as LocalOrderStatus,
+            status: "cancelled" as OrderStatus,
             cancelledAt: new Date(),
             cancellationReason: cancelReason,
           },
@@ -176,7 +175,7 @@ export const orderReducer = (
           ...state.data,
           order: {
             ...state.data.order,
-            status: "completed" as LocalOrderStatus,
+            status: "completed" as OrderStatus,
             completedAt: new Date(),
           },
           orderHistory: [
@@ -184,7 +183,7 @@ export const orderReducer = (
             {
               id: `complete-${Date.now()}`,
               timestamp: Date.now(),
-              action: "COMPLETE",
+              action: "COMPLETED",
               actor: action.payload?.actor || { name: "System" },
               details: "Order completed",
             },
@@ -283,3 +282,7 @@ export const orderReducer = (
       return failure(new Error(`Unknown action type: ${action.type}`));
   }
 };
+
+function getPersonName(person: Person): string {
+  return `${person.firstName} ${person.lastName}`;
+}

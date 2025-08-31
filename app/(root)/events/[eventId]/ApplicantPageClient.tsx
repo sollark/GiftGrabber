@@ -13,21 +13,9 @@
  */
 import { Section } from "@/ui/layout";
 import OrderGifts from "@/components/order/OrderGifts";
-import { OrderStatus } from "@/types/common.types";
-import { useEventSelector } from "@/app/contexts/EventContext";
 import { isSome } from "@/utils/fp";
-
-// Only these fields are expected in event:
-// - publicId: string
-// - name: string
-// - email: string
-interface ApplicantPageClientProps {
-  event: {
-    publicId: string;
-    name: string;
-    email: string;
-  };
-}
+import { OrderProvider } from "@/app/contexts/order/OrderContext";
+import { useEventSelector } from "@/app/contexts/EventContext";
 
 /**
  * ApplicantPageClient
@@ -41,25 +29,12 @@ export default function ApplicantPageClient() {
   const eventMaybe = useEventSelector((state) => state.data);
   const event = isSome(eventMaybe) ? eventMaybe.value : undefined;
 
-  // Prepare order context data (no gifts/applicants/approvers available)
-  const orderData = {
-    publicId: `order-${Date.now()}`,
-    createdAt: new Date(),
-    applicant: null as any, // To be selected by user in workflow
-    gifts: [],
-    orderId: `order-${Date.now()}`,
-    confirmationRQCode: "",
-    confirmedByApprover: null,
-    status: OrderStatus.PENDING,
-  };
-
-  // No approver/applicant data available, so use empty array
-  const approverList: any[] = [];
-
   return (
-    <Section>
-      <Section.Title>{event?.name || "Event"}</Section.Title>
-      <OrderGifts />
-    </Section>
+    <OrderProvider>
+      <Section>
+        <Section.Title>{event?.name || "Event"}</Section.Title>
+        <OrderGifts />
+      </Section>
+    </OrderProvider>
   );
 }

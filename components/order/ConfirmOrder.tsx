@@ -128,7 +128,7 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
   }
 
   return (
-    <OrderProvider order={order as Order} approverList={approvers}>
+    <OrderProvider>
       <MultistepNavigator>
         <Approver />
         <OrderConfirmationSection />

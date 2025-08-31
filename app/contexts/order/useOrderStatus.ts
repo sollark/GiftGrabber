@@ -6,7 +6,6 @@
  */
 import { Person } from "@/database/models/person.model";
 import { useOrderActions, useOrderSelector } from "./OrderContext";
-import { getPersonName } from "./orderUtils";
 import { failure } from "@/utils/fp";
 
 /**
@@ -121,3 +120,11 @@ export const useOrderStatus = () => {
     canCancel,
   };
 };
+
+// Remove: import { getPersonName } from "./orderUtils";
+// Add local implementation if needed
+function getPersonName(
+  person: import("@/database/models/person.model").Person
+): string {
+  return `${person.firstName} ${person.lastName}`;
+}

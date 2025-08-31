@@ -4,28 +4,15 @@
  * Responsibilities: Defines shape of state, actions, and related entities.
  * Architecture: Shared by reducer, middleware, context, and hooks for type safety.
  */
-import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { FunctionalState, FunctionalAction } from "@/utils/fp-contexts";
 import { Maybe } from "@/utils/fp";
-
-// Local order status for internal operations
-export type LocalOrderStatus =
-  | "pending"
-  | "confirmed"
-  | "rejected"
-  | "completed"
-  | "cancelled";
-
-// Enhanced order type with local status
-export interface EnhancedOrder extends Omit<Order, "status"> {
-  status: LocalOrderStatus;
-}
+import { newOrder } from "@/types/common.types";
 
 // Main order state for context
 export interface OrderState
   extends FunctionalState<{
-    order: EnhancedOrder;
+    order: newOrder;
     approverList: Person[];
     selectedApprover: Maybe<Person>;
     orderHistory: OrderHistoryEntry[];

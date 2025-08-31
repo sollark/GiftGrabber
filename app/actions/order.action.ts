@@ -203,7 +203,7 @@ const confirmOrderInternalAction = async (
     const confirmedOrder = result.value;
     return {
       publicId: confirmedOrder.publicId,
-      status: "COMPLETE",
+      status: "COMPLETED",
       approverPublicId,
     };
   } catch (error) {

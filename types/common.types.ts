@@ -18,6 +18,8 @@
 
 import { ExcelFormatType } from "@/types/excel.types";
 import { Types } from "mongoose";
+import { Person } from "@/database/models/person.model";
+import { Gift } from "@/database/models/gift.model";
 
 // ============================================================================
 // UTILITY TYPES - Common patterns used across the app
@@ -106,6 +108,21 @@ export interface NewPerson {
   sourceFormat: ExcelFormatType;
 }
 
+/**
+ * newOrder type for use in order context
+ * Represents a newly created order with relevant details
+ */
+export type newOrder = {
+  createdAt: Date;
+  applicant: Person | null;
+  gifts: Gift[];
+  orderId: string;
+  confirmationRQCode: string;
+  confirmedByApprover: Person | null;
+  confirmedAt?: Date;
+  status: OrderStatus;
+};
+
 // ============================================================================
 // QR CODE & EMAIL TYPES - Service layer interfaces
 // ============================================================================
@@ -136,7 +153,7 @@ export interface EmailAttachment {
 export enum OrderStatus {
   PENDING = "Pending",
   PROCESSING = "Processing",
-  COMPLETE = "Complete",
+  COMPLETED = "Completed",
   CANCELLED = "Cancelled",
 }
 

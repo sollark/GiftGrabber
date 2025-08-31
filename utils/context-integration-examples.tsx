@@ -97,14 +97,7 @@ export const CombinedContextProvider: React.FC<FlexibleProviderProps> = ({
   }
 
   if (contexts.order) {
-    wrappedChildren = (
-      <OrderProvider
-        order={contexts.order.order}
-        approverList={contexts.order.approverList}
-      >
-        {wrappedChildren}
-      </OrderProvider>
-    );
+    wrappedChildren = <OrderProvider>{wrappedChildren}</OrderProvider>;
   }
 
   if (contexts.gift) {

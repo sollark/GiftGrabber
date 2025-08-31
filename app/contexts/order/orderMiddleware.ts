@@ -4,7 +4,6 @@
  * Responsibilities: Intercepts actions, adds side effects, and enforces business rules.
  * Architecture: Pluggable middleware for OrderContext, enhancing reducer logic.
  */
-// ...existing code...
 import {
   validationMiddleware,
   optimisticMiddleware,
@@ -12,6 +11,7 @@ import {
 import { success, failure } from "@/utils/fp";
 import { OrderState, OrderAction } from "./types";
 import { isPersonInList } from "@/utils/utils";
+import { OrderStatus } from "@/types/common.types";
 
 /**
  * Validation middleware for order actions.
@@ -31,7 +31,7 @@ export const orderValidation = validationMiddleware<OrderState, OrderAction>(
         }
         return success(true);
       case "CONFIRM_ORDER":
-        if (state.data.order.status !== "pending") {
+        if (state.data.order.status !== OrderStatus.PENDING) {
           return failure("Only pending orders can be confirmed");
         }
         if (!action.payload) {
@@ -39,7 +39,7 @@ export const orderValidation = validationMiddleware<OrderState, OrderAction>(
         }
         return success(true);
       case "REJECT_ORDER":
-        if (state.data.order.status !== "pending") {
+        if (state.data.order.status !== OrderStatus.PENDING) {
           return failure("Only pending orders can be rejected");
         }
         if (!action.payload?.approver) {
@@ -47,7 +47,10 @@ export const orderValidation = validationMiddleware<OrderState, OrderAction>(
         }
         return success(true);
       case "CANCEL_ORDER":
-        if (["completed", "cancelled"].includes(state.data.order.status)) {
+        if (
+          state.data.order.status === OrderStatus.COMPLETED ||
+          state.data.order.status === OrderStatus.CANCELLED
+        ) {
           return failure("Cannot cancel completed or already cancelled orders");
         }
         return success(true);

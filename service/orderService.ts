@@ -20,7 +20,7 @@
  * @businessLogic
  * - Orders aggregate multiple gifts for single applicant with approval workflow
  * - Public ID strategy prevents enumeration attacks on order data
- * - Order status progression: PENDING → processing → COMPLETE/CANCELLED
+ * - Order status progression: PENDING → processing → COMPLETED/CANCELLED
  * - Approver assignment enables hierarchical approval workflows
  * - QR code integration supports mobile-friendly order verification
  *
@@ -61,7 +61,7 @@ const ORDER_CONFIG = {
   // Status constants
   STATUS: {
     PENDING: "PENDING",
-    COMPLETE: "COMPLETE",
+    COMPLETED: "COMPLETED",
     CANCELLED: "CANCELLED",
   },
 } as const;
