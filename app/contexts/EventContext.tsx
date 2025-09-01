@@ -301,7 +301,7 @@ type EventProviderProps = {
  * Provider component for EventContext, initializes state with eventId (optional).
  */
 const EventProviderComponent: React.FC<EventProviderProps> = ({
-  eventId = "",
+  eventId,
   children,
 }) => {
   const initialData = React.useMemo(
