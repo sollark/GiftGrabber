@@ -1,5 +1,24 @@
-import React, { FC, useCallback, useMemo } from "react";
-import { useApplicantList } from "@/app/contexts/ApplicantContext";
+/**
+ * SelectUnclaimedGift.tsx
+ *
+ * Purpose: Component for searching applicants and assigning their gifts.
+ *
+ * Responsibilities:
+ * - Allows users to search for people and automatically assign their unclaimed gifts
+ * - Uses context hooks for applicant and gift state
+ * - Optimizes performance with memoization
+ * - Maintains local state for selected person and their gift
+ *
+ * Notes:
+ * - No UI or styling changes are made in this file
+ * - No new features are added; only code quality and structure improvements
+ */
+
+import React, { FC, useCallback, useMemo, useState } from "react";
+import {
+  useApplicantList,
+  useSelectedApplicant,
+} from "@/app/contexts/ApplicantContext";
 import {
   useGiftSelector,
   useGiftActions,
@@ -8,12 +27,14 @@ import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import PersonAutocomplete from "../PersonAutocomplete";
 import GiftInfo from "../gift/GiftInfo";
+import { PrimaryButton } from "@/ui/primitives";
 
 /**
- * Finds a gift for a specific person (claimed or unclaimed)
- * @param selectedPerson - The person to find a gift for
- * @param gifts - Array of available gifts
- * @returns The found gift or undefined if none available
+ * findPersonGift
+ * Finds a gift for a specific person (claimed or unclaimed).
+ * @param selectedPerson {Person} - The person to find a gift for
+ * @param gifts {Gift[]} - Array of available gifts
+ * @returns {Gift | undefined} The found gift or undefined if none available
  */
 const findPersonGift = (
   selectedPerson: Person,
@@ -22,29 +43,47 @@ const findPersonGift = (
   gifts.find((gift) => gift.owner.publicId === selectedPerson.publicId);
 
 /**
- * Functional SelectUnclaimedGift component.
- * Allows users to search for people and automatically assigns their unclaimed gifts.
- * Uses memo and strict typing for composability and performance.
+ * Utility to check if a gift is unclaimed.
+ * @param gift {Gift}
+ * @returns {boolean}
+ */
+const isGiftUnclaimed = (gift: Gift): boolean => !gift.applicant;
+
+/**
+ * SelectUnclaimedGift
+ * Functional component for searching applicants and assigning gifts.
+ * - Uses context hooks for state
+ * - Memoizes applicants and gifts for performance
+ * - Handles selection and assignment logic
+ * @returns {JSX.Element} The applicant search and gift assignment UI
  */
 const SelectUnclaimedGift: FC = () => {
   const applicantList = useApplicantList();
+  const selectedApplicant = useSelectedApplicant();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const giftList = React.useMemo(
+  const giftList = useMemo(
     () =>
       giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
         ? giftListMaybe.value
         : [],
     [giftListMaybe]
   );
+
   // Local state for selected person and their gift
-  const [selectedPerson, setSelectedPerson] = React.useState<Person | null>(
-    null
+  const initialPerson =
+    selectedApplicant._tag === "Some" ? selectedApplicant.value : null;
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(
+    initialPerson
   );
-  const [personGift, setPersonGift] = React.useState<Gift | undefined>(
-    undefined
-  );
+  const [personGift, setPersonGift] = useState<Gift | undefined>(undefined);
   const actions = useGiftActions();
-  const addGift = React.useCallback(
+
+  /**
+   * addGift
+   * Dispatches an action to add a gift if actions are available.
+   * @param gift {Gift} - The gift to add
+   */
+  const addGift = useCallback(
     (gift: Gift) => {
       if (actions._tag === "Some") {
         actions.value.dispatchSafe({ type: "ADD_GIFT", payload: gift });
@@ -53,25 +92,34 @@ const SelectUnclaimedGift: FC = () => {
     [actions]
   );
 
-  // Extract values from Maybe types for easier consumption
+  /**
+   * availableApplicants
+   * Memoized list of applicants from context.
+   */
   const availableApplicants = useMemo(
     () => (applicantList._tag === "Some" ? applicantList.value : []),
     [applicantList]
   );
+
+  /**
+   * availableGifts
+   * Memoized list of gifts from context.
+   */
   const availableGifts = useMemo(() => giftList, [giftList]);
 
-  // Handler for gift selection and assignment
+  /**
+   * handleGiftSelection
+   * Handles person selection and gift assignment logic.
+   * @param person {Person}
+   */
   const handleGiftSelection = useCallback(
     (person: Person) => {
       if (!person) return;
       setSelectedPerson(person);
       const gift = findPersonGift(person, availableGifts);
       setPersonGift(gift);
-      if (gift && !(gift as any).applicant) {
-        addGift(gift);
-      }
     },
-    [availableGifts, addGift]
+    [availableGifts]
   );
 
   return (
@@ -79,8 +127,17 @@ const SelectUnclaimedGift: FC = () => {
       <PersonAutocomplete
         peopleList={availableApplicants}
         onSelectPerson={handleGiftSelection}
+        value={selectedPerson}
       />
       {personGift && <GiftInfo gift={personGift} />}
+      {personGift && isGiftUnclaimed(personGift) && (
+        <PrimaryButton onClick={() => addGift(personGift)}>
+          Add Gift
+        </PrimaryButton>
+      )}
+      {!personGift && selectedPerson && (
+        <div>No gift found for this person.</div>
+      )}
     </div>
   );
 };

@@ -78,32 +78,6 @@ export type ApplicantAction =
   | { type: "SELECT_APPLICANT"; payload: Person };
 
 // ============================================================================
-// REDUCER HELPERS
-// ============================================================================
-
-/**
- * Type guard for event data payload
- */
-const isEventDataPayload = (
-  payload: unknown
-): payload is { applicantList?: Person[] } => {
-  return typeof payload === "object" && payload !== null;
-};
-
-/**
- * Type guard for person payload
- * Checks if payload has the required sourceFormat field (only required field in Person)
- */
-const isPersonPayload = (payload: unknown): payload is Person => {
-  return (
-    typeof payload === "object" &&
-    payload !== null &&
-    "sourceFormat" in payload &&
-    typeof (payload as any).sourceFormat === "string"
-  );
-};
-
-// ============================================================================
 // INITIAL STATE AND REDUCER
 // ============================================================================
 
@@ -166,8 +140,6 @@ const applicantReducer = (
       return failure(new Error(`Unknown action type: ${action.type}`));
   }
 };
-
-// CONTEXT CREATION is below, after applicantValidation is defined
 
 // ============================================================================
 // VALIDATION MIDDLEWARE

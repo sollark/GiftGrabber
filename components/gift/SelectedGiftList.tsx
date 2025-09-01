@@ -44,6 +44,10 @@ import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import ErrorMessage from "@/ui/form/ErrorMessage";
 import { BaseTableColumn } from "@/ui/table/BaseTable";
 import { ControlledBaseTable } from "@/ui/table/ControlledBaseTable";
+import {
+  useOrderSelector,
+  useOrderActions,
+} from "@/app/contexts/order/OrderContext";
 
 // Use getMaybeOrElse from utils/fp to safely extract array from Maybe type
 
@@ -88,6 +92,9 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     (state) => state.data.applicantGifts
   );
   const actions = useGiftActions();
+  // Order context selectors and actions
+  const order = useOrderSelector((state) => state.data.order);
+  const orderActions = useOrderActions();
 
   // Get eventId from URL parameters
   const pathname = usePathname();
@@ -189,32 +196,57 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
    */
   const processOrder = useCallback(() => {
     if (!applicant || isProcessingOrder) return;
+    // Update order context with applicant and gifts
+    if (orderActions._tag === "Some") {
+      orderActions.value.dispatchSafe({
+        type: "UPDATE_ORDER",
+        payload: {
+          applicant,
+          gifts: applicantGifts,
+        },
+      });
+    }
     executeOrderProcess();
-  }, [applicant, isProcessingOrder, executeOrderProcess]);
-
-  // No longer needed: handleRemoveGift
+  }, [
+    applicant,
+    isProcessingOrder,
+    executeOrderProcess,
+    orderActions,
+    applicantGifts,
+  ]);
 
   /**
-   * Renders a single gift item with its component and remove button
-   *
-   * @param gift - The gift object to render
-   * @returns JSX.Element - Gift item with remove functionality
+   * Utility function to render a gift cell.
+   * @param gift {Gift}
+   * @returns JSX.Element
    */
+  const renderGiftCell = (gift: Gift) => <GiftComponent gift={gift} />;
+
+  /**
+   * Utility function to render a remove button cell.
+   * @param gift {Gift}
+   * @param removeGiftAction {(gift: Gift) => void}
+   * @returns JSX.Element
+   */
+  const renderRemoveButtonCell = (
+    gift: Gift,
+    removeGiftAction: (gift: Gift) => void
+  ) => (
+    <SecondaryButton onClick={() => removeGiftAction(gift)}>
+      Remove
+    </SecondaryButton>
+  );
 
   // Define columns for ControlledBaseTable
   const columns: BaseTableColumn<Gift>[] = useMemo(
     () => [
       {
         header: "Gift",
-        accessor: (gift) => <GiftComponent gift={gift} />,
+        accessor: (gift) => renderGiftCell(gift),
       },
       {
         header: "",
-        accessor: (gift) => (
-          <SecondaryButton onClick={() => removeGiftAction(gift)}>
-            Remove
-          </SecondaryButton>
-        ),
+        accessor: (gift) => renderRemoveButtonCell(gift, removeGiftAction),
         className: "w-32 text-right",
       },
     ],
@@ -255,7 +287,10 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
       {orderError._tag === "Some" && (
         <ErrorMessage message={orderError.value.message} />
       )}
+      {/* Add error handling for QR code generation */}
       <QRcode url={orderUrl} qrRef={orderQRCodeRef} />
+      {/* Example: Add error message for missing applicant */}
+      {!applicant && <ErrorMessage message={MESSAGES.NO_APPLICANT_ERROR} />}
     </Box>
   );
 };

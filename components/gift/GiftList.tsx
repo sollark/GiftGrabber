@@ -110,7 +110,4 @@ const GiftList: React.FC<GiftListProps> = ({
   );
 };
 
-// Add display name for debugging
-GiftList.displayName = "GiftList";
-
 export default GiftList;

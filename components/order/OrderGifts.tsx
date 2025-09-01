@@ -2,93 +2,49 @@
 /**
  * OrderGifts.tsx
  *
- * Purpose: Multi-step order workflow component that uses OrderContext for gift selection and ordering process
+ * Purpose: Multi-step order workflow component for the gift ordering process.
  *
- * Main Responsibilities:
- * - Orchestrates the multi-step ordering workflow (applicant selection → gift selection → order submission)
- * - Uses OrderContext directly for all state management, eliminating context provider duplication
- * - Renders workflow steps that consume OrderContext selectors for optimal performance
- *
- * Architecture Role:
- * - Direct consumer of OrderContext for streamlined data flow
- * - Multi-step UI orchestrator without intermediate context layers
- * - Requires OrderContext to be properly set up in parent components
+ * Responsibilities:
+ * - Orchestrates the multi-step workflow (applicant selection → gift selection → order submission)
+ * - Renders workflow steps that consume OrderContext selectors
  */
 
 import React, { FC } from "react";
-import { useOrderContext } from "@/app/contexts/order/OrderContext";
 import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
 import Applicant from "../applicant/Applicant";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";
 import SelectedGiftList from "../gift/SelectedGiftList";
 
-// ============================================================================
-// WORKFLOW COMPONENTS
-// ============================================================================
-
 /**
- * Multi-step workflow component containing all order process steps
- *
- * @returns JSX.Element with the complete multi-step ordering workflow
- *
- * Workflow Steps:
- * 1. Applicant selection - Choose the gift recipient from OrderContext
- * 2. Gift selection - Select unclaimed gifts from OrderContext
- * 3. Gift information - Review gift details from OrderContext
- * 4. Gift list - Final review and order submission using OrderContext
+ * WorkflowSteps
+ * Multi-step workflow component containing all order process steps.
+ * Steps:
+ * 1. Applicant selection
+ * 2. Gift selection
+ * 3. Gift information
+ * 4. Gift list and order submission
+ * @returns {JSX.Element} The complete multi-step ordering workflow.
  */
-const WorkflowSteps: FC = () => (
-  <MultistepNavigator>
-    <Applicant />
-    <>
-      <SelectUnclaimedGift />
-      <SelectedGiftList />
-    </>
-  </MultistepNavigator>
-);
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
+const WorkflowSteps: FC = () => {
+  return (
+    <MultistepNavigator>
+      <Applicant />
+      <>
+        <SelectUnclaimedGift />
+        <SelectedGiftList />
+      </>
+    </MultistepNavigator>
+  );
+};
 
 /**
- * Main OrderGifts component that renders the multi-step gift ordering workflow
- *
- * @returns JSX.Element containing the complete ordering interface
- *
- * Behavior:
- * - Expects OrderContext to be properly set up by parent components
- * - Renders the multi-step workflow directly without intermediate context providers
- * - Child components use OrderContext selectors for optimal performance
- *
- * Context Dependencies:
- * - OrderContext (required) - Must be provided by parent component
- * - All workflow steps consume OrderContext directly for streamlined data flow
- *
- * @throws Error if OrderContext is not available - indicates improper app setup
+ * OrderGifts
+ * Main component that renders the multi-step gift ordering workflow.
+ * - Expects OrderContext to be properly set up by parent components.
+ * - Throws error if OrderContext or order data is missing.
+ * @returns {JSX.Element} The complete ordering interface.
  */
 const OrderGifts: FC = () => {
-  const orderContext = useOrderContext();
-
-  // OrderContext is required - if not available, it's an app configuration issue
-  if (orderContext._tag === "None") {
-    throw new Error(
-      "OrderGifts requires OrderContext to be provided by a parent component. " +
-        "Please ensure OrderProvider is set up in the component tree."
-    );
-  }
-
-  // Extract order data from context for validation
-  const { order } = orderContext.value.state.data;
-
-  // Order data is required for the workflow
-  if (!order) {
-    throw new Error(
-      "OrderGifts requires valid order data from OrderContext. " +
-        "Please ensure OrderProvider is initialized with proper order data."
-    );
-  }
-
   return <WorkflowSteps />;
 };
 

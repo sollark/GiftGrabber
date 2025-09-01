@@ -140,11 +140,3 @@ export const OrderProvider = withErrorBoundary(
   "OrderContext",
   <div>Failed to load Order context. Please refresh the page.</div>
 );
-
-// =======================
-// File Purpose
-// =======================
-/**
- * OrderContext with functional programming patterns
- * Provides immutable state management for order operations
- */
