@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Applicant.tsx
  *
@@ -15,17 +17,14 @@
  * - Only code quality, structure, and documentation improvements
  */
 
-"use client";
-import React, { FC, useCallback, useState } from "react";
-import { Maybe, some, none } from "@/utils/fp";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import React, { FC, useCallback } from "react";
 import {
-  useGiftSelector,
-  useGiftActions,
-} from "@/app/contexts/gift/GiftContext";
+  useApplicantList,
+  useApplicantActions,
+  useSelectedApplicant,
+} from "@/app/contexts/ApplicantContext";
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 import { Person } from "@/database/models/person.model";
-import { Gift } from "@/database/models/gift.model";
 import PersonAutocomplete from "../PersonAutocomplete";
 
 /**
@@ -35,57 +34,10 @@ import PersonAutocomplete from "../PersonAutocomplete";
  * @returns The applicant selection UI
  */
 const Applicant: FC = () => {
-  const { applicantList, selectApplicant } = useApplicantSelection();
-  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const actions = useGiftActions();
+  const applicantList = useApplicantList();
+  const applicantActions = useApplicantActions();
+  const selectedApplicant = useSelectedApplicant();
   const { goToNextStep } = useStepNavigationActions();
-
-  // Local state for selected person
-  const [selectedPerson, setSelectedPerson] = useState<Maybe<Person>>(none);
-
-  // Simplified gift list extraction
-  const giftList = React.useMemo(
-    () =>
-      giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
-        ? giftListMaybe.value
-        : [],
-    [giftListMaybe]
-  );
-
-  // Simplified gift addition with safe access
-  const addGift = React.useCallback(
-    (gift: Gift) => {
-      if (actions._tag === "Some") {
-        actions.value.dispatchSafe({ type: "ADD_GIFT", payload: gift });
-      }
-    },
-    [actions]
-  );
-
-  /**
-   * findApplicantGift
-   * Finds the first unclaimed gift for the given person.
-   * @param person - The person to find a gift for
-   * @returns The first unclaimed gift or undefined
-   */
-  const findApplicantGift = useCallback(
-    (person: Person): Gift | undefined =>
-      giftList.find(
-        (gift: Gift) =>
-          gift.owner.publicId === person.publicId && !(gift as any).receiver
-      ),
-    [giftList]
-  );
-
-  /**
-   * updateApplicantGifts
-   * Adds a gift to the applicant's list.
-   * @param gift - The gift to add
-   */
-  const updateApplicantGifts = useCallback(
-    (gift: Gift) => addGift(gift),
-    [addGift]
-  );
 
   /**
    * processApplicantSelection
@@ -94,13 +46,15 @@ const Applicant: FC = () => {
    */
   const processApplicantSelection = useCallback(
     (person: Person) => {
-      setSelectedPerson(some(person));
-      selectApplicant(person);
-      const applicantGift = findApplicantGift(person);
-      if (applicantGift) updateApplicantGifts(applicantGift);
+      if (applicantActions._tag === "Some") {
+        applicantActions.value.dispatchSafe({
+          type: "SELECT_APPLICANT",
+          payload: person,
+        });
+      }
       goToNextStep();
     },
-    [selectApplicant, findApplicantGift, updateApplicantGifts, goToNextStep]
+    [goToNextStep]
   );
 
   /**
@@ -116,20 +70,13 @@ const Applicant: FC = () => {
     [processApplicantSelection]
   );
 
-  /**
-   * handlePersonChange
-   * Placeholder for handling person change events (currently a no-op).
-   */
-  const handlePersonChange = useCallback(() => {}, []);
-
   return (
     <PersonAutocomplete
       peopleList={applicantList._tag === "Some" ? applicantList.value : []}
       onSelectPerson={handleApplicantSelection}
-      onChangePerson={handlePersonChange}
+      value={selectedApplicant._tag === "Some" ? selectedApplicant.value : null}
     />
   );
 };
-// Applicant.displayName = "Applicant";
 
 export default Applicant;

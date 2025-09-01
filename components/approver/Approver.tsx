@@ -40,7 +40,7 @@ const Approver: FC = () => {
         <PersonAutocomplete
           peopleList={approverList._tag === "Some" ? approverList.value : []}
           onSelectPerson={handleApproverSelection}
-          onChangePerson={handlePersonChange}
+          // ...existing code...
         />
       </ConditionalRender>
     </div>

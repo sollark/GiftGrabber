@@ -1,12 +1,27 @@
 /**
- * GiftInfo.tsx
+ * GiftComponent.tsx
  *
- * This file defines the GiftInfo component, which displays the first unclaimed gift for the currently selected person.
+ * Purpose: Presentational component for displaying individual gift information with owner and claim status
+ *
+ * Main Responsibilities:
+ * - Renders gift owner information with first and last name display
+ * - Shows gift availability status (claimed vs available) for user awareness
+ * - Provides consistent gift display formatting across the application
+ * - Maintains decoupled design for reusability in different contexts
+ * - Implements defensive programming with null/undefined gift handling
+ *
+ * Architecture Role:
+ * - Pure presentational component without business logic or state management
+ * - Reusable UI component for gift lists, grids, and selection interfaces
+ * - Foundation component for gift visualization in various application contexts
+ * - Decoupled from context providers for maximum testability and flexibility
+ * - Building block for complex gift management and selection workflows
+ *
+ * This file defines the GiftComponent, a presentational component for displaying a single gift's owner and claim status.
  *
  * Responsibilities:
- * - Use context to get the selected person and the list of gifts
- * - Find and display the first unclaimed gift for that person
- * - Remain performant and maintainable
+ * - Render the owner's name and whether the gift is claimed or available
+ * - Remain decoupled from context for reusability and testability
  *
  * Constraints:
  * - No styling or UI changes
@@ -14,38 +29,38 @@
  * - Only code quality, structure, and documentation improvements
  */
 
-import { FC, useState } from "react";
-import { none, Maybe, getMaybeOrElse } from "@/utils/fp";
-import { useGiftSelector } from "@/app/contexts/gift/GiftContext";
-import GiftComponent from "./GiftComponent";
 import { Gift } from "@/database/models/gift.model";
-import { Person } from "@/database/models/person.model";
+import { Box } from "@mui/material";
+import { FC } from "react";
+import PersonInfo from "../PersonInfo";
+
+type GiftProps = {
+  gift: Gift;
+};
 
 /**
- * GiftInfo
- * Displays the first unclaimed gift for the currently selected person, if any.
- * Uses context for person and gifts.
- * @returns The GiftComponent for the first unclaimed gift, or null if none
+ * Pure presentational component for individual gift display with owner and status information
+ *
+ * @param gift - Gift object containing owner and applicant information for display
+ * @returns JSX.Element with formatted gift information or empty fragment if no gift
+ *
+ * @sideEffects None - pure presentational component with no state changes
+ * @performance Lightweight component with minimal rendering overhead
+ * @businessLogic Displays "Claimed" if applicant exists, "Available" otherwise
+ * @notes Defensive programming handles null/undefined gift gracefully
+ * @publicAPI Reusable component for gift display across different contexts
  */
-const GiftInfo: FC = () => {
-  // State for the currently selected person (Maybe<Person>)
-  const [selectedPerson] = useState<Maybe<Person>>(none);
-  // Get the list of gifts from context (Maybe<Gift[]>)
-  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const giftList = getMaybeOrElse<Gift[]>([])(giftListMaybe);
+const GiftInfo: FC<GiftProps> = ({ gift }) => {
+  if (!gift) return <></>;
 
-  if (selectedPerson._tag !== "Some") return null;
-  const person = selectedPerson.value;
-  // Find the first unclaimed gift for the selected person
-  const gift = giftList.find(
-    (gift) =>
-      gift.owner &&
-      person.publicId === gift.owner.publicId &&
-      !(gift as any).applicant
+  const { owner, applicant } = gift;
+  const giftStatus = applicant ? "Claimed" : "Available";
+
+  return (
+    <Box sx={{ padding: "1rem" }}>
+      <PersonInfo person={owner} />: {giftStatus}
+    </Box>
   );
-
-  if (!gift) return null;
-  return <GiftComponent gift={gift} />;
 };
 
 export default GiftInfo;

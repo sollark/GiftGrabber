@@ -14,8 +14,7 @@
  * - Only code quality, structure, and documentation improvements
  */
 
-"use client";
-
+import React from "react";
 import { FC, useState, useCallback, useMemo, SyntheticEvent } from "react";
 import { Person } from "@/database/models/person.model";
 import { Autocomplete, TextField } from "@mui/material";
@@ -36,7 +35,7 @@ export interface OptionType {
 interface PersonAutocompleteProps {
   peopleList: Person[];
   onSelectPerson: (person: Person) => void;
-  onChangePerson: (person: Person) => void;
+  value?: Person | null;
 }
 
 /**
@@ -78,15 +77,30 @@ const isOptionEqualToValue = (option: OptionType, value: OptionType): boolean =>
 const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   peopleList,
   onSelectPerson,
-  onChangePerson,
+  value = null,
 }) => {
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(value);
+
+  // Sync local state with value prop
+  React.useEffect(() => {
+    setSelectedPerson(value);
+  }, [value]);
 
   // Memoized option list to prevent unnecessary recalculation
   const optionList = useMemo(
     () => mapPersonListToOptions(peopleList),
     [peopleList]
   );
+
+  // Find the OptionType for the current value
+  const selectedOption = useMemo(() => {
+    if (!selectedPerson) return null;
+    return (
+      optionList.find(
+        (opt) => opt.person.publicId === selectedPerson.publicId
+      ) || null
+    );
+  }, [selectedPerson, optionList]);
 
   /**
    * handleOptionSelect
@@ -97,9 +111,8 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
       if (!value) return;
       const { person } = value;
       setSelectedPerson(person);
-      onChangePerson(person);
     },
-    [onChangePerson]
+    []
   );
 
   /**
@@ -129,6 +142,7 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
         disablePortal
         className={AUTOCOMPLETE_CONFIG.CLASS_NAME}
         options={optionList}
+        value={selectedOption}
         onChange={handleOptionSelect}
         sx={{ width: AUTOCOMPLETE_CONFIG.WIDTH }}
         renderInput={renderInput}

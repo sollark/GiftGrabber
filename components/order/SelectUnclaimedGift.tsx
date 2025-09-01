@@ -1,5 +1,5 @@
-import React, { FC, useCallback, useMemo, memo } from "react";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import React, { FC, useCallback, useMemo } from "react";
+import { useApplicantList } from "@/app/contexts/ApplicantContext";
 import {
   useGiftSelector,
   useGiftActions,
@@ -7,22 +7,19 @@ import {
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import PersonAutocomplete from "../PersonAutocomplete";
+import GiftInfo from "../gift/GiftInfo";
 
 /**
- * Finds an available unclaimed gift for a specific person
+ * Finds a gift for a specific person (claimed or unclaimed)
  * @param selectedPerson - The person to find a gift for
  * @param gifts - Array of available gifts
- * @returns The found unclaimed gift or undefined if none available
+ * @returns The found gift or undefined if none available
  */
-const findUnclaimedGift = (
+const findPersonGift = (
   selectedPerson: Person,
   gifts: Gift[]
 ): Gift | undefined =>
-  gifts.find(
-    (gift) =>
-      gift.owner.publicId === selectedPerson.publicId &&
-      !(gift as any).applicant
-  );
+  gifts.find((gift) => gift.owner.publicId === selectedPerson.publicId);
 
 /**
  * Functional SelectUnclaimedGift component.
@@ -30,7 +27,7 @@ const findUnclaimedGift = (
  * Uses memo and strict typing for composability and performance.
  */
 const SelectUnclaimedGift: FC = () => {
-  const { applicantList } = useApplicantSelection();
+  const applicantList = useApplicantList();
   const giftListMaybe = useGiftSelector((state) => state.data.giftList);
   const giftList = React.useMemo(
     () =>
@@ -39,9 +36,12 @@ const SelectUnclaimedGift: FC = () => {
         : [],
     [giftListMaybe]
   );
-  // Local state for selected person
+  // Local state for selected person and their gift
   const [selectedPerson, setSelectedPerson] = React.useState<Person | null>(
     null
+  );
+  const [personGift, setPersonGift] = React.useState<Gift | undefined>(
+    undefined
   );
   const actions = useGiftActions();
   const addGift = React.useCallback(
@@ -60,19 +60,15 @@ const SelectUnclaimedGift: FC = () => {
   );
   const availableGifts = useMemo(() => giftList, [giftList]);
 
-  // Handler for person selection changes (tracking only)
-  const handlePersonChange = useCallback((person: Person) => {
-    setSelectedPerson(person);
-  }, []);
-
   // Handler for gift selection and assignment
   const handleGiftSelection = useCallback(
     (person: Person) => {
       if (!person) return;
       setSelectedPerson(person);
-      const unclaimedGift = findUnclaimedGift(person, availableGifts);
-      if (unclaimedGift) {
-        addGift(unclaimedGift);
+      const gift = findPersonGift(person, availableGifts);
+      setPersonGift(gift);
+      if (gift && !(gift as any).applicant) {
+        addGift(gift);
       }
     },
     [availableGifts, addGift]
@@ -83,11 +79,10 @@ const SelectUnclaimedGift: FC = () => {
       <PersonAutocomplete
         peopleList={availableApplicants}
         onSelectPerson={handleGiftSelection}
-        onChangePerson={handlePersonChange}
       />
+      {personGift && <GiftInfo gift={personGift} />}
     </div>
   );
 };
-SelectUnclaimedGift.displayName = "SelectUnclaimedGift";
 
 export default SelectUnclaimedGift;

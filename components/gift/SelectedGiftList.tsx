@@ -28,7 +28,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Box } from "@mui/material";
 import { getMaybeOrElse } from "@/utils/fp";
 import { processCompleteOrder } from "@/utils/orderProcessing";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { useSelectedApplicant } from "@/app/contexts/ApplicantContext";
 import {
   useGiftSelector,
   useGiftActions,
@@ -38,7 +38,7 @@ import { generateOrderId } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import ListSkeleton from "@/components/ui/ListSkeleton";
-import GiftComponent from "./GiftComponent";
+import GiftComponent from "./GiftInfo";
 import QRcode from "@/ui/data-display/QRcode";
 import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import ErrorMessage from "@/ui/form/ErrorMessage";
@@ -83,7 +83,7 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   const orderQRCodeRef = useRef<HTMLDivElement>(null!);
 
   // Context state selectors
-  const { selectedApplicant } = useApplicantSelection();
+  const selectedApplicant = useSelectedApplicant();
   const applicantGiftsMaybe = useGiftSelector(
     (state) => state.data.applicantGifts
   );
@@ -126,10 +126,7 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   );
 
   const applicant = useMemo(() => {
-    return selectedApplicant._tag === "Some" &&
-      selectedApplicant.value._tag === "Some"
-      ? selectedApplicant.value.value
-      : null;
+    return selectedApplicant._tag === "Some" ? selectedApplicant.value : null;
   }, [selectedApplicant]);
 
   const applicantDisplayName = useMemo(

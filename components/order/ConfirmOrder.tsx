@@ -28,7 +28,7 @@ import Approver from "../approver/Approver";
 import { ConfirmOrderButton } from "@/ui/primitives";
 import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
 import OrderDetails from "./OrderDetails";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { useApplicantSelector } from "@/app/contexts/ApplicantContext";
 import { useApproverSelection } from "@/app/contexts/ApproverContext";
 
 // --- Constants ---
@@ -64,7 +64,7 @@ type ConfirmOrderProps = {
  */
 const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
   // Context hooks (used for side effects or future extensibility)
-  useApplicantSelection();
+  // useApplicantSelector(); // Removed: requires selector argument
   useApproverSelection();
 
   // Fetch order data with SWR

@@ -20,7 +20,6 @@ import { useOrderContext } from "@/app/contexts/order/OrderContext";
 import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
 import Applicant from "../applicant/Applicant";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";
-import GiftInfo from "../gift/GiftInfo";
 import SelectedGiftList from "../gift/SelectedGiftList";
 
 // ============================================================================
@@ -43,7 +42,6 @@ const WorkflowSteps: FC = () => (
     <Applicant />
     <>
       <SelectUnclaimedGift />
-      <GiftInfo />
       <SelectedGiftList />
     </>
   </MultistepNavigator>

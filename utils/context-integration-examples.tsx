@@ -20,7 +20,9 @@ import { getMaybeOrElse, failure } from "@/utils/fp";
 // Enhanced context imports
 import {
   ApplicantProvider,
-  useApplicantSelection,
+  useApplicantSelector,
+  useSelectedApplicant,
+  useApplicantActions,
 } from "@/app/contexts/ApplicantContext";
 import {
   GiftProvider,
@@ -167,11 +169,25 @@ export const LegacyCombinedContextProvider: React.FC<
  */
 export const useOrderCreationWorkflow = () => {
   // Context hooks
-  const { selectedApplicant, selectApplicant } = useApplicantSelection();
+  const selectedApplicant = useSelectedApplicant();
+  const applicantActions = useApplicantActions();
+  // Helper to select applicant using context actions
+  const selectApplicant = React.useCallback(
+    (applicant: Person) => {
+      if (applicantActions._tag === "Some") {
+        return applicantActions.value.dispatchSafe({
+          type: "SELECT_APPLICANT",
+          payload: applicant,
+        });
+      }
+      return failure(new Error("Applicant actions unavailable"));
+    },
+    [applicantActions]
+  );
   const applicantGifts = getMaybeOrElse<Gift[]>([])(
     useGiftSelector((state) => state.data.applicantGifts)
   );
-  const actions = useGiftActions();
+  const giftActions = useGiftActions();
   /**
    * addGift - Adds a gift using context actions. Returns Result.
    * @param gift - Gift object to add
@@ -186,12 +202,15 @@ export const useOrderCreationWorkflow = () => {
    */
   const addGift = React.useCallback(
     (gift: Gift) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({ type: "ADD_GIFT", payload: gift });
+      if (giftActions._tag === "Some") {
+        return giftActions.value.dispatchSafe({
+          type: "ADD_GIFT",
+          payload: gift,
+        });
       }
       return failure(new Error("Gift actions unavailable"));
     },
-    [actions]
+    [giftActions]
   );
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
   const navigation = useStepNavigation();
@@ -347,10 +366,7 @@ export const useOrderCreationWorkflow = () => {
   const submitOrder = React.useCallback(
     async (approver: Person) => {
       // Validate all required data
-      if (
-        selectedApplicant._tag !== "Some" ||
-        selectedApplicant.value._tag !== "Some"
-      ) {
+      if (selectedApplicant._tag !== "Some") {
         return failure(new Error("No applicant selected"));
       }
 
@@ -367,7 +383,7 @@ export const useOrderCreationWorkflow = () => {
           approver,
           submittedAt: Date.now(),
           orderDetails: {
-            applicant: selectedApplicant.value.value,
+            applicant: selectedApplicant.value,
             gifts: applicantGifts,
           },
         });
@@ -801,7 +817,7 @@ export function withFunctionalContexts<P extends object>(
  * @notes Example only; extend for real cross-context sync logic
  */
 export const useContextSynchronization = () => {
-  const { selectedApplicant } = useApplicantSelection();
+  const selectedApplicant = useSelectedApplicant();
   const { order } = useOrderStatus();
   const { setStepData } = useStepData();
 

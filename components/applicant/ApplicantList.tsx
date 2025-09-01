@@ -1,6 +1,6 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
-import { useApplicantSelection } from "@/app/contexts/ApplicantContext";
+import { useApplicantList } from "@/app/contexts/ApplicantContext";
 import SortableFilterableTable, {
   TableColumn,
 } from "@/ui/table/SortableFilterableTable";
@@ -26,7 +26,7 @@ const ApplicantList: FC<ApplicantListProps> = ({
   isLoading = false,
 }) => {
   // Use context for applicant list, but preserve original rendering and props
-  const { applicantList } = useApplicantSelection();
+  const applicantList = useApplicantList();
 
   // Prefer context value if available, else fallback to prop
   const list =
