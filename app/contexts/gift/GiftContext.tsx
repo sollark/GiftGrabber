@@ -1,7 +1,8 @@
 "use client";
 /**
- * GiftContext: Isolated context for gift management logic
- * Provides immutable state management and action-based updates for gifts
+ * GiftContext: Isolated context for gift management logic.
+ * Provides immutable state management and action-based updates for gifts.
+ * Uses functional programming patterns for state, actions, and error handling.
  */
 
 import React from "react";
@@ -22,6 +23,19 @@ import { isGiftInList, areGiftsEqual } from "@/utils/utils";
 // TYPES AND INTERFACES
 // ============================================================================
 
+// Minimal GiftAction type definition to resolve type errors
+export interface GiftAction {
+  type:
+    | "SET_GIFT_LIST"
+    | "ADD_GIFT"
+    | "REMOVE_GIFT"
+    | "CLEAR_GIFTS"
+    | "SET_SEARCH_QUERY"
+    | "UPDATE_FILTERS"
+    | "RESET_FILTERS";
+  payload?: unknown;
+}
+
 export interface GiftState
   extends FunctionalState<{
     giftList: Gift[];
@@ -34,22 +48,15 @@ export interface GiftState
     };
   }> {}
 
-export interface GiftAction extends FunctionalAction {
-  type:
-    | "SET_GIFT_LIST"
-    | "ADD_GIFT"
-    | "REMOVE_GIFT"
-    | "CLEAR_GIFTS"
-    | "SET_SEARCH_QUERY"
-    | "UPDATE_FILTERS"
-    | "RESET_FILTERS";
-  payload?: any;
-}
-
 // ============================================================================
 // INITIAL STATE AND REDUCER
 // ============================================================================
 
+/**
+ * Creates the initial state for the gift context.
+ * @param giftList - Initial list of gifts
+ * @returns GiftState
+ */
 const createGiftInitialState = (giftList: Gift[] = []): GiftState => ({
   data: {
     giftList,
@@ -67,6 +74,10 @@ const createGiftInitialState = (giftList: Gift[] = []): GiftState => ({
   version: 0,
 });
 
+/**
+ * Reducer for gift context actions.
+ * Returns a Result<GiftState, Error> for all state transitions.
+ */
 const giftReducer = (
   state: GiftState,
   action: GiftAction
@@ -77,7 +88,7 @@ const giftReducer = (
         ...state,
         data: {
           ...state.data,
-          giftList: action.payload || [],
+          giftList: Array.isArray(action.payload) ? action.payload : [],
         },
       });
     case "ADD_GIFT": {
@@ -124,7 +135,7 @@ const giftReducer = (
         ...state,
         data: {
           ...state.data,
-          searchQuery: action.payload || "",
+          searchQuery: typeof action.payload === "string" ? action.payload : "",
         },
       });
     case "UPDATE_FILTERS":
@@ -163,6 +174,10 @@ const giftReducer = (
 // VALIDATION MIDDLEWARE
 // ============================================================================
 
+/**
+ * Validation middleware for gift actions.
+ * Ensures business rules are enforced before state changes.
+ */
 const giftValidation = validationMiddleware<GiftState, GiftAction>(
   (action, state) => {
     switch (action.type) {
@@ -187,6 +202,9 @@ const giftValidation = validationMiddleware<GiftState, GiftAction>(
 // CONTEXT CREATION
 // ============================================================================
 
+/**
+ * Creates the functional context for gifts, with logging, validation, and persistence middleware.
+ */
 const contextResult = createFunctionalContext<GiftState, GiftAction>({
   name: "Gift",
   initialState: createGiftInitialState([]),
@@ -201,17 +219,21 @@ const contextResult = createFunctionalContext<GiftState, GiftAction>({
   debugMode: process.env.NODE_ENV === "development",
 });
 
+/** GiftContext - React context for gift state */
 export const GiftContext = contextResult.Context;
+/** BaseGiftProvider - Low-level provider for advanced usage */
 export const BaseGiftProvider = contextResult.Provider;
+/** useGiftContext - Hook to access gift context */
 export const useGiftContext = contextResult.useContext;
+/** useGiftContextResult - Hook to access context result */
 export const useGiftContextResult = contextResult.useContextResult;
-
+/** useGiftSelector - Hook to select state from context */
 export const useGiftSelector = contextResult.useSelector as <
   TSelected = unknown
 >(
   selector: (state: GiftState) => TSelected
 ) => Maybe<TSelected>;
-
+/** useGiftActions - Hook to access context actions */
 export const useGiftActions = contextResult.useActions;
 
 type GiftProviderProps = {
@@ -221,10 +243,8 @@ type GiftProviderProps = {
 
 /**
  * GiftProvider: Supplies gift context to child components.
- *
- * NOTE: To prevent coupling, child components should consume gift data
- * either via context (using useGiftContext/useGiftSelector) or via props,
- * but not both. Do not duplicate data sources.
+ * @param giftList - Initial list of gifts
+ * @param children - React children
  */
 const GiftProviderComponent: React.FC<GiftProviderProps> = ({
   giftList = [],
@@ -246,6 +266,9 @@ export const GiftProvider = withErrorBoundary(
   <div>Failed to load Gift context. Please refresh the page.</div>
 );
 
+/**
+ * GiftContextExports: Named exports for all context APIs.
+ */
 const GiftContextExports = {
   GiftProvider,
   useGiftContext,

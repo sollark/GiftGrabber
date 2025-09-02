@@ -15,7 +15,7 @@
  * - Promotes code reuse across different order-related components
  */
 
-import { Result, success, failure, tryAsync } from "@/utils/fp";
+import { Result, tryAsync } from "@/utils/fp";
 import { makeOrder } from "@/app/actions/order.action";
 import { getQRcodeBuffer } from "@/utils/utils";
 import { Gift } from "@/database/models/gift.model";
