@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC } from "react";
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import OrderGifts from "./OrderGifts";
 
@@ -30,9 +30,8 @@ const formatPersonName = (person: {
 const OrderDetails: FC = () => {
   const orderStatus = useOrderStatus();
 
-  // Extract order  from Maybe types
-  const order =
-    orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
+  // Extract order from context (null/undefined safe)
+  const order = orderStatus.order ?? null;
 
   // Early return if no order exists
   if (!order) return null;

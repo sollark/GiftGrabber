@@ -82,9 +82,6 @@ const contextResult = createFunctionalContext<OrderState, OrderAction>({
 export const OrderContext = contextResult.Context;
 export const BaseOrderProvider = contextResult.Provider;
 export const useOrderContext = contextResult.useContext;
-export const useOrderContextResult = contextResult.useContextResult;
-export const useOrderSelector = contextResult.useSelector;
-export const useOrderActions = contextResult.useActions;
 
 // =======================
 // Provider Component
@@ -125,3 +122,10 @@ export const OrderProvider = withErrorBoundary(
   "OrderContext",
   <div>Failed to load Order context. Please refresh the page.</div>
 );
+
+const OrderContextExports = {
+  OrderProvider,
+  useOrderContext,
+};
+
+export default OrderContextExports;

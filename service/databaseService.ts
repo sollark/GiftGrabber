@@ -66,6 +66,7 @@ import {
   executeParallelQueries,
   findEventsPaginated,
 } from "@/database/optimizedQueries";
+import { OrderStatus } from "@/types/common.types";
 
 // ============================================================================
 // CENTRALIZED SERIALIZATION UTILITIES
@@ -254,6 +255,21 @@ export class PersonService {
     delete ret.__v;
     return ret;
   };
+
+  /**
+   * Finds a person by their ObjectId (legacy).
+   * @param personId {Types.ObjectId}
+   * @returns Promise<Result<Person | null, Error>>
+   * @sideEffects DB read
+   * @publicAPI
+   */
+  static async findById(
+    personId: Types.ObjectId
+  ): Promise<Result<Person | null, Error>> {
+    return fromPromise(
+      PersonModel.findById(personId, PUBLIC_FIELD_SELECTIONS.PERSON).exec()
+    );
+  }
 }
 
 /**
@@ -692,6 +708,49 @@ export class OrderService {
     } catch (error) {
       return failure(error as Error);
     }
+  }
+
+  /**
+   * Finds an order with populated fields by orderId.
+   * @param orderId {string}
+   * @returns Promise<Result<Order | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
+   */
+  static async findWithPopulation(
+    orderId: string
+  ): Promise<Result<Order | null, Error>> {
+    return fromPromise(
+      OrderModel.findOne({ orderId }, PUBLIC_FIELD_SELECTIONS.ORDER)
+        .populate([
+          POPULATION_CONFIG.ORDER_APPLICANT,
+          POPULATION_CONFIG.ORDER_GIFTS,
+        ])
+        .exec()
+    );
+  }
+
+  /**
+   * Finds an unconfirmed order with populated fields by orderId.
+   * @param orderId {string}
+   * @returns Promise<Result<Order | null, Error>>
+   * @sideEffects DB read with population
+   * @publicAPI
+   */
+  static async findUnconfirmedWithPopulation(
+    orderId: string
+  ): Promise<Result<Order | null, Error>> {
+    return fromPromise(
+      OrderModel.findOne(
+        { orderId, status: OrderStatus.PENDING },
+        PUBLIC_FIELD_SELECTIONS.ORDER
+      )
+        .populate([
+          POPULATION_CONFIG.ORDER_APPLICANT,
+          POPULATION_CONFIG.ORDER_GIFTS,
+        ])
+        .exec()
+    );
   }
 }
 

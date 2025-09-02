@@ -189,25 +189,6 @@ export const ApplicantContext = contextResult.Context;
 export const BaseApplicantProvider = contextResult.Provider;
 export const useApplicantContext = contextResult.useContext;
 
-/**
- * useApplicantSelector
- * A typed selector hook for accessing specific slices of the ApplicantContext state.
- * @param selector - Function to select part of the state
- * @returns Maybe<TSelected>
- */
-export const useApplicantSelector = contextResult.useSelector as <
-  TSelected = unknown
->(
-  selector: (state: ApplicantState) => TSelected
-) => Maybe<TSelected>;
-
-/**
- * useApplicantActions
- * Hook to access action creators and safe/async dispatchers for the ApplicantContext.
- * @returns Maybe<{ dispatch, dispatchSafe, dispatchAsync, createAction, getState }>
- */
-export const useApplicantActions = contextResult.useActions;
-
 // ============================================================================
 // ENHANCED PROVIDER WITH ERROR BOUNDARY
 // ============================================================================
@@ -257,7 +238,10 @@ export const ApplicantProvider = withErrorBoundary(
  * @returns Maybe<Person[]> - The current applicant list
  */
 export const useApplicantList = () => {
-  return useApplicantSelector((state) => state.data.applicantList);
+  const context = useApplicantContext();
+  return context._tag === "Some"
+    ? context.value.state.data.applicantList
+    : undefined;
 };
 
 /**
@@ -266,8 +250,12 @@ export const useApplicantList = () => {
  * @returns Maybe<Person> - The currently selected applicant
  */
 export const useSelectedApplicant = (): Maybe<Person> => {
-  const maybe = useApplicantSelector((state) => state.data.selectedApplicant);
-  return flatMapMaybe((inner: Maybe<Person>) => inner)(maybe);
+  const context = useApplicantContext();
+  const selected =
+    context._tag === "Some"
+      ? context.value.state.data.selectedApplicant
+      : undefined;
+  return selected ?? none;
 };
 
 // ============================================================================
@@ -277,8 +265,6 @@ export const useSelectedApplicant = (): Maybe<Person> => {
 const ApplicantContextExports = {
   ApplicantProvider,
   useApplicantContext,
-  useApplicantSelector,
-  useApplicantActions,
   useApplicantList,
   useSelectedApplicant,
 };

@@ -4,71 +4,77 @@
  * Responsibilities: Exposes step data and helpers for components.
  * Architecture: Public API for consumers of MultistepContext.
  */
-// ...existing code...
 import React from "react";
-import { Result, success, failure } from "@/utils/fp";
+import { success, failure } from "@/utils/fp";
 import MultistepContext from "./MultistepContext";
-import { selectStepData, selectCurrentStepId } from "./multistepSelectors";
 
 /**
  * useStepData - Hook for step data management.
  * Returns step data and actions for setting, updating, and clearing step data.
  */
-export const useStepData = () => {
-  const actions = MultistepContext.useMultistepActions();
-  const stepData = MultistepContext.useMultistepSelector(selectStepData);
-  const currentStepId =
-    MultistepContext.useMultistepSelector(selectCurrentStepId);
+export const useStepData = (): {
+  stepData: any;
+  setStepData: (stepId: string, data: unknown) => any;
+  updateStepData: (stepId: string, data: unknown) => any;
+  clearStepData: (stepId: string) => any;
+  getCurrentStepData: () => any;
+  getStepData: (stepId: string) => any;
+} => {
+  const context = MultistepContext.useMultistepContext();
+  const state = context._tag === "Some" ? context.value.state.data : {};
+  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
+  const stepData = state.stepData || {};
+  const currentStepId = state.currentStepId || "";
 
   /**
    * Sets step data for a given stepId. Returns Result<void, Error>.
    */
   const setStepData = React.useCallback(
-    (stepId: string, data: unknown): Result<void, Error> => {
-      const safeActions = actions._tag === "Some" && actions.value;
-      if (safeActions) {
-        safeActions.dispatchSafe({
-          type: "SET_STEP_DATA",
-          payload: { stepId, data },
-        });
+    (stepId: string, data: unknown): any => {
+      if (!dispatch)
+        return failure(new Error("Multistep context not available"));
+      try {
+        dispatch({ type: "SET_STEP_DATA", payload: { stepId, data } });
         return success(undefined);
+      } catch (e) {
+        return failure(e instanceof Error ? e : new Error("Unknown error"));
       }
-      return failure(new Error("Multistep context not available"));
     },
-    [actions]
+    [dispatch]
   );
 
   /**
    * Updates step data for a given stepId. Returns Result<void, Error>.
    */
   const updateStepData = React.useCallback(
-    (stepId: string, data: unknown): Result<void, Error> => {
-      const safeActions = actions._tag === "Some" && actions.value;
-      if (safeActions) {
-        safeActions.dispatchSafe({
-          type: "UPDATE_STEP_DATA",
-          payload: { stepId, data },
-        });
+    (stepId: string, data: unknown): any => {
+      if (!dispatch)
+        return failure(new Error("Multistep context not available"));
+      try {
+        dispatch({ type: "UPDATE_STEP_DATA", payload: { stepId, data } });
         return success(undefined);
+      } catch (e) {
+        return failure(e instanceof Error ? e : new Error("Unknown error"));
       }
-      return failure(new Error("Multistep context not available"));
     },
-    [actions]
+    [dispatch]
   );
 
   /**
    * Clears step data for a given stepId. Returns Result<void, Error>.
    */
   const clearStepData = React.useCallback(
-    (stepId: string): Result<void, Error> => {
-      const safeActions = actions._tag === "Some" && actions.value;
-      if (safeActions) {
-        safeActions.dispatchSafe({ type: "CLEAR_STEP_DATA", payload: stepId });
+    (stepId: string): any => {
+      if (!dispatch)
+        return failure(new Error("Multistep context not available"));
+      try {
+        dispatch({ type: "CLEAR_STEP_DATA", payload: stepId });
         return success(undefined);
+      } catch (e) {
+        return failure(e instanceof Error ? e : new Error("Unknown error"));
       }
-      return failure(new Error("Multistep context not available"));
     },
-    [actions]
+    [dispatch]
   );
 
   /**

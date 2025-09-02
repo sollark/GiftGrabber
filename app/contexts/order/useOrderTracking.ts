@@ -4,8 +4,8 @@
  * Responsibilities: Exposes tracking state and helpers for order lifecycle.
  * Architecture: Public API for order-related components.
  */
-import { useOrderActions, useOrderSelector } from "./OrderContext";
-import { failure } from "@/utils/fp";
+import { useOrderContext } from "./OrderContext";
+import { success, failure } from "@/utils/fp";
 import { OrderNotification, OrderHistoryEntry } from "./types";
 
 /**
@@ -13,64 +13,70 @@ import { OrderNotification, OrderHistoryEntry } from "./types";
  * Provides methods to add, dismiss, and clear notifications and history entries.
  */
 export const useOrderTracking = () => {
-  const actions = useOrderActions();
-  const orderHistory = useOrderSelector((state: any) => state.orderHistory);
-  const notifications = useOrderSelector((state: any) => state.notifications);
+  const context = useOrderContext();
+  const orderHistory =
+    context._tag === "Some" ? context.value.state.data.orderHistory : [];
+  const notifications =
+    context._tag === "Some" ? context.value.state.data.notifications : [];
+  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
 
   // Add history entry
   const addHistoryEntry = (
     entry: Omit<OrderHistoryEntry, "id" | "timestamp">
   ) => {
-    if (actions._tag !== "Some")
-      return failure(new Error("Order context not available"));
-    return actions.value.dispatchSafe({
-      type: "ADD_HISTORY_ENTRY",
-      payload: entry,
-    });
+    if (!dispatch) return failure(new Error("Order context not available"));
+    try {
+      dispatch({ type: "ADD_HISTORY_ENTRY", payload: entry });
+      return success(undefined);
+    } catch (e) {
+      return failure(e instanceof Error ? e : new Error("Unknown error"));
+    }
   };
 
   // Add notification
   const addNotification = (
     notification: Omit<OrderNotification, "id" | "timestamp" | "dismissed">
   ) => {
-    if (actions._tag !== "Some")
-      return failure(new Error("Order context not available"));
-    return actions.value.dispatchSafe({
-      type: "ADD_NOTIFICATION",
-      payload: notification,
-    });
+    if (!dispatch) return failure(new Error("Order context not available"));
+    try {
+      dispatch({ type: "ADD_NOTIFICATION", payload: notification });
+      return success(undefined);
+    } catch (e) {
+      return failure(e instanceof Error ? e : new Error("Unknown error"));
+    }
   };
 
   // Dismiss notification
   const dismissNotification = (notificationId: string) => {
-    if (actions._tag !== "Some")
-      return failure(new Error("Order context not available"));
-    return actions.value.dispatchSafe({
-      type: "DISMISS_NOTIFICATION",
-      payload: notificationId,
-    });
+    if (!dispatch) return failure(new Error("Order context not available"));
+    try {
+      dispatch({ type: "DISMISS_NOTIFICATION", payload: notificationId });
+      return success(undefined);
+    } catch (e) {
+      return failure(e instanceof Error ? e : new Error("Unknown error"));
+    }
   };
 
   // Clear all notifications
   const clearNotifications = () => {
-    if (actions._tag !== "Some")
-      return failure(new Error("Order context not available"));
-    return actions.value.dispatchSafe({ type: "CLEAR_NOTIFICATIONS" });
+    if (!dispatch) return failure(new Error("Order context not available"));
+    try {
+      dispatch({ type: "CLEAR_NOTIFICATIONS" });
+      return success(undefined);
+    } catch (e) {
+      return failure(e instanceof Error ? e : new Error("Unknown error"));
+    }
   };
 
   // Computed: active notifications
-  const activeNotifications =
-    notifications._tag === "Some"
-      ? notifications.value.filter((n: OrderNotification) => !n.dismissed)
-      : [];
+  const activeNotifications = notifications.filter(
+    (n: OrderNotification) => !n.dismissed
+  );
 
   // Computed: recent history (last 10, sorted desc)
-  const recentHistory =
-    orderHistory._tag === "Some"
-      ? [...orderHistory.value]
-          .sort((a, b) => b.timestamp - a.timestamp)
-          .slice(0, 10)
-      : [];
+  const recentHistory = [...orderHistory]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 10);
 
   // Computed: notification count
   const notificationCount = activeNotifications.length;

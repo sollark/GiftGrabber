@@ -103,16 +103,6 @@ export const MultistepProvider = withErrorBoundary(
 /** useMultistepContext - Hook to access multistep context */
 export const useMultistepContext = (contextResult as any).useContext;
 
-/** useMultistepContextResult - Hook to access context result */
-export const useMultistepContextResult = (contextResult as any)
-  .useContextResult;
-
-/** useMultistepSelector - Hook to select state from context */
-export const useMultistepSelector = (contextResult as any).useSelector;
-
-/** useMultistepActions - Hook to access context actions */
-export const useMultistepActions = (contextResult as any).useActions;
-
 // Export all hooks and components with consistent named exports
 export { useStepNavigation, useStepData };
 
@@ -122,9 +112,6 @@ const MultistepContextAPI = {
   MultistepProvider,
   BaseMultistepProvider,
   useMultistepContext,
-  useMultistepContextResult,
-  useMultistepSelector,
-  useMultistepActions,
 
   // Business logic hooks
   useStepNavigation,

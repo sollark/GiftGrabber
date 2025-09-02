@@ -113,24 +113,6 @@ export interface FunctionalContextResult<S, A extends FunctionalAction> {
     dispatch: (action: A) => void;
     getState: () => S;
   }>;
-  useContextResult: () => Result<
-    {
-      state: S;
-      dispatch: (action: A) => void;
-      getState: () => S;
-    },
-    Error
-  >;
-  useSelector: <R>(selector: (state: S) => R) => Maybe<R>;
-  useActions: () => Maybe<{
-    dispatch: (action: A) => void;
-    dispatchSafe: (action: A) => Result<void, Error>;
-    dispatchAsync: (
-      actionCreator: () => Promise<A>
-    ) => Promise<Result<void, Error>>;
-    createAction: (type: string, payload?: any) => A;
-    getState: () => S;
-  }>;
   name: string;
 }
 
@@ -439,9 +421,6 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
     Context: StateContext,
     Provider,
     useContext,
-    useContextResult,
-    useSelector,
-    useActions,
     name,
   };
 }

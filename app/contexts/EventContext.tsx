@@ -182,9 +182,11 @@ const eventReducer = (
  * @returns {object} Selection state and actions: { eventId, eventData, selectEvent, clearEvent, hasSelection }
  */
 export const useEventSelection = () => {
-  const actions = useEventActions();
-  const eventId = useEventSelector((state) => state.data.eventId);
-  const eventData = useEventSelector((state) => state.data);
+  const context = useEventContext();
+  const eventId =
+    context._tag === "Some" ? context.value.state.data.eventId : undefined;
+  const eventData =
+    context._tag === "Some" ? context.value.state.data : undefined;
 
   /**
    * selectEvent
@@ -194,37 +196,34 @@ export const useEventSelection = () => {
    */
   const selectEvent = React.useCallback(
     (id: string) => {
-      if (actions._tag === "Some") {
-        return actions.value.dispatchSafe({
+      if (context._tag === "Some") {
+        context.value.dispatch({
           type: "SET_EVENT_ID",
           payload: id,
         });
+        return success(context.value.state);
       }
       return failure(new Error("Event context not available"));
     },
-    [actions]
+    [context]
   );
 
-  /**
-   * clearEvent
-   * Clears the current event selection.
-   * @returns {Result<EventState, Error>} Result of dispatch
-   */
   const clearEvent = React.useCallback(() => {
-    if (actions._tag === "Some") {
-      return actions.value.dispatchSafe({
+    if (context._tag === "Some") {
+      context.value.dispatch({
         type: "RESET_EVENT",
       });
+      return success(context.value.state);
     }
     return failure(new Error("Event context not available"));
-  }, [actions]);
+  }, [context]);
 
   return {
     eventId,
     eventData,
     selectEvent,
     clearEvent,
-    hasSelection: eventId._tag === "Some" && !!eventId.value,
+    hasSelection: !!eventId,
   };
 };
 
@@ -260,27 +259,6 @@ export const BaseEventProvider = contextResult.Provider;
  * useEventContext: Hook to access the raw event context value.
  */
 export const useEventContext = contextResult.useContext;
-
-/**
- * useEventContextResult: Hook to access the context result (with error/success state).
- */
-export const useEventContextResult = contextResult.useContextResult;
-
-/**
- * useEventSelector: Typed selector hook for extracting slices of event state.
- * @param selector - Function to select part of the state
- * @returns Maybe<TSelected>
- */
-export const useEventSelector = contextResult.useSelector as <
-  TSelected = unknown
->(
-  selector: (state: EventState) => TSelected
-) => Maybe<TSelected>;
-
-/**
- * useEventActions: Hook to dispatch event actions in a type-safe way.
- */
-export const useEventActions = contextResult.useActions;
 
 // ============================================================================
 // ENHANCED PROVIDER WITH ERROR BOUNDARY
@@ -330,9 +308,6 @@ export const EventProvider = withErrorBoundary(
 const EventContextExports = {
   EventProvider,
   useEventContext,
-  useEventContextResult,
-  useEventSelector,
-  useEventActions,
   useEventSelection,
 };
 

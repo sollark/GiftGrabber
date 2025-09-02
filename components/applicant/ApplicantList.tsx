@@ -1,6 +1,9 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
-import { useApplicantList } from "@/app/contexts/ApplicantContext";
+import {
+  useApplicantList,
+  useApplicantContext,
+} from "@/app/contexts/ApplicantContext";
 import SortableFilterableTable, {
   TableColumn,
 } from "@/ui/table/SortableFilterableTable";
@@ -28,17 +31,18 @@ const ApplicantList: FC<ApplicantListProps> = ({
 }) => {
   const { handleError, errorCount } = useErrorHandler("ApplicantList");
 
-  // Use context for applicant list, but preserve original rendering and props
+  /**
+   * Get applicant list from context, fallback to prop if context is unavailable.
+   * @returns Person[]
+   */
   const applicantList = useApplicantList();
-
-  // Prefer context value if available, else fallback to prop
   const list =
-    applicantList._tag === "Some" && Array.isArray(applicantList.value)
-      ? applicantList.value
+    Array.isArray(applicantList) && applicantList.length > 0
+      ? applicantList
       : personArray;
 
   // Track context access issues
-  if (applicantList._tag === "None" && personArray.length === 0) {
+  if (!list.length && personArray.length === 0) {
     const error = new Error(
       "No applicant data available from context or props"
     );

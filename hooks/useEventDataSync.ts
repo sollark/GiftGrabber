@@ -17,15 +17,15 @@ export function useEventDataSync(
   contextActions: {
     eventActions?: {
       _tag: string;
-      value: { dispatchSafe: (action: any) => void };
+      value: { dispatch: (action: any) => void };
     };
     applicantActions: {
       _tag: string;
-      value: { dispatchSafe: (action: any) => void };
+      value: { dispatch: (action: any) => void };
     };
     giftActions: {
       _tag: string;
-      value: { dispatchSafe: (action: any) => void };
+      value: { dispatch: (action: any) => void };
     };
   }
 ) {
@@ -57,7 +57,7 @@ export function useEventDataSync(
 
         // Dispatch event details to Event Context if available
         if (actions.eventActions && actions.eventActions._tag === "Some") {
-          actions.eventActions.value.dispatchSafe({
+          actions.eventActions.value.dispatch({
             type: "SET_EVENT_DETAILS" as const,
             payload: { name: event.name, email: event.email, eventId },
           });
@@ -65,14 +65,14 @@ export function useEventDataSync(
 
         // Dispatch to applicant context
         if (actions.applicantActions._tag === "Some") {
-          actions.applicantActions.value.dispatchSafe({
+          actions.applicantActions.value.dispatch({
             type: "SET_EVENT_APPLICANTS" as const,
             payload: { applicantList: event.applicantList || [] },
           });
         }
         // Dispatch to gift context
         if (actions.giftActions._tag === "Some") {
-          actions.giftActions.value.dispatchSafe({
+          actions.giftActions.value.dispatch({
             type: "SET_GIFT_LIST" as const,
             payload: event.giftList || [],
           });

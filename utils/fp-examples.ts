@@ -19,10 +19,8 @@ import {
   useFormValidation,
 } from "@/utils/fp-hooks";
 import { withDatabaseResult, safeQuery } from "@/lib/withDatabase";
-import {
-  useSafeContext,
-  useCombinedContexts,
-} from "@/app/hooks/useSafeContext";
+import useSafeContext from "@/app/hooks/useSafeContext";
+// If you need useCombinedContexts, implement or import it from the correct module.
 import { useStepNavigation } from "@/app/contexts/multistep/useStepNavigation";
 
 // ============================================================================
@@ -311,8 +309,9 @@ export const useOrderContext = () => useSafeContext(mockOrderContext);
 export const useUserContext = () => useSafeContext(mockUserContext);
 
 // Combined context access using existing patterns
-export const useCombinedOrderData = () =>
-  useCombinedContexts(useOrderContext, useUserContext);
+// Combined context access using existing patterns
+// export const useCombinedOrderData = () =>
+//   useCombinedContexts(useOrderContext, useUserContext);
 
 // ============================================================================
 // UTILITY COMPOSITION EXAMPLES

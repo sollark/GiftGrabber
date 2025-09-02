@@ -14,7 +14,7 @@ import { Section } from "@/ui/layout";
 import OrderGifts from "@/components/order/OrderGifts";
 import { isSome } from "@/utils/fp";
 import { OrderProvider } from "@/app/contexts/order/OrderContext";
-import { useEventSelector } from "@/app/contexts/EventContext";
+import { useEventSelection } from "@/app/contexts/EventContext";
 
 /**
  * ApplicantPageClient
@@ -25,8 +25,9 @@ import { useEventSelector } from "@/app/contexts/EventContext";
  * @returns JSX.Element containing the event title and order workflow
  */
 export default function ApplicantPageClient() {
-  const eventMaybe = useEventSelector((state) => state.data);
-  const event = isSome(eventMaybe) ? eventMaybe.value : undefined;
+  // Use new context API for event selection
+  const { eventData } = useEventSelection();
+  const event = eventData;
 
   return (
     <OrderProvider>

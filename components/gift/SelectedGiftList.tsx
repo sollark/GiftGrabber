@@ -26,13 +26,9 @@
 import React, { FC, useRef, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Box } from "@mui/material";
-import { getMaybeOrElse } from "@/utils/fp";
 import { processCompleteOrder } from "@/utils/orderProcessing";
 import { useSelectedApplicant } from "@/app/contexts/ApplicantContext";
-import {
-  useGiftSelector,
-  useGiftActions,
-} from "@/app/contexts/gift/GiftContext";
+import { useGiftContext } from "@/app/contexts/gift/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { generateOrderId } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
@@ -44,10 +40,7 @@ import { AccentButton as StyledButton, SecondaryButton } from "@/ui/primitives";
 import ErrorMessage from "@/ui/form/ErrorMessage";
 import { BaseTableColumn } from "@/ui/table/BaseTable";
 import { ControlledBaseTable } from "@/ui/table/ControlledBaseTable";
-import {
-  useOrderSelector,
-  useOrderActions,
-} from "@/app/contexts/order/OrderContext";
+import { useOrderContext } from "@/app/contexts/order/OrderContext";
 
 // Use getMaybeOrElse from utils/fp to safely extract array from Maybe type
 
@@ -88,13 +81,21 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
 
   // Context state selectors
   const selectedApplicant = useSelectedApplicant();
-  const applicantGiftsMaybe = useGiftSelector(
-    (state) => state.data.applicantGifts
-  );
-  const actions = useGiftActions();
-  // Order context selectors and actions
-  const order = useOrderSelector((state) => state.data.order);
-  const orderActions = useOrderActions();
+  const giftContext = useGiftContext();
+  const orderContext = useOrderContext();
+  // Extract state and dispatch from context
+  const applicantGifts =
+    giftContext._tag === "Some"
+      ? giftContext.value.state.data.applicantGifts
+      : [];
+  const giftDispatch =
+    giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
+  const order =
+    orderContext._tag === "Some"
+      ? orderContext.value.state.data.order
+      : undefined;
+  const orderDispatch =
+    orderContext._tag === "Some" ? orderContext.value.dispatch : undefined;
 
   // Get eventId from URL parameters
   const pathname = usePathname();
@@ -103,25 +104,21 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     return match ? match[1] : "";
   }, [pathname]);
 
-  // Extract the list of gifts for the selected applicant from context (safe fallback to empty array)
-  const applicantGifts = useMemo(
-    () => getMaybeOrElse<Gift[]>([])(applicantGiftsMaybe),
-    [applicantGiftsMaybe]
-  );
+  // applicantGifts already extracted above
 
   /**
    * Remove gift action for ControlledBaseTable. Dispatches context action to remove a gift by publicId.
    */
   const removeGiftAction = useMemo(
     () =>
-      actions._tag === "Some"
+      giftDispatch
         ? (gift: Gift) =>
-            actions.value.dispatchSafe({
+            giftDispatch({
               type: "REMOVE_GIFT",
               payload: gift.publicId,
             })
         : () => {},
-    [actions]
+    [giftDispatch]
   );
 
   // Memoized computed values
@@ -197,8 +194,8 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   const processOrder = useCallback(() => {
     if (!applicant || isProcessingOrder) return;
     // Update order context with applicant and gifts
-    if (orderActions._tag === "Some") {
-      orderActions.value.dispatchSafe({
+    if (orderDispatch) {
+      orderDispatch({
         type: "UPDATE_ORDER",
         payload: {
           applicant,
@@ -211,7 +208,7 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     applicant,
     isProcessingOrder,
     executeOrderProcess,
-    orderActions,
+    orderDispatch,
     applicantGifts,
   ]);
 

@@ -8,9 +8,9 @@ import {
   getGifts,
 } from "@/app/actions/event.action";
 import ApplicantPageClient from "./ApplicantPageClient";
-import { useApplicantActions } from "@/app/contexts/ApplicantContext";
-import { useGiftActions } from "@/app/contexts/gift/GiftContext";
-import { useEventActions } from "@/app/contexts/EventContext";
+import { useApplicantContext } from "@/app/contexts/ApplicantContext";
+import { useGiftContext } from "@/app/contexts/gift/GiftContext";
+import { useEventContext } from "@/app/contexts/EventContext";
 
 export default function ApplicantPage({
   params,
@@ -20,9 +20,9 @@ export default function ApplicantPage({
   const [eventId, setEventId] = useState<string | null>(null);
 
   // All hooks must be called unconditionally at the top
-  const applicantActions = useApplicantActions();
-  const giftActions = useGiftActions();
-  const eventActions = useEventActions();
+  const applicantContext = useApplicantContext();
+  const giftContext = useGiftContext();
+  const eventContext = useEventContext();
 
   useEffect(() => {
     params.then(({ eventId }) => setEventId(eventId));
@@ -77,8 +77,8 @@ export default function ApplicantPage({
   );
 
   useEffect(() => {
-    if (event && eventActions._tag === "Some") {
-      eventActions.value.dispatchSafe({
+    if (event && eventContext._tag === "Some") {
+      eventContext.value.dispatch({
         type: "SET_EVENT_DETAILS",
         payload: {
           name: event.name,
@@ -87,20 +87,20 @@ export default function ApplicantPage({
         },
       });
     }
-    if (applicants.length && applicantActions._tag === "Some") {
-      applicantActions.value.dispatchSafe({
+    if (applicants.length && applicantContext._tag === "Some") {
+      applicantContext.value.dispatch({
         type: "SET_EVENT_APPLICANTS",
         payload: { applicantList: applicants },
       });
     }
 
-    if (gifts.length && giftActions._tag === "Some") {
-      giftActions.value.dispatchSafe({
+    if (gifts.length && giftContext._tag === "Some") {
+      giftContext.value.dispatch({
         type: "SET_GIFT_LIST",
         payload: gifts,
       });
     }
-  }, [event, applicants, gifts, eventActions, applicantActions, giftActions]);
+  }, [event, applicants, gifts, eventContext, applicantContext, giftContext]);
 
   if (eventLoading || applicantsLoading || giftsLoading || !eventId)
     return <div>Loading...</div>;

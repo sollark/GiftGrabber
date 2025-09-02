@@ -1,5 +1,6 @@
 import { FC, useCallback } from "react";
 import { useOrderStatus } from "@/app/contexts/order/OrderContext";
+import { OrderStatus } from "@/types/common.types";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import StyledButton from "./AccentButton";
 import ErrorMessage from "@/ui/form/ErrorMessage";
@@ -15,10 +16,8 @@ const ConfirmOrderButton: FC = () => {
   const { handleError, errorCount, lastError } =
     useErrorHandler("ConfirmOrderButton");
 
-  const order =
-    orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
-
-  const isOrderCompleted = order?.status === "completed";
+  const order = orderStatus.order ?? null;
+  const isOrderCompleted = order?.status === OrderStatus.COMPLETED;
 
   /**
    * Safe order confirmation with proper error handling, success navigation, and enhanced error tracking

@@ -20,8 +20,8 @@
 import React, { FC, useCallback } from "react";
 import {
   useApplicantList,
-  useApplicantActions,
   useSelectedApplicant,
+  useApplicantContext,
 } from "@/app/contexts/ApplicantContext";
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 import { Person } from "@/database/models/person.model";
@@ -34,9 +34,12 @@ import PersonAutocomplete from "../PersonAutocomplete";
  * @returns The applicant selection UI
  */
 const Applicant: FC = () => {
+  /**
+   * Get applicant list and selected applicant from context.
+   */
   const applicantList = useApplicantList();
-  const applicantActions = useApplicantActions();
   const selectedApplicant = useSelectedApplicant();
+  const context = useApplicantContext();
   const { goToNextStep } = useStepNavigationActions();
 
   /**
@@ -44,17 +47,22 @@ const Applicant: FC = () => {
    * Handles the full applicant selection process: updates state, assigns gift, and advances step.
    * @param person - The selected applicant
    */
+  /**
+   * processApplicantSelection
+   * Handles the full applicant selection process: updates state and advances step.
+   * @param person - The selected applicant
+   */
   const processApplicantSelection = useCallback(
     (person: Person) => {
-      if (applicantActions._tag === "Some") {
-        applicantActions.value.dispatchSafe({
+      if (context._tag === "Some") {
+        context.value.dispatch({
           type: "SELECT_APPLICANT",
           payload: person,
         });
       }
       goToNextStep();
     },
-    [goToNextStep]
+    [goToNextStep, context]
   );
 
   /**
@@ -72,7 +80,7 @@ const Applicant: FC = () => {
 
   return (
     <PersonAutocomplete
-      peopleList={applicantList._tag === "Some" ? applicantList.value : []}
+      peopleList={Array.isArray(applicantList) ? applicantList : []}
       onSelectPerson={handleApplicantSelection}
       value={selectedApplicant._tag === "Some" ? selectedApplicant.value : null}
     />

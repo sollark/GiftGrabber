@@ -223,18 +223,7 @@ const contextResult = createFunctionalContext<GiftState, GiftAction>({
 export const GiftContext = contextResult.Context;
 /** BaseGiftProvider - Low-level provider for advanced usage */
 export const BaseGiftProvider = contextResult.Provider;
-/** useGiftContext - Hook to access gift context */
 export const useGiftContext = contextResult.useContext;
-/** useGiftContextResult - Hook to access context result */
-export const useGiftContextResult = contextResult.useContextResult;
-/** useGiftSelector - Hook to select state from context */
-export const useGiftSelector = contextResult.useSelector as <
-  TSelected = unknown
->(
-  selector: (state: GiftState) => TSelected
-) => Maybe<TSelected>;
-/** useGiftActions - Hook to access context actions */
-export const useGiftActions = contextResult.useActions;
 
 type GiftProviderProps = {
   giftList?: Gift[];
@@ -272,9 +261,6 @@ export const GiftProvider = withErrorBoundary(
 const GiftContextExports = {
   GiftProvider,
   useGiftContext,
-  useGiftContextResult,
-  useGiftSelector,
-  useGiftActions,
 };
 
 export default GiftContextExports;

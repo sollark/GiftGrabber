@@ -18,15 +18,9 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useEventSelector, useEventActions } from "@/app/contexts/EventContext";
-import {
-  useApplicantSelector,
-  useApplicantActions,
-} from "@/app/contexts/ApplicantContext";
-import {
-  useGiftSelector,
-  useGiftActions,
-} from "@/app/contexts/gift/GiftContext";
+import { useEventContext } from "@/app/contexts/EventContext";
+import { useApplicantContext } from "@/app/contexts/ApplicantContext";
+import { useGiftContext } from "@/app/contexts/gift/GiftContext";
 import { useEventDataSync } from "@/hooks/useEventDataSync";
 import ApplicantList from "@/components/applicant/ApplicantList";
 import ListSkeleton from "@/components/ui/ListSkeleton";
@@ -72,55 +66,43 @@ export default function OptimisticEventDetailsClient({
   eventId,
   ownerId,
 }: OptimisticEventDetailsClientProps) {
-  // --- Context Selectors ---
-  // Extract data from contexts using stable selectors
-  const eventData = useEventSelector((state) => state.data);
-  const rawEventActions = useEventActions();
+  // --- Context Access ---
+  const eventContext = useEventContext();
+  const applicantContext = useApplicantContext();
+  const giftContext = useGiftContext();
 
-  // --- Context Data Extraction with Stable References ---
-  /**
-   * Helper to safely extract value from a Maybe type, fallback to default.
-   */
+  // Helper to safely extract value from a Maybe type, fallback to default.
   const extractOrDefault = <T,>(maybe: any, fallback: T): T => {
     return maybe && maybe._tag === "Some" ? maybe.value : fallback;
   };
 
-  // Context selectors - extract once per render
-  const rawApplicantList = useApplicantSelector(
-    (state) => state.data.applicantList
-  );
-
-  const rawGiftList = useGiftSelector((state) => state.data.giftList);
-  const rawApplicantActions = useApplicantActions();
-  const rawGiftActions = useGiftActions();
-
-  // Extract values using stable function
-  const applicantList = extractOrDefault(rawApplicantList, []);
-  const giftList = extractOrDefault(rawGiftList, []);
-  const eventDetails = extractOrDefault(eventData, {
-    eventId,
-    name: "",
-    email: "",
-  });
+  // Extract values from context
+  const eventDetails =
+    eventContext._tag === "Some"
+      ? eventContext.value.state.data
+      : { eventId, name: "", email: "" };
+  const applicantList =
+    applicantContext._tag === "Some"
+      ? applicantContext.value.state.data.applicantList
+      : [];
+  const giftList =
+    giftContext._tag === "Some" ? giftContext.value.state.data.giftList : [];
 
   // Create stable context actions object - memoized by actual action functions
   const contextActions = useMemo(() => {
-    const eventActions = extractOrDefault(rawEventActions, {
-      dispatchSafe: () => {},
-    });
-    const applicantActions = extractOrDefault(rawApplicantActions, {
-      dispatchSafe: () => {},
-    });
-    const giftActions = extractOrDefault(rawGiftActions, {
-      dispatchSafe: () => {},
-    });
-
+    const toActions = (ctx: any, fallbackTag = "Some") =>
+      ctx && ctx._tag === "Some"
+        ? { _tag: fallbackTag, value: { dispatch: ctx.value.dispatch } }
+        : { _tag: fallbackTag, value: { dispatch: () => {} } };
     return {
-      eventActions: { _tag: "Some" as const, value: eventActions },
-      applicantActions: { _tag: "Some" as const, value: applicantActions },
-      giftActions: { _tag: "Some" as const, value: giftActions },
+      eventActions:
+        eventContext && eventContext._tag === "Some"
+          ? { _tag: "Some", value: { dispatch: eventContext.value.dispatch } }
+          : undefined,
+      applicantActions: toActions(applicantContext),
+      giftActions: toActions(giftContext),
     };
-  }, [rawEventActions, rawApplicantActions, rawGiftActions]);
+  }, [eventContext, applicantContext, giftContext]);
 
   /**
    * Unified Event Data Synchronization

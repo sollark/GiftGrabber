@@ -7,7 +7,7 @@
 
 import React from "react";
 import { Result, success, failure } from "@/utils/fp";
-import { useMultistepActions, useMultistepSelector } from "./MultistepContext";
+import { useMultistepContext } from "./MultistepContext";
 import { canNavigateToStep, findStepIndex } from "./multistepUtils";
 import { StepDefinition, MultistepState } from "./types";
 
@@ -17,23 +17,9 @@ import { StepDefinition, MultistepState } from "./types";
  * @returns Step navigation state and actions
  */
 export const useStepNavigation = () => {
-  const actions = useMultistepActions();
-
-  // Single memoized selector to reduce re-renders - performance optimization
-  const multistepState = useMultistepSelector(
-    React.useCallback(
-      (state: MultistepState) => ({
-        currentStepIndex: state.data.currentStepIndex,
-        currentStepId: state.data.currentStepId,
-        steps: state.data.steps,
-        canGoBack: state.data.canGoBack,
-        canGoNext: state.data.canGoNext,
-        completedSteps: state.data.completedSteps,
-        skippedSteps: state.data.skippedSteps,
-      }),
-      []
-    )
-  );
+  const context = useMultistepContext();
+  const state = context._tag === "Some" ? context.value.state.data : undefined;
+  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
 
   // Destructure for cleaner access
   const {
@@ -44,37 +30,39 @@ export const useStepNavigation = () => {
     canGoNext,
     completedSteps,
     skippedSteps,
-  } = multistepState || {};
+  } = state || {};
 
   /**
    * Navigate to next step with validation.
    * @returns Result indicating success or failure
    */
   const goToNextStep = React.useCallback((): Result<void, string> => {
-    if (actions._tag !== "Some") {
+    if (!dispatch) {
       return failure("Multistep context not available");
     }
-
-    const result = actions.value.dispatchSafe({ type: "GO_TO_NEXT_STEP" });
-    return result._tag === "Success"
-      ? success(undefined)
-      : failure("Failed to navigate to next step");
-  }, [actions]);
+    try {
+      dispatch({ type: "GO_TO_NEXT_STEP" });
+      return success(undefined);
+    } catch {
+      return failure("Failed to navigate to next step");
+    }
+  }, [dispatch]);
 
   /**
    * Navigate to previous step.
    * @returns Result indicating success or failure
    */
   const goToPreviousStep = React.useCallback((): Result<void, string> => {
-    if (actions._tag !== "Some") {
+    if (!dispatch) {
       return failure("Multistep context not available");
     }
-
-    const result = actions.value.dispatchSafe({ type: "GO_TO_PREVIOUS_STEP" });
-    return result._tag === "Success"
-      ? success(undefined)
-      : failure("Failed to navigate to previous step");
-  }, [actions]);
+    try {
+      dispatch({ type: "GO_TO_PREVIOUS_STEP" });
+      return success(undefined);
+    } catch {
+      return failure("Failed to navigate to previous step");
+    }
+  }, [dispatch]);
 
   /**
    * Jump to specific step by ID.
@@ -83,20 +71,16 @@ export const useStepNavigation = () => {
    */
   const jumpToStep = React.useCallback(
     (stepId: string): Result<void, string> => {
-      if (actions._tag !== "Some") {
+      if (!dispatch) {
         return failure("Multistep context not available");
       }
-
       if (!steps || steps.length === 0) {
         return failure("No steps available");
       }
-
       const stepIndex = findStepIndex(steps, stepId);
       if (stepIndex === -1) {
         return failure(`Step with id "${stepId}" not found`);
       }
-
-      // Check if navigation is allowed
       const navigationCheck = canNavigateToStep(
         steps,
         stepIndex,
@@ -105,17 +89,14 @@ export const useStepNavigation = () => {
       if (navigationCheck._tag === "Failure") {
         return failure(navigationCheck.error);
       }
-
-      const result = actions.value.dispatchSafe({
-        type: "GO_TO_STEP",
-        payload: stepId,
-      });
-
-      return result._tag === "Success"
-        ? success(undefined)
-        : failure(`Failed to navigate to step "${stepId}"`);
+      try {
+        dispatch({ type: "GO_TO_STEP", payload: stepId });
+        return success(undefined);
+      } catch {
+        return failure(`Failed to navigate to step "${stepId}"`);
+      }
     },
-    [actions, steps, completedSteps]
+    [dispatch, steps, completedSteps]
   );
 
   /**
@@ -125,24 +106,20 @@ export const useStepNavigation = () => {
    */
   const goToStep = React.useCallback(
     (stepIndex: number): Result<void, string> => {
-      if (actions._tag !== "Some") {
+      if (!dispatch) {
         return failure("Multistep context not available");
       }
-
       if (!steps || stepIndex < 0 || stepIndex >= steps.length) {
         return failure("Invalid step index");
       }
-
-      const result = actions.value.dispatchSafe({
-        type: "GO_TO_STEP",
-        payload: stepIndex,
-      });
-
-      return result._tag === "Success"
-        ? success(undefined)
-        : failure(`Failed to navigate to step ${stepIndex}`);
+      try {
+        dispatch({ type: "GO_TO_STEP", payload: stepIndex });
+        return success(undefined);
+      } catch {
+        return failure(`Failed to navigate to step ${stepIndex}`);
+      }
     },
-    [actions, steps]
+    [dispatch, steps]
   );
 
   /**
@@ -152,20 +129,20 @@ export const useStepNavigation = () => {
    */
   const completeStep = React.useCallback(
     (stepId?: string): Result<void, string> => {
-      if (actions._tag !== "Some") {
+      if (!dispatch) {
         return failure("Multistep context not available");
       }
-
-      const result = actions.value.dispatchSafe({
-        type: "COMPLETE_STEP",
-        payload: stepId || currentStepId,
-      });
-
-      return result._tag === "Success"
-        ? success(undefined)
-        : failure("Failed to complete step");
+      try {
+        dispatch({
+          type: "COMPLETE_STEP",
+          payload: stepId || currentStepId,
+        });
+        return success(undefined);
+      } catch {
+        return failure("Failed to complete step");
+      }
     },
-    [actions, currentStepId]
+    [dispatch, currentStepId]
   );
 
   /**
@@ -175,20 +152,20 @@ export const useStepNavigation = () => {
    */
   const skipStep = React.useCallback(
     (stepId?: string): Result<void, string> => {
-      if (actions._tag !== "Some") {
+      if (!dispatch) {
         return failure("Multistep context not available");
       }
-
-      const result = actions.value.dispatchSafe({
-        type: "SKIP_STEP",
-        payload: stepId || currentStepId,
-      });
-
-      return result._tag === "Success"
-        ? success(undefined)
-        : failure("Failed to skip step");
+      try {
+        dispatch({
+          type: "SKIP_STEP",
+          payload: stepId || currentStepId,
+        });
+        return success(undefined);
+      } catch {
+        return failure("Failed to skip step");
+      }
     },
-    [actions, currentStepId]
+    [dispatch, currentStepId]
   );
 
   /**

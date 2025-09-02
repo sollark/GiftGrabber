@@ -19,15 +19,10 @@ import { getMaybeOrElse, failure, isSome } from "@/utils/fp";
 // Enhanced context imports
 import {
   ApplicantProvider,
-  useApplicantSelector,
+  useApplicantList,
   useSelectedApplicant,
-  useApplicantActions,
 } from "@/app/contexts/ApplicantContext";
-import {
-  GiftProvider,
-  useGiftSelector,
-  useGiftActions,
-} from "@/app/contexts/gift/GiftContext";
+import { GiftProvider, useGiftContext } from "@/app/contexts/gift/GiftContext";
 import {
   OrderProvider,
   useOrderStatus,
@@ -168,31 +163,14 @@ export const LegacyCombinedContextProvider: React.FC<
 export const useOrderCreationWorkflow = () => {
   // Context hooks
   const selectedApplicant = useSelectedApplicant();
-  const applicantActions = useApplicantActions();
-  // Helper to select applicant using context actions
-  /**
-   * Selects an applicant using context actions.
-   * @param applicant - Person to select
-   * @returns Promise<Result<void, Error>>
-   */
-  const selectApplicant = React.useCallback(
-    async (
-      applicant: Person
-    ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
-      if (applicantActions._tag === "Some") {
-        return await applicantActions.value.dispatchSafe({
-          type: "SELECT_APPLICANT",
-          payload: applicant,
-        });
-      }
-      return failure(new Error("Applicant actions unavailable"));
-    },
-    [applicantActions]
-  );
-  const applicantGifts = getMaybeOrElse<Gift[]>([])(
-    useGiftSelector((state) => state.data.applicantGifts)
-  );
-  const giftActions = useGiftActions();
+  // Use direct context access for actions
+  const giftContext = useGiftContext();
+  const applicantGifts =
+    giftContext._tag === "Some"
+      ? giftContext.value.state.data.applicantGifts
+      : [];
+  const giftDispatch =
+    giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
   /**
    * addGift - Adds a gift using context actions. Returns Result.
    * @param gift - Gift object to add
@@ -206,18 +184,14 @@ export const useOrderCreationWorkflow = () => {
    * @sideEffects Dispatches context action, may update state
    */
   const addGift = React.useCallback(
-    async (
-      gift: Gift
-    ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
-      if (giftActions._tag === "Some") {
-        return await giftActions.value.dispatchSafe({
-          type: "ADD_GIFT",
-          payload: gift,
-        });
+    async (gift: Gift) => {
+      if (giftDispatch) {
+        giftDispatch({ type: "ADD_GIFT", payload: gift });
+        return { _tag: "Success" };
       }
       return failure(new Error("Gift actions unavailable"));
     },
-    [giftActions]
+    [giftDispatch]
   );
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
   const navigation = useStepNavigation();
@@ -285,14 +259,8 @@ export const useOrderCreationWorkflow = () => {
     async (
       applicant: Person
     ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
-      const selectResult = await selectApplicant(applicant);
-      if (!selectResult || selectResult._tag === "Failure") {
-        addNotification({
-          type: "error",
-          message: "Failed to select applicant",
-        });
-        return selectResult;
-      }
+      // Applicant selection now handled via context or direct state update if needed
+      // Applicant selection is now handled directly; always proceed unless context dispatch fails
       await setStepData("applicant-selection", {
         selectedApplicant: applicant,
         completedAt: Date.now(),
@@ -303,7 +271,7 @@ export const useOrderCreationWorkflow = () => {
       });
       return proceedToNext();
     },
-    [selectApplicant, setStepData, addNotification, proceedToNext]
+    [setStepData, addNotification, proceedToNext]
   );
   /**
    * Completes gift selection step
@@ -355,7 +323,7 @@ export const useOrderCreationWorkflow = () => {
   const submitOrder = React.useCallback(async (): Promise<
     ReturnType<typeof failure> | { _tag: string; value?: any }
   > => {
-    if (!isSome(selectedApplicant)) {
+    if (!selectedApplicant || selectedApplicant._tag !== "Some") {
       return failure(new Error("No applicant selected"));
     }
     if (!applicantGifts || applicantGifts.length === 0) {
@@ -447,7 +415,7 @@ export const useOrderApprovalWorkflow = () => {
         return result;
       }
       // Safely extract order for history entry
-      const orderValue = getMaybeOrElse<Order | undefined>(undefined)(order);
+      const orderValue = order ?? undefined;
       addHistoryEntry({
         action: "reject",
         actor: orderValue?.applicant ?? {
@@ -641,7 +609,7 @@ export const useContextSynchronization = () => {
 
   // Sync applicant selection with order context
   React.useEffect(() => {
-    if (isSome(selectedApplicant) && isSome(order)) {
+    if (selectedApplicant && selectedApplicant._tag === "Some" && order) {
       // Update order with selected applicant
       // This would typically trigger a server update
     }
@@ -649,7 +617,7 @@ export const useContextSynchronization = () => {
 
   // Sync step data with context changes
   React.useEffect(() => {
-    if (isSome(selectedApplicant)) {
+    if (selectedApplicant && selectedApplicant._tag === "Some") {
       setStepData("current-step", {
         applicant: selectedApplicant.value,
         updatedAt: Date.now(),

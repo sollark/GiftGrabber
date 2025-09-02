@@ -33,8 +33,7 @@
 import { Result, success, failure } from "@/utils/fp";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
-import OrderModel from "@/database/models/order.model";
-import PersonModel from "@/database/models/person.model";
+// Removed unused direct model imports; use service layer only
 import { OrderCreationPublicData } from "@/types/common.types";
 import {
   OrderService as DatabaseOrderService,
@@ -118,22 +117,29 @@ export const createOrderData = (
 
 /**
  * Creates a new order using PublicId strategy with enhanced validation and error handling.
- * @param orderData - The order creation data with public IDs.
+ * @param params - The order creation data as an object.
  * @returns Promise<Result<Order, string>> - The created order or error.
  */
+export type CreateOrderParams = {
+  applicantPublicId: string;
+  giftPublicIds: string[];
+  orderId: string;
+  confirmationRQCode: string;
+};
+
 export const createOrderInternal = async (
-  orderData: OrderCreationPublicData
+  params: CreateOrderParams
 ): Promise<Result<Order, string>> => {
   // Validate required fields
-  if (!orderData.applicantPublicId || !orderData.orderId) {
+  if (!params.applicantPublicId || !params.orderId) {
     return failure("Missing required fields: applicantPublicId, orderId");
   }
 
-  if (!orderData.giftPublicIds || orderData.giftPublicIds.length === 0) {
+  if (!params.giftPublicIds || params.giftPublicIds.length === 0) {
     return failure("At least one gift must be selected for the order");
   }
 
-  const result = await DatabaseOrderService.create(orderData);
+  const result = await DatabaseOrderService.create(params);
   if (result._tag === "Failure") {
     return failure(`Order creation failed: ${result.error.message}`);
   }
@@ -231,27 +237,39 @@ export const getAllOrdersInternal = async (): Promise<
 /**
  * Finds an order with populated fields using centralized population logic.
  * @param orderId - The unique identifier for the order.
- * @returns Promise<Order | null> - Order with populated fields or null.
+ * @returns Promise<Result<Order, Error>> - Order with populated fields or error.
  */
 export const findOrderWithPopulation = async (
   orderId: string
-): Promise<Order | null> => {
-  const query = OrderModel.findOne({ orderId });
-  return populateOrder(query).exec();
+): Promise<Result<Order, Error>> => {
+  try {
+    const result = await DatabaseOrderService.findWithPopulation(orderId);
+    if (result._tag === "Failure") return failure(result.error);
+    if (!result.value) return failure(new Error("Order not found"));
+    return success(result.value);
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**
  * Finds an unconfirmed order using centralized population logic.
  * @param orderId - The unique identifier for the order.
- * @returns Promise<Order | null> - Unconfirmed order or null.
+ * @returns Promise<Result<Order, Error>> - Unconfirmed order or error.
  */
 export const findUnconfirmedOrder = async (
   orderId: string
-): Promise<Order | null> => {
-  const query = OrderModel.findOne({
-    orderId,
-  });
-  return populateOrder(query).exec();
+): Promise<Result<Order, Error>> => {
+  try {
+    const result = await DatabaseOrderService.findUnconfirmedWithPopulation(
+      orderId
+    );
+    if (result._tag === "Failure") return failure(result.error);
+    if (!result.value) return failure(new Error("Unconfirmed order not found"));
+    return success(result.value);
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 // ============================================================================
@@ -261,24 +279,31 @@ export const findUnconfirmedOrder = async (
 /**
  * Find a person by their publicId.
  * @param publicId - The person's public identifier.
- * @returns Promise<Person | null> - Person if found, null otherwise.
+ * @returns Promise<Result<Person, Error>> - Person if found, error otherwise.
  */
 export const findPersonByPublicId = async (
   publicId: string
-): Promise<Person | null> => {
+): Promise<Result<Person, Error>> => {
   const result = await PersonService.findByPublicId(publicId);
-  return result._tag === "Success" ? result.value : null;
+  if (result._tag === "Success" && result.value) return success(result.value);
+  return failure(new Error("Person not found"));
 };
 
 /**
  * Finds a person by ID (LEGACY).
  * @param personId - The person's ObjectId.
- * @returns Promise<any | null> - Person document or null.
+ * @returns Promise<Result<Person, Error>> - Person document or error.
  */
 export const findPersonById = async (
   personId: Types.ObjectId
-): Promise<any | null> => {
-  return await PersonModel.findById(personId);
+): Promise<Result<Person, Error>> => {
+  try {
+    const result = await PersonService.findById(personId);
+    if (result._tag === "Success" && result.value) return success(result.value);
+    return failure(new Error("Person not found"));
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 // ============================================================================

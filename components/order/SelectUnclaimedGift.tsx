@@ -19,10 +19,7 @@ import {
   useApplicantList,
   useSelectedApplicant,
 } from "@/app/contexts/ApplicantContext";
-import {
-  useGiftSelector,
-  useGiftActions,
-} from "@/app/contexts/gift/GiftContext";
+import { useGiftContext } from "@/app/contexts/gift/GiftContext";
 import { Gift } from "@/database/models/gift.model";
 import { Person } from "@/database/models/person.model";
 import PersonAutocomplete from "../PersonAutocomplete";
@@ -60,14 +57,11 @@ const isGiftUnclaimed = (gift: Gift): boolean => !gift.applicant;
 const SelectUnclaimedGift: FC = () => {
   const applicantList = useApplicantList();
   const selectedApplicant = useSelectedApplicant();
-  const giftListMaybe = useGiftSelector((state) => state.data.giftList);
-  const giftList = useMemo(
-    () =>
-      giftListMaybe._tag === "Some" && Array.isArray(giftListMaybe.value)
-        ? giftListMaybe.value
-        : [],
-    [giftListMaybe]
-  );
+  const giftContext = useGiftContext();
+  const giftList =
+    giftContext._tag === "Some" ? giftContext.value.state.data.giftList : [];
+  const giftDispatch =
+    giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
 
   // Local state for selected person and their gift
   const initialPerson =
@@ -76,7 +70,6 @@ const SelectUnclaimedGift: FC = () => {
     initialPerson
   );
   const [personGift, setPersonGift] = useState<Gift | undefined>(undefined);
-  const actions = useGiftActions();
 
   /**
    * addGift
@@ -85,11 +78,11 @@ const SelectUnclaimedGift: FC = () => {
    */
   const addGift = useCallback(
     (gift: Gift) => {
-      if (actions._tag === "Some") {
-        actions.value.dispatchSafe({ type: "ADD_GIFT", payload: gift });
+      if (giftDispatch) {
+        giftDispatch({ type: "ADD_GIFT", payload: gift });
       }
     },
-    [actions]
+    [giftDispatch]
   );
 
   /**
@@ -97,7 +90,7 @@ const SelectUnclaimedGift: FC = () => {
    * Memoized list of applicants from context.
    */
   const availableApplicants = useMemo(
-    () => (applicantList._tag === "Some" ? applicantList.value : []),
+    () => (Array.isArray(applicantList) ? applicantList : []),
     [applicantList]
   );
 
