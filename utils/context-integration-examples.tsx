@@ -14,7 +14,7 @@
  */
 
 import React from "react";
-import { getMaybeOrElse, failure } from "@/utils/fp";
+import { getMaybeOrElse, failure, isSome } from "@/utils/fp";
 
 // Enhanced context imports
 import {
@@ -45,6 +45,11 @@ import { Gift } from "@/database/models/gift.model";
 import { ExcelFormatType } from "@/types/excel.types";
 
 // Helper function to get person name
+/**
+ * Returns the full name of a person.
+ * @param person - Person object
+ * @returns string
+ */
 const getPersonName = (person: Person): string => {
   return `${person.firstName} ${person.lastName}`;
 };
@@ -61,7 +66,7 @@ interface FlexibleProviderProps {
   contexts: {
     applicant?: { applicantList: Person[] };
     gift?: { giftList: Gift[] };
-  order?: { order: Order };
+    order?: { order: Order };
     multistep?: { steps: StepDefinition[] };
   };
 }
@@ -137,7 +142,7 @@ export const LegacyCombinedContextProvider: React.FC<
           applicantList: applicants,
         },
         gift: { giftList: gifts },
-  order: { order },
+        order: { order },
         multistep: { steps: multistepSteps },
       }}
     >
@@ -165,10 +170,17 @@ export const useOrderCreationWorkflow = () => {
   const selectedApplicant = useSelectedApplicant();
   const applicantActions = useApplicantActions();
   // Helper to select applicant using context actions
+  /**
+   * Selects an applicant using context actions.
+   * @param applicant - Person to select
+   * @returns Promise<Result<void, Error>>
+   */
   const selectApplicant = React.useCallback(
-    (applicant: Person) => {
+    async (
+      applicant: Person
+    ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
       if (applicantActions._tag === "Some") {
-        return applicantActions.value.dispatchSafe({
+        return await applicantActions.value.dispatchSafe({
           type: "SELECT_APPLICANT",
           payload: applicant,
         });
@@ -194,9 +206,11 @@ export const useOrderCreationWorkflow = () => {
    * @sideEffects Dispatches context action, may update state
    */
   const addGift = React.useCallback(
-    (gift: Gift) => {
+    async (
+      gift: Gift
+    ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
       if (giftActions._tag === "Some") {
-        return giftActions.value.dispatchSafe({
+        return await giftActions.value.dispatchSafe({
           type: "ADD_GIFT",
           payload: gift,
         });
@@ -240,14 +254,12 @@ export const useOrderCreationWorkflow = () => {
   /**
    * proceedToNext (Internal Helper)
    * Proceeds to the next step, validating required data for the current step.
-   * @returns Result<void, Error> - Success or failure of step transition
-   * @sideEffects May trigger notifications and navigation state changes
-   * @notes Enforces required step completion before advancing
+   * @returns Promise<Result<void, Error>>
    */
-  const proceedToNext = React.useCallback(async () => {
+  const proceedToNext = React.useCallback(async (): Promise<
+    ReturnType<typeof failure> | { _tag: string; value?: any }
+  > => {
     if (!currentStep) return failure(new Error("No current step"));
-
-    // Basic data check - ensure current step has data if required
     const currentData = getCurrentStepData();
     if (!currentStep.isOptional && !currentData) {
       addNotification({
@@ -256,8 +268,6 @@ export const useOrderCreationWorkflow = () => {
       });
       return failure(new Error(`${currentStep.title} is required`));
     }
-
-    // Proceed to next step
     return goToNextStep();
   }, [currentStep, getCurrentStepData, goToNextStep, addNotification]);
 
@@ -269,33 +279,28 @@ export const useOrderCreationWorkflow = () => {
    * completeApplicantSelection (Public API)
    * Completes the applicant selection step, updates context, and advances workflow.
    * @param applicant Person - The selected applicant
-   * @returns Result<void, Error> - Success or failure of the operation
-   * @sideEffects Updates context, triggers notifications, advances step
+   * @returns Promise<Result<void, Error>>
    */
   const completeApplicantSelection = React.useCallback(
-    async (applicant: Person) => {
-      // Select the applicant
+    async (
+      applicant: Person
+    ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
       const selectResult = await selectApplicant(applicant);
-
-      if (selectResult._tag === "Failure") {
+      if (!selectResult || selectResult._tag === "Failure") {
         addNotification({
           type: "error",
           message: "Failed to select applicant",
         });
         return selectResult;
       }
-
-      // Save step data
       await setStepData("applicant-selection", {
         selectedApplicant: applicant,
         completedAt: Date.now(),
       });
-
       addNotification({
         type: "success",
         message: `Applicant ${getPersonName(applicant)} selected`,
       });
-
       return proceedToNext();
     },
     [selectApplicant, setStepData, addNotification, proceedToNext]
@@ -308,17 +313,15 @@ export const useOrderCreationWorkflow = () => {
    * completeGiftSelection (Public API)
    * Completes the gift selection step, adds gifts, and advances workflow.
    * @param gifts Gift[] - Array of selected gifts
-   * @returns Result<void, Error> - Success or failure of the operation
-   * @sideEffects Updates context, triggers notifications, advances step
-   * @notes Handles batch add and error aggregation
+   * @returns Promise<Result<void, Error>>
    */
   const completeGiftSelection = React.useCallback(
-    async (gifts: Gift[]) => {
-      // Add all gifts
+    async (
+      gifts: Gift[]
+    ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
       const addResults = await Promise.all(gifts.map((gift) => addGift(gift)));
-
       const hasErrors = addResults.some(
-        (result: any) => result._tag === "Failure"
+        (result: any) => !result || result._tag === "Failure"
       );
       if (hasErrors) {
         addNotification({
@@ -327,18 +330,14 @@ export const useOrderCreationWorkflow = () => {
         });
         return failure(new Error("Failed to add gifts"));
       }
-
-      // Save step data
       await setStepData("gift-selection", {
         selectedGifts: gifts,
         completedAt: Date.now(),
       });
-
       addNotification({
         type: "success",
         message: `${gifts.length} gifts selected`,
       });
-
       return proceedToNext();
     },
     [addGift, setStepData, addNotification, proceedToNext]
@@ -351,19 +350,17 @@ export const useOrderCreationWorkflow = () => {
   /**
    * submitOrder (Public API)
    * Submits the completed order for approval, validating all required data.
-   * @returns Result<void, Error> - Success or failure of the submission
-   * @sideEffects Updates context, triggers notifications, saves step data
-   * @notes Aggregates all workflow data for final submission
+   * @returns Promise<Result<void, Error>>
    */
-  const submitOrder = React.useCallback(async () => {
-    // Validate all required data
-    if (!selectedApplicant || selectedApplicant._tag !== "Some") {
+  const submitOrder = React.useCallback(async (): Promise<
+    ReturnType<typeof failure> | { _tag: string; value?: any }
+  > => {
+    if (!isSome(selectedApplicant)) {
       return failure(new Error("No applicant selected"));
     }
     if (!applicantGifts || applicantGifts.length === 0) {
       return failure(new Error("No gifts selected"));
     }
-    // Save step data
     await setStepData("order-submission", {
       selectedApplicant: selectedApplicant.value,
       selectedGifts: applicantGifts,
@@ -374,7 +371,13 @@ export const useOrderCreationWorkflow = () => {
       message: "Order submitted successfully!",
     });
     return proceedToNext();
-  }, [selectedApplicant, applicantGifts, setStepData, addNotification, proceedToNext]);
+  }, [
+    selectedApplicant,
+    applicantGifts,
+    setStepData,
+    addNotification,
+    proceedToNext,
+  ]);
 
   return {
     // State
@@ -406,7 +409,68 @@ export const useOrderApprovalWorkflow = () => {
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
   const { addHistoryEntry, addNotification } = useOrderTracking();
 
+  /**
+   * approveOrder (Public API)
+   * Approves the current order and adds a history entry.
+   * @returns Result<void, Error>
+   */
+  const approveOrder = React.useCallback(async () => {
+    const result = await confirmOrder();
+    if (!result || result._tag === "Failure") {
+      addNotification({
+        type: "error",
+        message: "Failed to approve order",
+      });
+      return result;
+    }
+    addNotification({
+      type: "success",
+      message: "Order approved",
+    });
+    return result;
+  }, [confirmOrder, addHistoryEntry, addNotification, order]);
 
+  /**
+   * rejectOrderWithReason (Public API)
+   * Rejects the current order with a reason and adds a history entry.
+   * @param reason string - Reason for rejection
+   * @returns Result<void, Error>
+   */
+  const rejectOrderWithReason = React.useCallback(
+    async (reason: string) => {
+      const result = await rejectOrder(reason);
+      if (!result || result._tag === "Failure") {
+        addNotification({
+          type: "error",
+          message: "Failed to reject order",
+        });
+        return result;
+      }
+      // Safely extract order for history entry
+      const orderValue = getMaybeOrElse<Order | undefined>(undefined)(order);
+      addHistoryEntry({
+        action: "reject",
+        actor: orderValue?.applicant ?? {
+          publicId: "unknown",
+          sourceFormat: ExcelFormatType.BASIC_NAME,
+        },
+        details: reason,
+      });
+      addNotification({
+        type: "success",
+        message: "Order rejected",
+      });
+      return result;
+    },
+    [rejectOrder, addHistoryEntry, addNotification, order]
+  );
+
+  return {
+    order,
+    approveOrder,
+    rejectOrderWithReason,
+  };
+};
 
 // ============================================================================
 // EXAMPLE COMPONENTS USING COMPOSITE HOOKS
@@ -436,26 +500,25 @@ export const OrderCreationWizard: React.FC = () => {
     switch (currentStep.id) {
       case "applicant-selection":
         return (
-          /**
-           * @file Context Integration Examples
-           *
-           * Purpose: Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
-           *
-           * Main Responsibilities:
-           * - Defines a combined provider for orchestrating context setup and data flow across the app's main business workflows (order creation, approval, etc.)
-           * - Implements composite hooks that encapsulate multi-context business logic for order creation and approval.
-           * - Provides example UI components and utilities for context composition and cross-context state synchronization.
-           *
-           * Architectural Role:
-           * - Sits at the integration layer, bridging domain contexts and UI workflows.
-           * - Encapsulates business process logic that spans multiple contexts.
-           * - Promotes separation of concerns by keeping context setup and workflow logic out of UI components.
-           */
+          <div>
+            <h3>Select Applicant</h3>
+            {/* Applicant selection UI goes here */}
+            <button
+              onClick={() => {
+                // Mock applicant selection
+                const mockApplicant: Person = {
+                  publicId: "mock-id-1",
+                  firstName: "John",
+                  lastName: "Doe",
+                  sourceFormat: ExcelFormatType.BASIC_NAME,
+                };
+                completeApplicantSelection(mockApplicant);
+              }}
+            >
               Complete Applicant Selection
             </button>
           </div>
         );
-
       case "gift-selection":
         return (
           <div>
@@ -472,20 +535,20 @@ export const OrderCreationWizard: React.FC = () => {
             </button>
           </div>
         );
-
       case "order-confirmation":
         return (
           <div>
             <h3>Confirm Order</h3>
             {/* Order summary UI */}
             <button
-              onClick={() => {}}
+              onClick={() => {
+                submitOrder();
+              }}
             >
               Submit Order
             </button>
           </div>
         );
-
       default:
         return <div>Unknown step</div>;
     }
@@ -501,7 +564,7 @@ export const OrderCreationWizard: React.FC = () => {
       <div className="step-content">{renderStepContent()}</div>
 
       <div className="step-navigation">
-        <button onClick={() => goToPreviousStep()}>
+        <button onClick={() => goToPreviousStep()} disabled={!canGoNext}>
           Previous
         </button>
 
@@ -530,10 +593,11 @@ export const OrderCreationWizard: React.FC = () => {
 export function withFunctionalContexts<P extends object>(
   Component: React.ComponentType<P>,
   contextConfig: {
-  applicants?: Person[];
-  gifts?: Gift[];
-  order?: Order;
-  multistepSteps?: StepDefinition[];
+    applicants?: Person[];
+    gifts?: Gift[];
+    order?: Order;
+    approverList?: Person[];
+    multistepSteps?: StepDefinition[];
   }
 ) {
   return function WrappedComponent(props: P) {
@@ -541,19 +605,14 @@ export function withFunctionalContexts<P extends object>(
       <CombinedContextProvider
         contexts={{
           applicant: contextConfig.applicants
-            ? {
-                applicantList: contextConfig.applicants,
-              }
+            ? { applicantList: contextConfig.applicants }
             : undefined,
           gift: contextConfig.gifts
             ? { giftList: contextConfig.gifts }
             : undefined,
-          order:
-            contextConfig.order
-              ? {
-                  order: contextConfig.order,
-                }
-              : undefined,
+          order: contextConfig.order
+            ? { order: contextConfig.order }
+            : undefined,
           multistep: contextConfig.multistepSteps
             ? { steps: contextConfig.multistepSteps }
             : undefined,
@@ -582,7 +641,7 @@ export const useContextSynchronization = () => {
 
   // Sync applicant selection with order context
   React.useEffect(() => {
-    if (selectedApplicant._tag === "Some" && order._tag === "Some") {
+    if (isSome(selectedApplicant) && isSome(order)) {
       // Update order with selected applicant
       // This would typically trigger a server update
     }
@@ -590,11 +649,13 @@ export const useContextSynchronization = () => {
 
   // Sync step data with context changes
   React.useEffect(() => {
-    if (selectedApplicant._tag === "Some") {
+    if (isSome(selectedApplicant)) {
       setStepData("current-step", {
         applicant: selectedApplicant.value,
         updatedAt: Date.now(),
       });
     }
   }, [selectedApplicant, setStepData]);
-}
+
+  return {};
+};
