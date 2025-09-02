@@ -4,7 +4,6 @@
  * Responsibilities: Defines shape of state, actions, steps, and related entities.
  * Architecture: Shared by reducer, context, selectors, and hooks for type safety.
  */
-// ...existing code...
 import type { FunctionalAction, FunctionalState } from "@/utils/fp-contexts";
 
 /**
@@ -20,7 +19,6 @@ export interface MultistepAction extends FunctionalAction {
     | "COMPLETE_STEP"
     | "SKIP_STEP"
     | "UNSKIP_STEP"
-    | "SET_STEP_DATA"
     | "UPDATE_STEP_DATA"
     | "CLEAR_STEP_DATA";
   payload?: unknown;

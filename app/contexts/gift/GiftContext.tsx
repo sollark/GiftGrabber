@@ -7,15 +7,11 @@
 
 import React from "react";
 import { Gift } from "@/database/models/gift.model";
-import {
-  createFunctionalContext,
-  FunctionalAction,
-  FunctionalState,
-} from "@/utils/fp-contexts";
+import { createFunctionalContext, FunctionalState } from "@/utils/fp-contexts";
 import { loggingMiddleware } from "@/utils/fp-contexts";
 import { validationMiddleware } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
-import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
+import { Result, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { isGiftInList, areGiftsEqual } from "@/utils/utils";
 

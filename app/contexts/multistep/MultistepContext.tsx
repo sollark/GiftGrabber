@@ -27,20 +27,17 @@ import { withErrorBoundary } from "@/components/ErrorBoundary";
 /**
  * Validation middleware for multistep context.
  * Ensures steps are validated before navigation.
+ * If business rules grow, move validation logic to a dedicated utility.
  */
 const multistepValidation = validationMiddleware<
   MultistepState,
   MultistepAction
 >((action, state) => {
+  // TODO: Centralize validation logic if business rules expand
   switch (action.type) {
-    case "GO_TO_NEXT_STEP": {
-      // You can add your validation logic here if needed
+    case "GO_TO_NEXT_STEP":
+    case "COMPLETE_STEP":
       return success(true);
-    }
-    case "COMPLETE_STEP": {
-      // You can add your validation logic here if needed
-      return success(true);
-    }
     default:
       return success(true);
   }
@@ -64,12 +61,18 @@ const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
   debugMode: process.env.NODE_ENV === "development",
 });
 
-/** MultistepContext - React context for multistep state */
+/**
+ * MultistepContext - React context for multistep state
+ * @public
+ */
 export const MultistepContext: React.Context<MultistepState> = (
   contextResult as any
 ).Context;
 
-/** BaseMultistepProvider - Low-level provider for advanced usage */
+/**
+ * BaseMultistepProvider - Low-level provider for advanced usage
+ * @public
+ */
 export const BaseMultistepProvider = (contextResult as any).Provider;
 
 /**
@@ -78,6 +81,7 @@ export const BaseMultistepProvider = (contextResult as any).Provider;
  * @param steps - Array of step definitions
  * @param children - React children to render within provider
  * @param initialStepIndex - Optional starting step index (defaults to 0)
+ * @public
  */
 const MultistepProviderComponent: React.FC<MultistepProviderProps> = ({
   steps,
@@ -85,7 +89,6 @@ const MultistepProviderComponent: React.FC<MultistepProviderProps> = ({
   initialStepIndex = 0,
 }) => {
   const initialState = React.useMemo(() => createInitialState(steps), [steps]);
-
   return (
     <BaseMultistepProvider initialState={initialState}>
       {children}
@@ -93,29 +96,36 @@ const MultistepProviderComponent: React.FC<MultistepProviderProps> = ({
   );
 };
 
-// Apply error boundary to the provider
+/**
+ * MultistepProvider - Provider component wrapped in error boundary.
+ * @see MultistepProviderComponent
+ * @public
+ */
 export const MultistepProvider = withErrorBoundary(
   MultistepProviderComponent,
   "MultistepContext",
   <div>Failed to load Multistep context. Please refresh the page.</div>
 );
 
-/** useMultistepContext - Hook to access multistep context */
+/**
+ * useMultistepContext - Hook to access multistep context.
+ * @returns {MultistepState} Current multistep state
+ * @public
+ */
 export const useMultistepContext = (contextResult as any).useContext;
 
-// Export all hooks and components with consistent named exports
-export { useStepNavigation, useStepData };
+/**
+ * useStepNavigation - Hook for step navigation actions.
+ * @returns Navigation helpers for multistep workflow
+ * @public
+ */
+export { useStepNavigation };
 
-// For backward compatibility, maintain default export
-const MultistepContextAPI = {
-  // Foundation components and hooks
-  MultistepProvider,
-  BaseMultistepProvider,
-  useMultistepContext,
+/**
+ * useStepData - Hook for accessing and managing step data.
+ * @returns Step data helpers for multistep workflow
+ * @public
+ */
+export { useStepData };
 
-  // Business logic hooks
-  useStepNavigation,
-  useStepData,
-};
-
-export default MultistepContextAPI;
+// Removed deprecated default export. Use named exports instead.

@@ -14,12 +14,11 @@
  */
 
 import React from "react";
-import { getMaybeOrElse, failure, isSome } from "@/utils/fp";
+import { failure, isSome } from "@/utils/fp";
 
 // Enhanced context imports
 import {
   ApplicantProvider,
-  useApplicantList,
   useSelectedApplicant,
 } from "@/app/contexts/ApplicantContext";
 import { GiftProvider, useGiftContext } from "@/app/contexts/gift/GiftContext";
@@ -28,9 +27,11 @@ import {
   useOrderStatus,
   useOrderTracking,
 } from "@/app/contexts/order/OrderContext";
-import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
-const { BaseMultistepProvider, useStepNavigation, useStepData } =
-  MultistepContextAPI;
+import {
+  BaseMultistepProvider,
+  useStepNavigation,
+  useStepData,
+} from "@/app/contexts/multistep/MultistepContext";
 import { StepDefinition } from "@/app/contexts/multistep/types";
 
 // Model imports
@@ -115,36 +116,7 @@ export const CombinedContextProvider: React.FC<FlexibleProviderProps> = ({
   return <>{wrappedChildren}</>;
 };
 
-// Backward compatibility - Legacy interface (deprecated)
-interface LegacyCombinedProviderProps {
-  children: React.ReactNode;
-  order: Order;
-  applicants: Person[];
-  gifts: Gift[];
-  multistepSteps: StepDefinition[];
-}
-
-/**
- * @deprecated Use CombinedContextProvider with contexts prop instead
- */
-export const LegacyCombinedContextProvider: React.FC<
-  LegacyCombinedProviderProps
-> = ({ children, order, applicants, gifts, multistepSteps }) => {
-  return (
-    <CombinedContextProvider
-      contexts={{
-        applicant: {
-          applicantList: applicants,
-        },
-        gift: { giftList: gifts },
-        order: { order },
-        multistep: { steps: multistepSteps },
-      }}
-    >
-      {children}
-    </CombinedContextProvider>
-  );
-};
+// ...removed deprecated legacy provider...
 
 // ============================================================================
 // COMPOSITE HOOKS FOR COMPLEX OPERATIONS
@@ -165,12 +137,10 @@ export const useOrderCreationWorkflow = () => {
   const selectedApplicant = useSelectedApplicant();
   // Use direct context access for actions
   const giftContext = useGiftContext();
-  const applicantGifts =
-    giftContext._tag === "Some"
-      ? giftContext.value.state.data.applicantGifts
-      : [];
-  const giftDispatch =
-    giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
+  const applicantGifts = isSome(giftContext)
+    ? giftContext.value.state.data.applicantGifts
+    : [];
+  const giftDispatch = isSome(giftContext) ? giftContext.value.dispatch : undefined;
   /**
    * addGift - Adds a gift using context actions. Returns Result.
    * @param gift - Gift object to add
@@ -218,7 +188,7 @@ export const useOrderCreationWorkflow = () => {
   }, [navigation]);
 
   const canGoNext = navigation.canGoNext;
-  const { setStepData, getCurrentStepData } = useStepData();
+  const { getCurrentStepData, updateStepData } = useStepData();
   const { addNotification } = useOrderTracking();
 
   /**
@@ -261,7 +231,7 @@ export const useOrderCreationWorkflow = () => {
     ): Promise<ReturnType<typeof failure> | { _tag: string; value?: any }> => {
       // Applicant selection now handled via context or direct state update if needed
       // Applicant selection is now handled directly; always proceed unless context dispatch fails
-      await setStepData("applicant-selection", {
+      await updateStepData("applicant-selection", {
         selectedApplicant: applicant,
         completedAt: Date.now(),
       });
@@ -271,7 +241,7 @@ export const useOrderCreationWorkflow = () => {
       });
       return proceedToNext();
     },
-    [setStepData, addNotification, proceedToNext]
+    [updateStepData, addNotification, proceedToNext]
   );
   /**
    * Completes gift selection step
@@ -298,7 +268,7 @@ export const useOrderCreationWorkflow = () => {
         });
         return failure(new Error("Failed to add gifts"));
       }
-      await setStepData("gift-selection", {
+      await updateStepData("gift-selection", {
         selectedGifts: gifts,
         completedAt: Date.now(),
       });
@@ -308,7 +278,7 @@ export const useOrderCreationWorkflow = () => {
       });
       return proceedToNext();
     },
-    [addGift, setStepData, addNotification, proceedToNext]
+    [addGift, updateStepData, addNotification, proceedToNext]
   );
 
   /**
@@ -323,13 +293,13 @@ export const useOrderCreationWorkflow = () => {
   const submitOrder = React.useCallback(async (): Promise<
     ReturnType<typeof failure> | { _tag: string; value?: any }
   > => {
-    if (!selectedApplicant || selectedApplicant._tag !== "Some") {
+    if (!isSome(selectedApplicant)) {
       return failure(new Error("No applicant selected"));
     }
     if (!applicantGifts || applicantGifts.length === 0) {
       return failure(new Error("No gifts selected"));
     }
-    await setStepData("order-submission", {
+    await updateStepData("order-submission", {
       selectedApplicant: selectedApplicant.value,
       selectedGifts: applicantGifts,
       completedAt: Date.now(),
@@ -342,7 +312,7 @@ export const useOrderCreationWorkflow = () => {
   }, [
     selectedApplicant,
     applicantGifts,
-    setStepData,
+    updateStepData,
     addNotification,
     proceedToNext,
   ]);
@@ -605,7 +575,7 @@ export function withFunctionalContexts<P extends object>(
 export const useContextSynchronization = () => {
   const selectedApplicant = useSelectedApplicant();
   const { order } = useOrderStatus();
-  const { setStepData } = useStepData();
+  const { updateStepData } = useStepData();
 
   // Sync applicant selection with order context
   React.useEffect(() => {
@@ -618,12 +588,12 @@ export const useContextSynchronization = () => {
   // Sync step data with context changes
   React.useEffect(() => {
     if (selectedApplicant && selectedApplicant._tag === "Some") {
-      setStepData("current-step", {
+      updateStepData("current-step", {
         applicant: selectedApplicant.value,
         updatedAt: Date.now(),
       });
     }
-  }, [selectedApplicant, setStepData]);
+  }, [selectedApplicant, updateStepData]);
 
   return {};
 };

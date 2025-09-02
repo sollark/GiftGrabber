@@ -16,7 +16,11 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { act } from "react";
-import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
+import {
+  BaseMultistepProvider,
+  useStepNavigation,
+  useStepData,
+} from "@/app/contexts/multistep/MultistepContext";
 
 const steps = [
   {
@@ -39,8 +43,8 @@ const steps = [
 describe("MultistepContext integration", () => {
   // Helper test harness to run hooks and trigger assertions after context is ready
   interface ContextHooks {
-    nav: ReturnType<typeof MultistepContextAPI.useStepNavigation>;
-    data: ReturnType<typeof MultistepContextAPI.useStepData>;
+    nav: ReturnType<typeof useStepNavigation>;
+    data: ReturnType<typeof useStepData>;
   }
 
   /**
@@ -48,8 +52,8 @@ describe("MultistepContext integration", () => {
    * This allows direct inspection and manipulation of context state and actions.
    */
   function TestHarness({ onReady }: { onReady: (ctx: ContextHooks) => void }) {
-    const navResult = MultistepContextAPI.useStepNavigation();
-    const data = MultistepContextAPI.useStepData();
+    const navResult = useStepNavigation();
+    const data = useStepData();
     React.useEffect(() => {
       onReady({ nav: navResult, data });
     }, [navResult, data, onReady]);
@@ -62,9 +66,9 @@ describe("MultistepContext integration", () => {
    */
   function renderWithContext(assertFn: (ctx: ContextHooks) => void) {
     render(
-      <MultistepContextAPI.BaseMultistepProvider steps={steps}>
+      <BaseMultistepProvider steps={steps}>
         <TestHarness onReady={assertFn} />
-      </MultistepContextAPI.BaseMultistepProvider>
+      </BaseMultistepProvider>
     );
   }
 
@@ -83,11 +87,6 @@ describe("MultistepContext integration", () => {
         expect(nav.currentStepId).not.toBe("");
       });
       expect(nav.currentStepId).toBe("step1");
-
-      // Test setting step data
-      act(() => {
-        data.setStepData("step1", { name: "test" });
-      });
 
       // Navigate to next step
       act(() => {

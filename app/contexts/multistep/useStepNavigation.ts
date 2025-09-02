@@ -9,7 +9,7 @@ import React from "react";
 import { Result, success, failure } from "@/utils/fp";
 import { useMultistepContext } from "./MultistepContext";
 import { canNavigateToStep, findStepIndex } from "./multistepUtils";
-import { StepDefinition, MultistepState } from "./types";
+import { StepDefinition } from "./types";
 
 /**
  * Business logic hook for multistep navigation.

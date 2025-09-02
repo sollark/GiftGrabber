@@ -125,13 +125,13 @@ export const multistepReducer = (
       const nextIndex = data.currentStepIndex + 1;
       if (nextIndex >= data.steps.length)
         return failure(new Error("Already at the last step"));
-      const nextNavigationCheck = canNavigateToStep(
+      const navigationCheck = canNavigateToStep(
         data.steps,
         nextIndex,
         data.completedSteps
       );
-      if (nextNavigationCheck._tag === "Failure")
-        return failure(new Error(nextNavigationCheck.error));
+      if (navigationCheck._tag === "Failure")
+        return failure(new Error(navigationCheck.error));
       const nextStep = data.steps[nextIndex];
       return success({
         ...state,
@@ -139,7 +139,7 @@ export const multistepReducer = (
           ...data,
           currentStepIndex: nextIndex,
           currentStepId: nextStep.id,
-          canGoBack: true,
+          canGoBack: nextIndex > 0,
           canGoNext: nextIndex < data.steps.length - 1,
           canComplete: data.completedSteps.size === data.steps.length - 1,
         },
@@ -204,25 +204,6 @@ export const multistepReducer = (
         data: {
           ...data,
           skippedSteps: newUnskippedSteps,
-        },
-      });
-    }
-
-    case "SET_STEP_DATA": {
-      const { stepId, data: stepDataValue } = action.payload as {
-        stepId: string;
-        data: unknown;
-      };
-      if (!stepId)
-        return failure(new Error("Step ID required for setting data"));
-      return success({
-        ...state,
-        data: {
-          ...data,
-          stepData: {
-            ...data.stepData,
-            [stepId]: stepDataValue,
-          },
         },
       });
     }
