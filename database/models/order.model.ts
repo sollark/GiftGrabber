@@ -7,7 +7,7 @@
  * - Defines Order schema with applicant, gifts, and approval workflow tracking
  * - Manages order lifecycle: creation → pending → approval → confirmation
  * - Provides QR code integration for mobile-friendly order verification
- * - Maintains audit trail with timestamps and approver tracking
+ * - Maintains audit trail with timestamps tracking
  * - Supports order status management through OrderStatus enumeration
  *
  * Architecture Role:
@@ -30,9 +30,6 @@ export type Order = {
   applicant: Person;
   gifts: Gift[];
   orderId: string;
-  confirmationRQCode: string;
-  confirmedByApprover: Person | null;
-  confirmedAt?: Date;
   status: OrderStatus;
 };
 type OrderDoc = {
@@ -42,9 +39,6 @@ type OrderDoc = {
   applicant: Types.ObjectId;
   gifts: Types.ObjectId[];
   orderId: string;
-  confirmationRQCode: string;
-  confirmedAt: Date | null;
-  confirmedByApprover: Types.ObjectId | null;
   status: OrderStatus;
 };
 
@@ -59,13 +53,6 @@ const orderSchema: Schema = new Schema({
   applicant: { type: Types.ObjectId, ref: "Person", required: true },
   gifts: [{ type: Types.ObjectId, ref: "Gift", required: true }],
   orderId: { type: String, required: true },
-  confirmationRQCode: { type: String, required: true },
-  confirmedAt: { type: Date, default: null },
-  confirmedByApprover: {
-    type: Types.ObjectId,
-    ref: "Person",
-    default: null,
-  },
   status: {
     type: String,
     enum: Object.values(OrderStatus),
@@ -83,7 +70,6 @@ orderSchema.index({ orderId: 1 }); // Business ID queries
 
 // Relationship-based queries
 orderSchema.index({ applicant: 1 }); // Orders by applicant
-orderSchema.index({ confirmedByApprover: 1 }); // Orders by approver
 
 // Status-based queries for dashboards/monitoring
 orderSchema.index({ status: 1 }); // Orders by status
@@ -92,7 +78,6 @@ orderSchema.index({ createdAt: -1 }); // Recent orders first
 // Compound indexes for complex filtering
 orderSchema.index({ applicant: 1, status: 1 }); // Applicant's orders by status
 orderSchema.index({ status: 1, createdAt: -1 }); // Status with recency
-orderSchema.index({ confirmedByApprover: 1, status: 1 }); // Approver's decisions
 orderSchema.index({ orderId: 1, status: 1 }); // Business ID with status
 
 // Performance optimization for gift relationship queries

@@ -85,15 +85,10 @@ export const findEventsByEventIds = async (
   );
 
   if (populate) {
-    query = query
-      .populate({
-        path: "applicantList",
-        select: PUBLIC_FIELD_SELECTIONS.PERSON,
-      })
-      .populate({
-        path: "approverList",
-        select: PUBLIC_FIELD_SELECTIONS.PERSON,
-      });
+    query = query.populate({
+      path: "applicantList",
+      select: PUBLIC_FIELD_SELECTIONS.PERSON,
+    });
   }
 
   return fromPromise(query.lean().exec());
@@ -132,7 +127,6 @@ export const getEventStatistics = async (
       {
         $project: {
           totalApplicants: { $size: "$applicantList" },
-          totalApprovers: { $size: { $ifNull: ["$approverList", []] } },
           totalGifts: { $size: "$giftList" },
           availableGifts: {
             $size: {
@@ -197,15 +191,6 @@ export const getOrderAnalytics = async (): Promise<Result<any, Error>> => {
               },
             },
           },
-          approvers: { $push: "$confirmedByApprover" },
-        },
-      },
-      {
-        $lookup: {
-          from: "people",
-          localField: "approvers",
-          foreignField: "_id",
-          as: "approverDetails",
         },
       },
     ];
@@ -217,7 +202,6 @@ export const getOrderAnalytics = async (): Promise<Result<any, Error>> => {
         totalOrders: 0,
         ordersByStatus: {},
         averageOrderTime: 0,
-        topApprovers: [],
       });
     }
 
@@ -231,7 +215,6 @@ export const getOrderAnalytics = async (): Promise<Result<any, Error>> => {
       totalOrders: result[0].totalOrders,
       ordersByStatus: statusCounts,
       averageOrderTime: result[0].avgTime || 0,
-      topApprovers: [], // Would need additional processing
     });
   } catch (error) {
     return failure(error as Error);

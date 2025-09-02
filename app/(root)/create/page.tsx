@@ -24,7 +24,6 @@ import { Section } from "@/ui/layout";
 import { FC } from "react";
 import { BaseEventProvider } from "@/app/contexts/EventContext";
 import { BaseApplicantProvider } from "@/app/contexts/ApplicantContext";
-import { BaseApproverProvider } from "@/app/contexts/ApproverContext";
 
 /**
  * Event creation page component with form and layout structure
@@ -41,12 +40,10 @@ const CreatePage: FC = () => {
   return (
     <BaseEventProvider>
       <BaseApplicantProvider>
-        <BaseApproverProvider>
-          <Section>
-            <Section.Title>Create New Event</Section.Title>
-            <CreateEventForm />
-          </Section>
-        </BaseApproverProvider>
+        <Section>
+          <Section.Title>Create New Event</Section.Title>
+          <CreateEventForm />
+        </Section>
       </BaseApplicantProvider>
     </BaseEventProvider>
   );

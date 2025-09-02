@@ -7,7 +7,6 @@ interface FormFileSectionProps {
   onFormatError?: (error: string) => void;
   onFormatSuccess?: (formatInfo: {
     applicantFormat?: ExcelFormatType;
-    approverFormat?: ExcelFormatType;
     detectedLanguage?: string;
     totalRecords?: number;
     validRecords?: number;
@@ -30,8 +29,6 @@ const FormFileSection: React.FC<FormFileSectionProps> = ({
       />
 
       <ControlledFileWithFormat
-        name="approversFile"
-        label="List of approvers (optional)"
         required={false}
         inputProps={FORM_CONFIG.INPUT_STYLES}
         onFormatError={onFormatError}

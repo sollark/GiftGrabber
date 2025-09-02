@@ -53,7 +53,6 @@ export interface CreateEventData {
   ownerIdQRCodeBase64: string;
   applicantIds: string[];
   giftIds: string[];
-  approverIds: string[];
 }
 
 /**
@@ -68,7 +67,6 @@ export interface EventFormData {
   eventQRCodeBase64: string;
   ownerIdQRCodeBase64: string;
   applicantList: NewPerson[];
-  approverList: NewPerson[];
 }
 
 /**
@@ -78,7 +76,6 @@ export interface EventFormData {
  */
 export interface OrderCreationData {
   createdAt: Date;
-  approverList: ObjectId[];
   applicant: ObjectId;
   gifts: ObjectId[];
   orderId: string;
@@ -118,8 +115,6 @@ export type newOrder = {
   gifts: Gift[];
   orderId: string;
   confirmationRQCode: string;
-  confirmedByApprover: Person | null;
-  confirmedAt?: Date;
   status: OrderStatus;
 };
 

@@ -7,7 +7,7 @@
  * Main Responsibilities:
  * - Handles dynamic routing for event ID and owner ID URL parameters
  * - Manages async parameter resolution from Next.js 15 Promise-based params
- * - Provides context provider hierarchy for event, approver, and gift management
+ * - Provides context provider hierarchy for event, and gift management
  * - Implements optimistic UI rendering with client-side data fetching
  * - Ensures proper access control through owner ID validation
  *
@@ -23,7 +23,6 @@
 
 import { useEffect, useState } from "react";
 import { EventProvider } from "@/app/contexts/EventContext";
-import { ApproverProvider } from "@/app/contexts/ApproverContext";
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
 import { GiftProvider } from "@/app/contexts/gift/GiftContext";
 import OptimisticEventDetailsClient from "./OptimisticEventDetailsClient";
@@ -87,13 +86,11 @@ export default function EventDetails({
   // Data will be fetched client-side through context hooks
   return (
     <EventProvider eventId={eventId}>
-      <ApproverProvider approverList={[]}>
-        <ApplicantProvider applicantList={[]}>
-          <GiftProvider giftList={[]}>
-            <OptimisticEventDetailsClient eventId={eventId} ownerId={ownerId} />
-          </GiftProvider>
-        </ApplicantProvider>
-      </ApproverProvider>
+      <ApplicantProvider applicantList={[]}>
+        <GiftProvider giftList={[]}>
+          <OptimisticEventDetailsClient eventId={eventId} ownerId={ownerId} />
+        </GiftProvider>
+      </ApplicantProvider>
     </EventProvider>
   );
 }

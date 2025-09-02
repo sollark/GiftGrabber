@@ -84,7 +84,6 @@ const result = await EventService.create({
   eventQRCodeBase64: "...",
   ownerIdQRCodeBase64: "...",
   applicantPublicIds: ["USR-789", "USR-101"],
-  approverPublicIds: ["USR-202"],
   giftPublicIds: ["GFT-303", "GFT-404"],
 });
 

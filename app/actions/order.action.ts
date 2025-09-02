@@ -18,8 +18,6 @@ const LOG_MESSAGES = {
   MAKE_ORDER_ERROR: "Error in makeOrder",
   GET_ORDER_START: "Getting an order using publicId...",
   GET_ORDER_ERROR: "Error in getOrder",
-  CONFIRM_ORDER_START: (orderPublicId: string, approverPublicId: string) =>
-    `in confirmOrder: ${orderPublicId} confirmed by ${approverPublicId}`,
   CONFIRM_ORDER_ERROR: "Error in confirmOrder",
   NEW_ORDER_CREATED: (order: Order) =>
     `Order created with publicId: ${order.publicId}`,
@@ -53,18 +51,6 @@ const logOrderError = (message: string): void => {
  */
 const logOrderRetrieval = (): void => {
   console.log(LOG_MESSAGES.GET_ORDER_START);
-};
-
-/**
- * Logs order confirmation start - Updated for publicId
- */
-const logOrderConfirmation = (
-  orderPublicId: string,
-  approverPublicId: string
-): void => {
-  console.log(
-    LOG_MESSAGES.CONFIRM_ORDER_START(orderPublicId, approverPublicId)
-  );
 };
 
 /**
@@ -185,14 +171,12 @@ export const getOrder = withDatabase(
  * Confirms an order and updates associated gifts (orchestration + error handling) - Fixed for publicId consistency
  */
 const confirmOrderInternalAction = async (
-  orderPublicId: string, // Changed from orderId to orderPublicId
-  approverPublicId: string
+  orderPublicId: string // Changed from orderId to orderPublicId
 ): Promise<Record<string, unknown> | false> => {
   try {
     console.log(LOG_MESSAGES.USING_PUBLIC_ID);
-    logOrderConfirmation(orderPublicId, approverPublicId);
 
-    const result = await confirmOrderInternal(orderPublicId, approverPublicId); // Now passes correct publicId
+    const result = await confirmOrderInternal(orderPublicId); // Now passes correct publicId
 
     if (result._tag === "Failure") {
       logOrderError(result.error);
@@ -204,7 +188,6 @@ const confirmOrderInternalAction = async (
     return {
       publicId: confirmedOrder.publicId,
       status: "COMPLETED",
-      approverPublicId,
     };
   } catch (error) {
     logOrderError(LOG_MESSAGES.CONFIRM_ORDER_ERROR);

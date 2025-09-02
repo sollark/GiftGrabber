@@ -18,7 +18,6 @@ interface EventListProps {
 interface EventWithFormatInfo extends Event {
   formatInfo?: {
     applicantFormat?: ExcelFormatType;
-    approverFormat?: ExcelFormatType;
     detectedLanguage?: string;
     processingDate?: string;
   };
@@ -61,7 +60,6 @@ const EventList: FC<EventListProps> = ({
 
           <div className="flex gap-4 text-sm text-gray-500">
             <span>Applicants: {event.applicantList?.length || 0}</span>
-            <span>Approvers: {event.approverList?.length || 0}</span>
             <span>Gifts: {event.giftList?.length || 0}</span>
           </div>
 
@@ -74,12 +72,6 @@ const EventList: FC<EventListProps> = ({
                   <div>
                     Applicant Format:{" "}
                     {(event as EventWithFormatInfo).formatInfo?.applicantFormat}
-                  </div>
-                )}
-                {(event as EventWithFormatInfo).formatInfo?.approverFormat && (
-                  <div>
-                    Approver Format:{" "}
-                    {(event as EventWithFormatInfo).formatInfo?.approverFormat}
                   </div>
                 )}
                 {(event as EventWithFormatInfo).formatInfo

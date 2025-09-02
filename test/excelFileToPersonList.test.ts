@@ -174,36 +174,6 @@ describe("excelFileToPersonList", () => {
       });
     });
 
-    it("should parse approvers.en.BASIC_NAME.xlsx correctly", async () => {
-      // Arrange
-      const filePath = path.join(testFilesPath, "approvers.en.BASIC_NAME.xlsx");
-      const fileBuffer = fs.readFileSync(filePath);
-      const file = new NodeFile(fileBuffer, "approvers.en.BASIC_NAME.xlsx", {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      }) as any;
-
-      // Act
-      const result = await excelFileToPersonList(file);
-      console.log("File processed successfully:", result);
-
-      // Assert
-      expect(result).not.toBeNull();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(3);
-
-      // Verify each person object structure
-      result!.forEach((person: Person, index: number) => {
-        expect(person).toHaveProperty(
-          "sourceFormat",
-          ExcelFormatType.BASIC_NAME
-        );
-        expect(person).toHaveProperty("firstName");
-        expect(person).toHaveProperty("lastName");
-        expect(person.firstName).toBe(`ApproverFirst${index + 1}`);
-        expect(person.lastName).toBe(`ApproverLast${index + 1}`);
-      });
-    });
-
     it("should handle BASIC_NAME format with required fields only", async () => {
       // Arrange
       const filePath = path.join(
@@ -399,28 +369,6 @@ describe("excelFileToPersonList", () => {
       // Assert
       expect(result).not.toBeNull();
       expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
-    });
-
-    it("should not leak memory on multiple calls", async () => {
-      // Arrange
-      const filePath = path.join(testFilesPath, "approvers.en.BASIC_NAME.xlsx");
-      const fileBuffer = fs.readFileSync(filePath);
-
-      // Act - Process same file multiple times
-      const promises = Array.from({ length: 10 }, (_, i) => {
-        const file = new NodeFile(fileBuffer, `test-${i}.xlsx`, {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-        return excelFileToPersonList(file as File);
-      });
-
-      const results = await Promise.all(promises);
-
-      // Assert
-      results.forEach((result) => {
-        expect(result).not.toBeNull();
-        expect(result).toHaveLength(3);
-      });
     });
   });
 });

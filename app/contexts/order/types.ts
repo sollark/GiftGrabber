@@ -13,8 +13,6 @@ import { newOrder } from "@/types/common.types";
 export interface OrderState
   extends FunctionalState<{
     order: newOrder;
-    approverList: Person[];
-    selectedApprover: Maybe<Person>;
     orderHistory: OrderHistoryEntry[];
     notifications: OrderNotification[];
     optimisticUpdates: Record<string, any>;
@@ -44,9 +42,6 @@ export interface OrderAction extends FunctionalAction {
   type:
     | "SET_ORDER"
     | "UPDATE_ORDER"
-    | "SET_APPROVER_LIST"
-    | "SELECT_APPROVER"
-    | "CLEAR_APPROVER"
     | "CONFIRM_ORDER"
     | "REJECT_ORDER"
     | "CANCEL_ORDER"

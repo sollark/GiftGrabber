@@ -7,7 +7,7 @@
  * - Display a list of gifts for the selected applicant
  * - Allow removal of gifts from the list
  * - Handle order creation and QR code generation
- * - Use context for applicant, approver, and gift data
+ * - Use context for applicant, and gift data
  * - Navigate to order confirmation page upon successful order submission
  * - Integrate with multiple contexts for state management with safe access patterns
  *
@@ -77,7 +77,7 @@ export interface SelectedGiftListProps {
  *
  * Renders a list of gifts for the selected applicant with removal functionality
  * and order processing capabilities. Integrates with multiple contexts to manage
- * applicant, approver, and gift state.
+ * applicant and gift state.
  *
  * @param isLoading - Whether the component is in a loading state
  * @returns JSX.Element - The gift list interface with order processing

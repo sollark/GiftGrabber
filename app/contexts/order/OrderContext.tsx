@@ -6,9 +6,8 @@
  */
 import React from "react";
 import { newOrder, OrderStatus } from "@/types/common.types";
-import { Person } from "@/database/models/person.model";
 import { OrderState, OrderAction } from "./types";
-import { some, none } from "@/utils/fp";
+import { none } from "@/utils/fp";
 import {
   createFunctionalContext,
   loggingMiddleware,
@@ -16,24 +15,16 @@ import {
   persistenceMiddleware,
 } from "@/utils/fp-contexts";
 import { orderReducer } from "./orderReducer";
-import { orderValidation, optimisticRollbacks } from "./orderMiddleware";
+import { optimisticRollbacks } from "./orderMiddleware";
 import { useOrderStatus } from "./useOrderStatus";
-import { useApproverSelection } from "./useApproverSelection";
 import { useOrderTracking } from "./useOrderTracking";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 // Utility to create initial OrderState for context
-function createInitialState(
-  order: newOrder,
-  approverList: Person[] = []
-): OrderState {
+function createInitialState(order: newOrder): OrderState {
   return {
     data: {
       order,
-      approverList,
-      selectedApprover: order.confirmedByApprover
-        ? some(order.confirmedByApprover)
-        : none,
       orderHistory: [],
       notifications: [],
       optimisticUpdates: {},
@@ -52,7 +43,6 @@ const defaultOrderData: newOrder = {
   gifts: [],
   orderId: `order-${Date.now()}`,
   confirmationRQCode: "",
-  confirmedByApprover: null,
   status: OrderStatus.PENDING,
 };
 
@@ -60,7 +50,7 @@ const defaultOrderData: newOrder = {
 // Custom Hook Exports
 // =======================
 // Export hooks for consumers of OrderContext
-export { useOrderStatus, useApproverSelection, useOrderTracking };
+export { useOrderStatus, useOrderTracking };
 
 // =======================
 // Context Setup and Exports
@@ -77,7 +67,6 @@ const contextResult = createFunctionalContext<OrderState, OrderAction>({
   reducer: orderReducer,
   middleware: [
     loggingMiddleware,
-    orderValidation,
     optimisticMiddleware(optimisticRollbacks),
     persistenceMiddleware("order-context", {
       exclude: ["loading", "error", "lastUpdated", "version", "notifications"],
@@ -103,9 +92,7 @@ export const useOrderActions = contextResult.useActions;
 
 /**
  * Provider component for OrderContext.
- * Initializes context state with order and approver list.
  * @param {newOrder} order - The order object
- * @param {Person[]} approverList - List of approver Person objects
  * @param {React.ReactNode} children - React children nodes
  * @returns {JSX.Element} Context provider wrapping children
  */
@@ -115,9 +102,7 @@ interface OrderProviderProps {
 
 /**
  * Provider component for OrderContext.
- * Initializes context state with order and approver list.
  * @param {newOrder} order - The order object to initialize state.
- * @param {Person[]} approverList - List of approvers.
  * @param {React.ReactNode} children - Child components.
  * @returns {JSX.Element} Context provider wrapping children.
  * Side effects: Initializes context state.

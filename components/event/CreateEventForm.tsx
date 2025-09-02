@@ -5,7 +5,7 @@
  *
  * Main Responsibilities:
  * - Handles complete event creation workflow from form input to database persistence
- * - Manages Excel file uploads for applicant and approver data import
+ * - Manages Excel file uploads for applicant data import
  * - Generates QR codes for event access and owner verification
  * - Validates form data and processes multi-format Excel imports
  * - Coordinates email delivery with QR codes and event details
@@ -71,7 +71,6 @@ import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/utils/qrcodeUtils";
-import { useAppContexts } from "@/utils/context-composers";
 import { success, failure } from "@/utils/fp";
 import {
   FORM_CONFIG,
@@ -163,7 +162,6 @@ const CreateEventForm: FC = () => {
       eventName: string;
       eventEmail: string;
       applicantsFile: File;
-      approversFile?: File;
     }) => processFormData(data, ERROR_MESSAGES),
     []
   );
@@ -184,17 +182,10 @@ const CreateEventForm: FC = () => {
    */
   const saveToContexts = useCallback(
     async (processedData: any) => {
-      const {
-        event: eventActions,
-        applicant: applicantActions,
-        approver: approverActions,
-      } = contextActions;
+      const { event: eventActions, applicant: applicantActions } =
+        contextActions;
       // All are Maybe types, so check _tag and use .value
-      if (
-        eventActions._tag !== "Some" ||
-        applicantActions._tag !== "Some" ||
-        approverActions._tag !== "Some"
-      ) {
+      if (eventActions._tag !== "Some" || applicantActions._tag !== "Some") {
         return failure("Context not available. Please refresh the page.");
       }
       // Save event id to EventContext
@@ -211,13 +202,7 @@ const CreateEventForm: FC = () => {
       });
       if (applicantResult._tag === "Failure")
         return failure("Failed to save applicant data");
-      // Save approver list to ApproverContext
-      const approverResult = approverActions.value.dispatchSafe({
-        type: "SET_EVENT_APPROVERS",
-        payload: { approverList: processedData.approverList },
-      });
-      if (approverResult._tag === "Failure")
-        return failure("Failed to save approver data");
+
       return success(undefined);
     },
     [contextActions, eventId]
@@ -235,7 +220,6 @@ const CreateEventForm: FC = () => {
       eventName: string;
       eventEmail: string;
       applicantsFile: File;
-      approversFile?: File;
     }) => {
       setErrorMessage("");
       setFileProcessingErrors([]);
@@ -278,7 +262,6 @@ const CreateEventForm: FC = () => {
         eventQRCodeBase64: qrCodes.eventQRCodeBase64,
         ownerIdQRCodeBase64: qrCodes.ownerIdQRCodeBase64,
         applicantList: processedData.applicantList,
-        approverList: processedData.approverList,
       });
       if (successResult) {
         router.push(`/events/${eventId}/${ownerId}`);

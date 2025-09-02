@@ -6,7 +6,7 @@ import { ExcelFormatType } from "@/types/excel.types";
 import { parseExcelFile } from "@/utils/excel_utils";
 
 interface ControlledFileWithFormatProps {
-  name: "applicantsFile" | "approversFile";
+  name: "applicantsFile";
   label: string;
   required?: boolean;
   // passthrough styling/props just like your current usage
@@ -15,7 +15,6 @@ interface ControlledFileWithFormatProps {
   onFormatError?: (error: string) => void;
   onFormatSuccess?: (formatInfo: {
     applicantFormat?: ExcelFormatType;
-    approverFormat?: ExcelFormatType;
     detectedLanguage?: string;
     totalRecords?: number;
     validRecords?: number;
@@ -35,7 +34,6 @@ const ControlledFileWithFormat: React.FC<ControlledFileWithFormatProps> = ({
   const { watch } = useFormContext();
   const [formatInfo, setFormatInfo] = useState<{
     applicantFormat?: ExcelFormatType;
-    approverFormat?: ExcelFormatType;
     detectedLanguage?: string;
     totalRecords?: number;
     validRecords?: number;
@@ -57,8 +55,7 @@ const ControlledFileWithFormat: React.FC<ControlledFileWithFormatProps> = ({
           validateRequired: false,
         });
 
-        const specificKey =
-          name === "applicantsFile" ? "applicantFormat" : "approverFormat";
+        const specificKey = "applicantFormat";
 
         const update = {
           [specificKey]: detectionResult.formatType as ExcelFormatType,

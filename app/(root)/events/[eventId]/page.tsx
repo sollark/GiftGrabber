@@ -5,12 +5,10 @@ import { useState, useEffect, useMemo } from "react";
 import {
   getEventDetails,
   getEventApplicants,
-  getEventApprovers,
   getGifts,
 } from "@/app/actions/event.action";
 import ApplicantPageClient from "./ApplicantPageClient";
 import { useApplicantActions } from "@/app/contexts/ApplicantContext";
-import { useApproverActions } from "@/app/contexts/ApproverContext";
 import { useGiftActions } from "@/app/contexts/gift/GiftContext";
 import { useEventActions } from "@/app/contexts/EventContext";
 
@@ -23,7 +21,6 @@ export default function ApplicantPage({
 
   // All hooks must be called unconditionally at the top
   const applicantActions = useApplicantActions();
-  const approverActions = useApproverActions();
   const giftActions = useGiftActions();
   const eventActions = useEventActions();
 
@@ -34,7 +31,6 @@ export default function ApplicantPage({
   // SWR keys
   const eventKey = eventId ? `events/${eventId}` : null;
   const applicantsKey = eventId ? `events/${eventId}/applicants` : null;
-  const approversKey = eventId ? `events/${eventId}/approvers` : null;
   const giftsKey = eventId ? `events/${eventId}/gifts` : null;
 
   // Fetch event details
@@ -57,17 +53,6 @@ export default function ApplicantPage({
     { revalidateOnFocus: false }
   );
 
-  // Fetch approvers
-  const {
-    data: approversResult,
-    error: approversError,
-    isLoading: approversLoading,
-  } = useSWR(
-    approversKey,
-    () => (eventId ? getEventApprovers(eventId) : undefined),
-    { revalidateOnFocus: false }
-  );
-
   // Fetch gifts
   const {
     data: giftsResult,
@@ -84,13 +69,6 @@ export default function ApplicantPage({
         ? applicantsResult.value
         : [],
     [applicantsResult]
-  );
-  const approvers = useMemo(
-    () =>
-      approversResult && approversResult._tag === "Success"
-        ? approversResult.value
-        : [],
-    [approversResult]
   );
   const gifts = useMemo(
     () =>
@@ -115,38 +93,18 @@ export default function ApplicantPage({
         payload: { applicantList: applicants },
       });
     }
-    if (approvers.length && approverActions._tag === "Some") {
-      approverActions.value.dispatchSafe({
-        type: "SET_EVENT_APPROVERS",
-        payload: { approverList: approvers },
-      });
-    }
+
     if (gifts.length && giftActions._tag === "Some") {
       giftActions.value.dispatchSafe({
         type: "SET_GIFT_LIST",
         payload: gifts,
       });
     }
-  }, [
-    event,
-    applicants,
-    approvers,
-    gifts,
-    eventActions,
-    applicantActions,
-    approverActions,
-    giftActions,
-  ]);
+  }, [event, applicants, gifts, eventActions, applicantActions, giftActions]);
 
-  if (
-    eventLoading ||
-    applicantsLoading ||
-    approversLoading ||
-    giftsLoading ||
-    !eventId
-  )
+  if (eventLoading || applicantsLoading || giftsLoading || !eventId)
     return <div>Loading...</div>;
-  if (eventError || applicantsError || approversError || giftsError)
+  if (eventError || applicantsError || giftsError)
     return <div>Error loading event data</div>;
   if (!event) return <div>Event not found</div>;
 

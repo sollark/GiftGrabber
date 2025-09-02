@@ -10,7 +10,6 @@ describe("Order Confirmation Integration", () => {
   // Increase timeout for slow DB operations
   jest.setTimeout(30000);
   let applicant: any;
-  let approver: any;
   let gifts: any[];
   let orderId: string;
   let confirmationRQCode: string;
@@ -19,15 +18,10 @@ describe("Order Confirmation Integration", () => {
     // Ensure DB connection is established before running tests
     await connectToDatabase();
 
-    // Create test applicant and approver with proper schema (publicId auto-generated)
+    // Create test applicant  with proper schema (publicId auto-generated)
     applicant = await PersonModel.create({
       firstName: "Test",
       lastName: "Applicant",
-      sourceFormat: "basic_name", // Use valid enum value
-    });
-    approver = await PersonModel.create({
-      firstName: "Test",
-      lastName: "Approver",
       sourceFormat: "basic_name", // Use valid enum value
     });
 
@@ -59,10 +53,7 @@ describe("Order Confirmation Integration", () => {
     expect(typeof orderPublicId).toBe("string");
 
     // Confirm order using publicIds
-    const confirmedOrder = await confirmOrder(
-      orderPublicId!,
-      approver.publicId
-    ); // Use publicId instead of _id
+    const confirmedOrder = await confirmOrder(orderPublicId!); // Use publicId instead of _id
     expect(confirmedOrder).toBeTruthy();
     if (confirmedOrder === false) {
       throw new Error("Order confirmation failed");

@@ -1,7 +1,6 @@
-/**
- * @file Context Integration Examples
+/* @file Context Integration Examples
  *
- * Purpose: Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Approver, Multistep) in a single provider tree.
+ * Purpose: Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
  *
  * Main Responsibilities:
  * - Defines a combined provider for orchestrating context setup and data flow across the app's main business workflows (order creation, approval, etc.)
@@ -29,15 +28,11 @@ import {
   useGiftSelector,
   useGiftActions,
 } from "@/app/contexts/gift/GiftContext";
-
 import {
   OrderProvider,
   useOrderStatus,
-  useApproverSelection,
   useOrderTracking,
 } from "@/app/contexts/order/OrderContext";
-import { useApproverSelector } from "@/app/contexts/ApproverContext";
-
 import MultistepContextAPI from "@/app/contexts/multistep/MultistepContext";
 const { BaseMultistepProvider, useStepNavigation, useStepData } =
   MultistepContextAPI;
@@ -47,7 +42,6 @@ import { StepDefinition } from "@/app/contexts/multistep/types";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
-import { Types } from "mongoose";
 import { ExcelFormatType } from "@/types/excel.types";
 
 // Helper function to get person name
@@ -67,7 +61,7 @@ interface FlexibleProviderProps {
   contexts: {
     applicant?: { applicantList: Person[] };
     gift?: { giftList: Gift[] };
-    order?: { order: Order; approverList: Person[] };
+  order?: { order: Order };
     multistep?: { steps: StepDefinition[] };
   };
 }
@@ -126,7 +120,6 @@ interface LegacyCombinedProviderProps {
   children: React.ReactNode;
   order: Order;
   applicants: Person[];
-  approverList: Person[];
   gifts: Gift[];
   multistepSteps: StepDefinition[];
 }
@@ -136,7 +129,7 @@ interface LegacyCombinedProviderProps {
  */
 export const LegacyCombinedContextProvider: React.FC<
   LegacyCombinedProviderProps
-> = ({ children, order, applicants, approverList, gifts, multistepSteps }) => {
+> = ({ children, order, applicants, gifts, multistepSteps }) => {
   return (
     <CombinedContextProvider
       contexts={{
@@ -144,7 +137,7 @@ export const LegacyCombinedContextProvider: React.FC<
           applicantList: applicants,
         },
         gift: { giftList: gifts },
-        order: { order, approverList },
+  order: { order },
         multistep: { steps: multistepSteps },
       }}
     >
@@ -358,52 +351,30 @@ export const useOrderCreationWorkflow = () => {
   /**
    * submitOrder (Public API)
    * Submits the completed order for approval, validating all required data.
-   * @param approver Person - The approver to submit to
    * @returns Result<void, Error> - Success or failure of the submission
    * @sideEffects Updates context, triggers notifications, saves step data
    * @notes Aggregates all workflow data for final submission
    */
-  const submitOrder = React.useCallback(
-    async (approver: Person) => {
-      // Validate all required data
-      if (selectedApplicant._tag !== "Some") {
-        return failure(new Error("No applicant selected"));
-      }
-
-      if (applicantGifts.length === 0) {
-        return failure(new Error("No gifts selected"));
-      }
-
-      // Confirm the order
-      const confirmResult = await confirmOrder(approver);
-
-      if (confirmResult._tag === "Success") {
-        // Save final step data
-        await setStepData("order-confirmation", {
-          approver,
-          submittedAt: Date.now(),
-          orderDetails: {
-            applicant: selectedApplicant.value,
-            gifts: applicantGifts,
-          },
-        });
-
-        addNotification({
-          type: "success",
-          message: "Order submitted successfully!",
-        });
-      }
-
-      return confirmResult;
-    },
-    [
-      selectedApplicant,
-      applicantGifts,
-      confirmOrder,
-      setStepData,
-      addNotification,
-    ]
-  );
+  const submitOrder = React.useCallback(async () => {
+    // Validate all required data
+    if (!selectedApplicant || selectedApplicant._tag !== "Some") {
+      return failure(new Error("No applicant selected"));
+    }
+    if (!applicantGifts || applicantGifts.length === 0) {
+      return failure(new Error("No gifts selected"));
+    }
+    // Save step data
+    await setStepData("order-submission", {
+      selectedApplicant: selectedApplicant.value,
+      selectedGifts: applicantGifts,
+      completedAt: Date.now(),
+    });
+    addNotification({
+      type: "success",
+      message: "Order submitted successfully!",
+    });
+    return proceedToNext();
+  }, [selectedApplicant, applicantGifts, setStepData, addNotification, proceedToNext]);
 
   return {
     // State
@@ -426,7 +397,6 @@ export const useOrderCreationWorkflow = () => {
  * useOrderApprovalWorkflow (Public API)
  *
  * Composite hook that orchestrates the order approval process across multiple contexts.
- * Encapsulates business logic for order approval, rejection, and approver selection.
  *
  * @returns Object containing state and action handlers for the order approval workflow
  * @sideEffects Triggers context state changes, notifications, and history updates
@@ -434,119 +404,9 @@ export const useOrderCreationWorkflow = () => {
  */
 export const useOrderApprovalWorkflow = () => {
   const { order, confirmOrder, rejectOrder } = useOrderStatus();
-  const { selectedApprover, selectApprover, approverList } =
-    useApproverSelection();
   const { addHistoryEntry, addNotification } = useOrderTracking();
 
-  /**
-   * Approves an order with validation
-   */
 
-  /**
-   * approveOrder (Public API)
-   * Approves an order, updating context and history, and triggering notifications.
-   * @param approver Person - The approver
-   * @param notes string (optional) - Approval notes
-   * @returns Result<void, Error> - Success or failure of the approval
-   * @sideEffects Updates context, adds history entry, triggers notifications
-   */
-  const approveOrder = React.useCallback(
-    async (approver: Person, notes?: string) => {
-      // Select the approver first
-      const selectResult = await selectApprover(approver);
-      if (selectResult._tag === "Failure") {
-        return selectResult;
-      }
-
-      // Add history entry
-      await addHistoryEntry({
-        action: "APPROVAL_INITIATED",
-        actor: approver,
-        details: `Approval process started by ${getPersonName(approver)}`,
-        metadata: { notes },
-      });
-
-      // Confirm the order
-      const confirmResult = await confirmOrder(approver);
-
-      if (confirmResult._tag === "Success") {
-        addNotification({
-          type: "success",
-          message: `Order approved by ${getPersonName(approver)}`,
-        });
-      } else {
-        addNotification({
-          type: "error",
-          message: "Failed to approve order",
-        });
-      }
-
-      return confirmResult;
-    },
-    [selectApprover, addHistoryEntry, confirmOrder, addNotification]
-  );
-
-  /**
-   * Rejects an order with validation
-   */
-
-  /**
-   * rejectOrderWithReason (Public API)
-   * Rejects an order, updating context and history, and triggering notifications.
-   * @param approver Person - The approver
-   * @param reason string - Reason for rejection
-   * @param notes string (optional) - Additional notes
-   * @returns Result<void, Error> - Success or failure of the rejection
-   * @sideEffects Updates context, adds history entry, triggers notifications
-   */
-  const rejectOrderWithReason = React.useCallback(
-    async (approver: Person, reason: string, notes?: string) => {
-      // Select the approver first
-      const selectResult = await selectApprover(approver);
-      if (selectResult._tag === "Failure") {
-        return selectResult;
-      }
-
-      // Add history entry
-      await addHistoryEntry({
-        action: "REJECTION_INITIATED",
-        actor: approver,
-        details: `Rejection process started by ${getPersonName(approver)}`,
-        metadata: { reason, notes },
-      });
-
-      // Reject the order
-      const rejectResult = await rejectOrder(approver, reason);
-
-      if (rejectResult._tag === "Success") {
-        addNotification({
-          type: "warning",
-          message: `Order rejected by ${getPersonName(approver)}`,
-        });
-      } else {
-        addNotification({
-          type: "error",
-          message: "Failed to reject order",
-        });
-      }
-
-      return rejectResult;
-    },
-    [selectApprover, addHistoryEntry, rejectOrder, addNotification]
-  );
-
-  return {
-    // State
-    order,
-    selectedApprover,
-    approverList,
-
-    // Actions
-    approveOrder,
-    rejectOrderWithReason,
-    selectApprover,
-  };
-};
 
 // ============================================================================
 // EXAMPLE COMPONENTS USING COMPOSITE HOOKS
@@ -568,8 +428,6 @@ export const OrderCreationWizard: React.FC = () => {
     goToPreviousStep,
   } = useOrderCreationWorkflow();
 
-  const { selectApprover, approverList } = useApproverSelection();
-
   if (!currentStep) {
     return <div>Loading...</div>;
   }
@@ -578,21 +436,21 @@ export const OrderCreationWizard: React.FC = () => {
     switch (currentStep.id) {
       case "applicant-selection":
         return (
-          <div>
-            <h3>Select Applicants</h3>
-            {/* Applicant selection UI */}
-            <button
-              onClick={() => {
-                // Mock applicant selection - should be one applicant
-                const mockApplicant: Person = {
-                  publicId: "example-public-id-123",
-                  firstName: "John",
-                  lastName: "Doe",
-                  sourceFormat: ExcelFormatType.COMPLETE_EMPLOYEE,
-                };
-                completeApplicantSelection(mockApplicant);
-              }}
-            >
+          /**
+           * @file Context Integration Examples
+           *
+           * Purpose: Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
+           *
+           * Main Responsibilities:
+           * - Defines a combined provider for orchestrating context setup and data flow across the app's main business workflows (order creation, approval, etc.)
+           * - Implements composite hooks that encapsulate multi-context business logic for order creation and approval.
+           * - Provides example UI components and utilities for context composition and cross-context state synchronization.
+           *
+           * Architectural Role:
+           * - Sits at the integration layer, bridging domain contexts and UI workflows.
+           * - Encapsulates business process logic that spans multiple contexts.
+           * - Promotes separation of concerns by keeping context setup and workflow logic out of UI components.
+           */
               Complete Applicant Selection
             </button>
           </div>
@@ -621,15 +479,7 @@ export const OrderCreationWizard: React.FC = () => {
             <h3>Confirm Order</h3>
             {/* Order summary UI */}
             <button
-              onClick={() => {
-                // Mock approver selection
-                if (
-                  approverList._tag === "Some" &&
-                  approverList.value.length > 0
-                ) {
-                  submitOrder(approverList.value[0]);
-                }
-              }}
+              onClick={() => {}}
             >
               Submit Order
             </button>
@@ -651,7 +501,7 @@ export const OrderCreationWizard: React.FC = () => {
       <div className="step-content">{renderStepContent()}</div>
 
       <div className="step-navigation">
-        <button onClick={() => goToPreviousStep()} disabled={!canGoNext}>
+        <button onClick={() => goToPreviousStep()}>
           Previous
         </button>
 
@@ -659,95 +509,6 @@ export const OrderCreationWizard: React.FC = () => {
           Next
         </button>
       </div>
-    </div>
-  );
-};
-
-/**
- * Order approval dashboard component
- */
-export const OrderApprovalDashboard: React.FC = () => {
-  const {
-    order,
-    selectedApprover,
-    approverList,
-    approveOrder,
-    rejectOrderWithReason,
-  } = useOrderApprovalWorkflow();
-
-  const [rejectionReason, setRejectionReason] = React.useState("");
-  const [approvalNotes, setApprovalNotes] = React.useState("");
-
-  if (order._tag !== "Some") {
-    return <div>No order available</div>;
-  }
-
-  const orderValue = order.value;
-
-  return (
-    <div className="approval-dashboard">
-      <div className="order-summary">
-        <h3>Order #{orderValue.publicId || orderValue.orderId}</h3>
-        <p>Status: {orderValue.status}</p>
-        <p>Created: {orderValue.createdAt?.toDateString()}</p>
-      </div>
-
-      <div className="approval-actions">
-        <div className="approve-section">
-          <h4>Approve Order</h4>
-          <textarea
-            value={approvalNotes}
-            onChange={(e) => setApprovalNotes(e.target.value)}
-            placeholder="Approval notes (optional)"
-          />
-          <button
-            onClick={() => {
-              if (
-                approverList._tag === "Some" &&
-                approverList.value.length > 0
-              ) {
-                approveOrder(approverList.value[0], approvalNotes);
-              }
-            }}
-            disabled={orderValue.status !== "pending"}
-          >
-            Approve Order
-          </button>
-        </div>
-
-        <div className="reject-section">
-          <h4>Reject Order</h4>
-          <input
-            type="text"
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Rejection reason (required)"
-          />
-          <button
-            onClick={() => {
-              if (
-                approverList._tag === "Some" &&
-                approverList.value.length > 0 &&
-                rejectionReason.trim()
-              ) {
-                rejectOrderWithReason(approverList.value[0], rejectionReason);
-              }
-            }}
-            disabled={
-              orderValue.status !== "pending" || !rejectionReason.trim()
-            }
-          >
-            Reject Order
-          </button>
-        </div>
-      </div>
-
-      {selectedApprover._tag === "Some" &&
-        selectedApprover.value._tag === "Some" && (
-          <div className="selected-approver">
-            <p>Selected Approver: {selectedApprover.value.value.name}</p>
-          </div>
-        )}
     </div>
   );
 };
@@ -769,11 +530,10 @@ export const OrderApprovalDashboard: React.FC = () => {
 export function withFunctionalContexts<P extends object>(
   Component: React.ComponentType<P>,
   contextConfig: {
-    applicants?: Person[];
-    gifts?: Gift[];
-    order?: Order;
-    approverList?: Person[];
-    multistepSteps?: StepDefinition[];
+  applicants?: Person[];
+  gifts?: Gift[];
+  order?: Order;
+  multistepSteps?: StepDefinition[];
   }
 ) {
   return function WrappedComponent(props: P) {
@@ -789,10 +549,9 @@ export function withFunctionalContexts<P extends object>(
             ? { giftList: contextConfig.gifts }
             : undefined,
           order:
-            contextConfig.order && contextConfig.approverList
+            contextConfig.order
               ? {
                   order: contextConfig.order,
-                  approverList: contextConfig.approverList,
                 }
               : undefined,
           multistep: contextConfig.multistepSteps
@@ -838,24 +597,4 @@ export const useContextSynchronization = () => {
       });
     }
   }, [selectedApplicant, setStepData]);
-
-  return {
-    // State synchronization utilities
-    syncApplicantWithOrder: () => {
-      // Implementation for manual sync
-    },
-    syncStepWithContexts: () => {
-      // Implementation for manual sync
-    },
-  };
-};
-
-export default {
-  CombinedContextProvider,
-  useOrderCreationWorkflow,
-  useOrderApprovalWorkflow,
-  OrderCreationWizard,
-  OrderApprovalDashboard,
-  withFunctionalContexts,
-  useContextSynchronization,
-};
+}

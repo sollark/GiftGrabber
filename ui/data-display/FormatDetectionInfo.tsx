@@ -14,7 +14,6 @@ import { ExcelFormatType } from "@/types/excel.types";
 interface FormatDetectionInfoProps {
   formatInfo?: {
     applicantFormat?: ExcelFormatType;
-    approverFormat?: ExcelFormatType;
     detectedLanguage?: string;
     totalRecords?: number;
     validRecords?: number;
@@ -59,7 +58,6 @@ const FormatDetectionInfo: React.FC<FormatDetectionInfoProps> = ({
 
   const {
     applicantFormat,
-    approverFormat,
     detectedLanguage,
     totalRecords,
     validRecords,
@@ -80,16 +78,6 @@ const FormatDetectionInfo: React.FC<FormatDetectionInfoProps> = ({
               <span className="text-gray-600">Applicant File Format:</span>
               <span className="font-medium text-blue-700">
                 {formatDisplayNames[applicantFormat]}
-              </span>
-            </div>
-          )}
-
-          {/* Approver file format */}
-          {approverFormat && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Approver File Format:</span>
-              <span className="font-medium text-blue-700">
-                {formatDisplayNames[approverFormat]}
               </span>
             </div>
           )}

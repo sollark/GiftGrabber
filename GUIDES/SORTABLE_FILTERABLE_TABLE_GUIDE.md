@@ -166,13 +166,6 @@ The following components have been updated to use the new table:
 - **Search**: Filter by any part of the name
 - **Columns**: First Name, Last Name, Full Name
 
-### 3. ApproverList Component
-
-- **Location**: `/components/approver/ApproverList.tsx`
-- **Features**: Same as ApplicantList
-- **Search**: Filter by any part of the name
-- **Columns**: First Name, Last Name, Full Name
-
 ## Advanced Examples
 
 ### Example 1: User Management Table

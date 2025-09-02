@@ -8,24 +8,22 @@ import { NewPerson } from "@/types/common.types";
 
 /**
  * Input type for processing event form data
- * Contains event name, email, and applicant/approver files from user input
+ * Contains event name, email, and applicant files from user input
  */
 export interface ProcessFormDataInput {
   eventName: string;
   eventEmail: string;
   applicantsFile: File;
-  approversFile?: File;
 }
 
 /**
  * Output type for processed event form data
- * Contains normalized event name, email, and applicant/approver lists
+ * Contains normalized event name, email, and applicant lists
  */
 export interface ProcessFormDataOutput {
   name: string;
   email: string;
   applicantList: NewPerson[];
-  approverList: NewPerson[];
 }
 
 /**
@@ -34,30 +32,16 @@ export interface ProcessFormDataOutput {
  */
 export const processFormData = async (
   data: ProcessFormDataInput,
-  errorMessages: { APPLICANT_LIST_ERROR: string; APPROVER_LIST_ERROR: string }
+  errorMessages: { APPLICANT_LIST_ERROR: string }
 ): Promise<Result<ProcessFormDataOutput, string>> => {
-  const {
-    eventName: name,
-    eventEmail: email,
-    applicantsFile,
-    approversFile,
-  } = data;
+  const { eventName: name, eventEmail: email, applicantsFile } = data;
 
   const applicantList = await excelFileToPersonList(applicantsFile);
   if (!applicantList) {
     return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
 
-  let approverList: NewPerson[] = [];
-  if (approversFile) {
-    const parsed = await excelFileToPersonList(approversFile);
-    if (!parsed) {
-      return failure(errorMessages.APPROVER_LIST_ERROR);
-    }
-    approverList = parsed;
-  }
-
-  return success({ name, email, applicantList, approverList });
+  return success({ name, email, applicantList });
 };
 
 /**

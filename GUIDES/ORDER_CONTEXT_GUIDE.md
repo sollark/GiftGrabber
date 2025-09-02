@@ -6,7 +6,7 @@ The Order Context module provides a comprehensive, type-safe state management so
 
 ## Summary
 
-Deploy the Order Context module for any order-related workflow requiring centralized state management, complex lifecycle coordination, or multi-component data synchronization in the GiftGrabber application. It integrates seamlessly with the app's functional programming architecture through Result types and immutable state patterns, while providing extensible business logic through its middleware system and specialized hooks. The module's architectural decisions—pure reducers, composable middleware, selective state subscriptions, and domain-specific abstractions—ensure long-term maintainability, predictable debugging experiences, and smooth integration with external systems while maintaining type safety and performance optimization throughout complex order management workflows.workflows in the GiftGrabber application. It centralizes order lifecycle management, approver selection, status tracking, and optimistic updates through a React Context architecture powered by functional reducers and composable middleware. This module solves the problem of coordinating distributed order state across multiple components while maintaining consistency during asynchronous operations like approvals, confirmations, and rejections. It serves as the primary business logic layer between UI components and order-related API calls, implementing a single source of truth pattern that ensures data integrity and predictable state transitions. The design emphasizes functional programming principles with immutable state updates, Result types for error handling, middleware-based side effects, and context-driven dependency injection for maximum testability and extensibility.er Context Module Documentation
+Deploy the Order Context module for any order-related workflow requiring centralized state management, complex lifecycle coordination, or multi-component data synchronization in the GiftGrabber application. It integrates seamlessly with the app's functional programming architecture through Result types and immutable state patterns, while providing extensible business logic through its middleware system and specialized hooks. The module's architectural decisions—pure reducers, composable middleware, selective state subscriptions, and domain-specific abstractions—ensure long-term maintainability, predictable debugging experiences, and smooth integration with external systems while maintaining type safety and performance optimization throughout complex order management workflows.workflows in the GiftGrabber application. It centralizes order lifecycle management, status tracking, and optimistic updates through a React Context architecture powered by functional reducers and composable middleware. This module solves the problem of coordinating distributed order state across multiple components while maintaining consistency during asynchronous operations like approvals, confirmations, and rejections. It serves as the primary business logic layer between UI components and order-related API calls, implementing a single source of truth pattern that ensures data integrity and predictable state transitions. The design emphasizes functional programming principles with immutable state updates, Result types for error handling, middleware-based side effects, and context-driven dependency injection for maximum testability and extensibility.er Context Module Documentation
 
 ## 1. Overview
 
@@ -22,7 +22,7 @@ The Order Context module provides a robust, type-safe, and extensible state mana
   `useOrderContext` (full state access),
   `useOrderSelector` (memoized state selection),
   `useOrderActions` (action dispatchers),
-  specialized hooks (`useOrderStatus`, `useApproverSelection`, `useOrderTracking`).
+  specialized hooks (`useOrderStatus` `useOrderTracking`).
 - **Interactions:** Orchestrates reducer, middleware pipeline, and initial state composition; provides foundation for all order-related UI components and business logic layers.
 - **Design:** Implements provider pattern with dependency injection for middleware; ensures strict separation between state management logic and consumer components through hook abstraction.
 
@@ -54,10 +54,10 @@ The Order Context module provides a robust, type-safe, and extensible state mana
 - **Interactions:** Imported across all module files ensuring type safety and enabling robust refactoring support.
 - **Design:** Centralizes type definitions using discriminated unions and branded types; supports both compile-time safety and runtime validation.
 
-### useOrderStatus.ts, useApproverSelection.ts, useOrderTracking.ts
+### useOrderStatus.ts, useOrderTracking.ts
 
 - **Purpose:** Domain-specific hooks encapsulating common order workflow patterns and providing optimized component interfaces.
-- **Exports:** Specialized hooks exposing targeted state slices and corresponding actions (`useOrderStatus`, `useApproverSelection`, `useOrderTracking`).
+- **Exports:** Specialized hooks exposing targeted state slices and corresponding actions (`useOrderStatus`, `useOrderTracking`).
 - **Interactions:** Built on foundation hooks from context; provide higher-level abstractions for specific UI patterns and business workflows.
 - **Design:** Implement single responsibility principle; utilize memoization and selective subscription patterns to minimize component re-renders.
 
@@ -71,7 +71,6 @@ The Order Context module provides a robust, type-safe, and extensible state mana
   - Context automatically propagates state changes to subscribed components through React's built-in change detection.
 - **Critical State Changes:**
   - Order lifecycle transitions: pending → approved → confirmed → completed, with validation at each stage.
-  - Approver selection workflow: candidate evaluation, selection persistence, and approval history maintenance.
   - Optimistic update cycle: immediate UI feedback, server synchronization, and rollback on failure scenarios.
   - Notification state management: alert queuing, display coordination, and automatic cleanup timers.
 - **Non-Obvious Logic:**
@@ -88,9 +87,8 @@ The Order Context module provides a robust, type-safe, and extensible state mana
 import { OrderProvider } from "./OrderContext";
 
 const order = { id: "order-123", status: "pending" /* ... */ };
-const approvers = [{ id: "approver-1", name: "John Doe" }];
 
-<OrderProvider initialOrder={order} approverList={approvers}>
+<OrderProvider initialOrder={order}>
   <OrderWorkflowComponents />
 </OrderProvider>;
 ```
@@ -101,16 +99,15 @@ const approvers = [{ id: "approver-1", name: "John Doe" }];
 import { useOrderContext, useOrderActions } from "./OrderContext";
 
 const OrderApprovalComponent = () => {
-  const { order, currentApprover } = useOrderContext();
   const { confirmOrder, rejectOrder } = useOrderActions();
 
   const handleApproval = async (decision: boolean) => {
     const action = decision ? confirmOrder : rejectOrder;
-    const result = await action(currentApprover);
 
     if (result._tag === "Failure") {
       showErrorNotification(result.error);
     }
+    return;
   };
 
   return (
@@ -160,7 +157,7 @@ const OptimisticOrderStatus = () => {
 ## 5. Best Practices and Extension Points
 
 - **Guidelines:**
-  - Utilize specialized hooks (`useOrderStatus`, `useApproverSelection`) over generic context access for better performance and type safety.
+  - Utilize specialized hooks (`useOrderStatus`) over generic context access for better performance and type safety.
   - Implement error boundaries around order workflows to gracefully handle middleware failures and state corruption.
   - Leverage selective state subscriptions through `useOrderSelector` to minimize component re-renders in complex UIs.
   - Maintain immutability discipline when extending reducers; use utility libraries like Immer for complex nested updates.

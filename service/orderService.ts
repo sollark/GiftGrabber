@@ -6,7 +6,7 @@
  * Main Responsibilities:
  * - Provides high-level order creation and management operations
  * - Implements order workflow from gift selection to confirmation
- * - Manages order status transitions and approver assignments
+ * - Manages order status transitions assignments
  * - Handles secure order operations using public IDs instead of internal ObjectIds
  * - Coordinates between gift claiming, order creation, and notification workflows
  *
@@ -14,14 +14,13 @@
  * - Business logic layer above database service for order operations
  * - Orchestrates complex order workflows involving multiple entities
  * - Provides public API surface for order management with security boundaries
- * - Integrates order operations with gift assignment and approver workflows
+ * - Integrates order operations with gift assignment
  * - Central service for order lifecycle management and status tracking
  *
  * @businessLogic
  * - Orders aggregate multiple gifts for single applicant with approval workflow
  * - Public ID strategy prevents enumeration attacks on order data
  * - Order status progression: PENDING → processing → COMPLETED/CANCELLED
- * - Approver assignment enables hierarchical approval workflows
  * - QR code integration supports mobile-friendly order verification
  *
  * Order Service - Unified Implementation with Centralized Population
@@ -96,9 +95,6 @@ export const validateOrderExists = (
 export const validateOrderForConfirmation = (
   order: Order
 ): Result<Order, string> => {
-  if (order.confirmedByApprover) {
-    return failure("Order has already been confirmed");
-  }
   return success(order);
 };
 
@@ -178,12 +174,10 @@ export const findOrderByPublicId = async (
 /**
  * Confirms an order using PublicId strategy.
  * @param orderPublicId - The order's public identifier.
- * @param approverPublicId - The approver's public identifier.
  * @returns Promise<Result<Order, string>> - The confirmed order or error.
  */
 export const confirmOrderInternal = async (
-  orderPublicId: string,
-  approverPublicId: string
+  orderPublicId: string
 ): Promise<Result<Order, string>> => {
   try {
     const orderResult = await findOrderByPublicId(orderPublicId);
@@ -195,11 +189,6 @@ export const confirmOrderInternal = async (
     const validationResult = validateOrderForConfirmation(order);
     if (validationResult._tag === "Failure") {
       return failure(validationResult.error);
-    }
-
-    const approver = await findPersonByPublicId(approverPublicId);
-    if (!approver) {
-      return failure("Approver not found");
     }
 
     // TODO: Implement DatabaseOrderService.confirm method
@@ -265,7 +254,6 @@ export const findUnconfirmedOrder = async (
 ): Promise<Order | null> => {
   const query = OrderModel.findOne({
     orderId,
-    confirmedByApprover: null,
   });
   return populateOrder(query).exec();
 };

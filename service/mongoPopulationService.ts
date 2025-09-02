@@ -32,21 +32,7 @@ export const populateEventApplicants = (query: any): any => {
 };
 
 /**
- * Populates the approverList field of an event query with Person documents.
- * Updated to include all Person fields after PersonDoc schema changes.
- * @param query - Mongoose query for Event
- * @returns Mongoose query with populated approverList
- */
-export const populateEventApprovers = (query: any): any => {
-  return query.populate({
-    path: "approverList",
-    model: "Person",
-    select: PERSON_SELECT_FIELDS,
-  });
-};
-
-/**
- * Populates all related fields (applicantList, giftList, approverList) of an event query.
+ * Populates all related fields (applicantList, giftList) of an event query.
  * Updated to include all Person fields after PersonDoc schema changes.
  * @param query - Mongoose query for Event
  * @returns Mongoose query with all relationships populated
@@ -65,10 +51,6 @@ export const populateEvent = (query: any): any => {
         model: "Person",
         select: PERSON_SELECT_FIELDS,
       },
-    })
-    .populate({
-      path: "approverList",
-      select: PERSON_SELECT_FIELDS,
     });
 };
 

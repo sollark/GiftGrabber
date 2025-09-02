@@ -40,7 +40,7 @@ const validateEvent = (event: Event | null): boolean => {
 };
 
 /**
- * Orchestrates creation of a new event with all related applicants, approvers, and gifts.
+ * Orchestrates creation of a new event with all related applicants, and gifts.
  * Enhanced with direct service calls and functional Result composition.
  * @param event - The event form data containing all necessary information.
  * @returns Promise<Result<boolean, string>> - Success if event was created, failure with error message otherwise.
@@ -56,24 +56,17 @@ export const createEventInternal = async (
     eventQRCodeBase64,
     ownerIdQRCodeBase64,
     applicantList,
-    approverList,
   } = event;
 
   // Use parallel processing for better performance and direct service calls
-  const [applicantResult, approverResult] = await Promise.all([
+  const [applicantResult] = await Promise.all([
     PersonService.createMany(applicantList),
-    PersonService.createMany(approverList),
   ]);
 
   // Enhanced error handling with Result composition
   if (applicantResult._tag === "Failure") {
     console.error("Failed to create applicants:", applicantResult.error);
     return failure("Failed to create applicants");
-  }
-
-  if (approverResult._tag === "Failure") {
-    console.error("Failed to create approvers:", approverResult.error);
-    return failure("Failed to create approvers");
   }
 
   // Create gifts for applicants using direct service call
@@ -94,7 +87,6 @@ export const createEventInternal = async (
     eventQRCodeBase64,
     ownerIdQRCodeBase64,
     applicantPublicIds: applicantResult.value,
-    approverPublicIds: approverResult.value,
     giftPublicIds: giftResult.value,
   });
 
@@ -104,28 +96,6 @@ export const createEventInternal = async (
   }
 
   return success(true);
-};
-
-/**
- * Gets only approvers list for an event.
- * Optimized function that fetches only approver data without full event object.
- * @param eventId - The unique identifier for the event.
- * @returns Promise<Person[]> - Array of approver persons with publicIds.
- */
-
-export const fetchEventApprovers = async (
-  eventId: string
-): Promise<Result<Person[], Error>> => {
-  try {
-    const result = await DatabaseEventService.getApprovers(eventId);
-    if (result._tag === "Success") {
-      return success(result.value);
-    } else {
-      return failure(result.error);
-    }
-  } catch (error) {
-    return failure(error instanceof Error ? error : new Error(String(error)));
-  }
 };
 
 /**

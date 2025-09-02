@@ -24,8 +24,7 @@ export const PUBLIC_FIELD_SELECTIONS = {
   EVENT:
     "publicId eventId name email ownerId eventQRCodeBase64 ownerIdQRCodeBase64",
   GIFT: "publicId owner applicant order",
-  ORDER:
-    "publicId createdAt applicant gifts orderId confirmationRQCode confirmedByApprover confirmedAt status",
+  ORDER: "publicId createdAt applicant gifts orderId  status",
 };
 
 /**
@@ -35,11 +34,6 @@ export const PUBLIC_FIELD_SELECTIONS = {
 export const POPULATION_CONFIGS = {
   EVENT_APPLICANTS: {
     path: "applicantList",
-    model: "Person",
-    select: PUBLIC_FIELD_SELECTIONS.PERSON,
-  },
-  EVENT_APPROVERS: {
-    path: "approverList",
     model: "Person",
     select: PUBLIC_FIELD_SELECTIONS.PERSON,
   },

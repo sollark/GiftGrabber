@@ -15,50 +15,21 @@ import { failure } from "@/utils/fp";
 export const useOrderStatus = () => {
   const actions = useOrderActions();
   const order = useOrderSelector((state: any) => state.order);
-  const selectedApprover = useOrderSelector(
-    (state: any) => state.selectedApprover
-  );
 
   // Confirm order
-  const confirmOrder = async (approver: Person) => {
+  const confirmOrder = async () => {
     if (actions._tag !== "Some")
       return failure(new Error("Order context not available"));
-    const result = actions.value.dispatchSafe({
-      type: "CONFIRM_ORDER",
-      payload: approver,
-      meta: { timestamp: Date.now(), optimistic: true },
-    });
-    if (result._tag === "Success") {
-      actions.value.dispatchSafe({
-        type: "ADD_NOTIFICATION",
-        payload: {
-          type: "success",
-          message: `Order confirmed by ${getPersonName(approver)}`,
-        },
-      });
-    }
-    return result;
+
+    return;
   };
 
   // Reject order
-  const rejectOrder = async (approver: Person, reason: string) => {
+  const rejectOrder = async (reason: string) => {
     if (actions._tag !== "Some")
       return failure(new Error("Order context not available"));
-    const result = actions.value.dispatchSafe({
-      type: "REJECT_ORDER",
-      payload: { approver, reason },
-      meta: { timestamp: Date.now(), optimistic: true },
-    });
-    if (result._tag === "Success") {
-      actions.value.dispatchSafe({
-        type: "ADD_NOTIFICATION",
-        payload: {
-          type: "warning",
-          message: `Order rejected by ${getPersonName(approver)}`,
-        },
-      });
-    }
-    return result;
+
+    return;
   };
 
   // Cancel order
@@ -110,7 +81,6 @@ export const useOrderStatus = () => {
 
   return {
     order,
-    selectedApprover,
     confirmOrder,
     rejectOrder,
     cancelOrder,

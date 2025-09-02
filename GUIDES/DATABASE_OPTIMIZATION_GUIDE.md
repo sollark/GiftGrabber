@@ -8,22 +8,6 @@
 
 **Solutions Applied**:
 
-```typescript
-// ✅ Optimized: Fetch only needed fields
-static async getApprovers(eventId: string) {
-  return EventModel.findOne({ eventId }, { approverList: 1 })
-    .populate(POPULATION_CONFIG.EVENT_APPROVERS)
-    .exec();
-}
-
-// ❌ Before: Fetched full event + populated approvers
-static async findWithApprovers(eventId: string) {
-  return EventModel.findOne({ eventId }, PUBLIC_FIELD_SELECTIONS.EVENT)
-    .populate(POPULATION_CONFIG.EVENT_APPROVERS)
-    .exec();
-}
-```
-
 **Performance Impact**: ~80% reduction in data transfer for list-only queries.
 
 ### 2. **Redundant Query Elimination**
@@ -93,7 +77,6 @@ export const findPersonsByPublicIds = async (publicIds: string[]) => {
 // ✅ Parallel query execution with connection pooling
 const result = await executeParallelQueries({
   applicants: () => PersonModel.find({...}).lean().exec(),
-  approvers: () => PersonModel.find({...}).lean().exec(),
   gifts: () => GiftModel.find({...}).lean().exec(),
 });
 

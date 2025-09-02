@@ -23,10 +23,6 @@ export function useEventDataSync(
       _tag: string;
       value: { dispatchSafe: (action: any) => void };
     };
-    approverActions: {
-      _tag: string;
-      value: { dispatchSafe: (action: any) => void };
-    };
     giftActions: {
       _tag: string;
       value: { dispatchSafe: (action: any) => void };
@@ -74,15 +70,6 @@ export function useEventDataSync(
             payload: { applicantList: event.applicantList || [] },
           });
         }
-
-        // Dispatch to approver context
-        if (actions.approverActions._tag === "Some") {
-          actions.approverActions.value.dispatchSafe({
-            type: "SET_EVENT_APPROVERS" as const,
-            payload: { approverList: event.approverList || [] },
-          });
-        }
-
         // Dispatch to gift context
         if (actions.giftActions._tag === "Some") {
           actions.giftActions.value.dispatchSafe({

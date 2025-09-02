@@ -14,7 +14,6 @@ import { Person } from "@/database/models/person.model";
 import { NewPerson } from "@/types/common.types";
 import {
   createEventInternal,
-  fetchEventApprovers,
   fetchEventApplicants,
   getEventWithDetails,
   fetchAllEvents,
@@ -36,7 +35,6 @@ export interface EventCreationData {
   eventQRCodeBase64: string;
   ownerIdQRCodeBase64: string;
   applicantList: NewPerson[];
-  approverList: NewPerson[];
 }
 
 // --- Event Actions (Public API) ---
@@ -167,37 +165,6 @@ export const getEventApplicants = withDatabase(
         timestamp: Date.now(),
       });
       return failure(result.error?.message || "Failed to fetch applicants");
-    }
-  }
-);
-
-/**
- * Fetches event approvers list with populated approver data using publicIds.
- * Returns Result<Person[], string> for functional error handling.
- * @param eventId - The unique identifier for the event
- * @returns Promise<Result<Person[], string>>
- */
-export const getEventApprovers = withDatabase(
-  async (eventId: string): Promise<Result<Person[], string>> => {
-    logger.info("[FETCH] getEventApprovers", {
-      eventId,
-      timestamp: Date.now(),
-    });
-    const result = await fetchEventApprovers(eventId);
-    if (isSuccess(result)) {
-      logger.info("[FETCH:RESULT] getEventApprovers", {
-        eventId,
-        count: Array.isArray(result.value) ? result.value.length : undefined,
-        timestamp: Date.now(),
-      });
-      return success(result.value);
-    } else {
-      logger.error("[FETCH:ERROR] getEventApprovers", {
-        eventId,
-        error: result.error,
-        timestamp: Date.now(),
-      });
-      return failure(result.error?.message || "Failed to fetch approvers");
     }
   }
 );

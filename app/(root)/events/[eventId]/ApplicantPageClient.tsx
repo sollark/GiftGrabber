@@ -8,7 +8,6 @@
  * - Receives minimal event data (publicId, name, email) as props
  * - Sets up the OrderProvider context for order-related state
  * - Displays the event name and the OrderGifts component
- * - Does not handle applicant/approver/gift data (empty arrays used)
  *
  */
 import { Section } from "@/ui/layout";

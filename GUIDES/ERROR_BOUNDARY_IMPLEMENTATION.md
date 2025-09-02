@@ -21,22 +21,17 @@ The ErrorBoundary component was created to provide consistent error handling acr
    - Wrapped with error boundary
    - Fallback: "Failed to load Applicant context. Please refresh the page."
 
-2. **ApproverContext** (`/app/contexts/ApproverContext.tsx`)
-
-   - Wrapped with error boundary
-   - Fallback: "Failed to load Approver context. Please refresh the page."
-
-3. **OrderContext** (`/app/contexts/order/OrderContext.tsx`)
+2. **OrderContext** (`/app/contexts/order/OrderContext.tsx`)
 
    - Wrapped with error boundary
    - Fallback: "Failed to load Order context. Please refresh the page."
 
-4. **MultistepContext** (`/app/contexts/multistep/MultistepContext.tsx`)
+3. **MultistepContext** (`/app/contexts/multistep/MultistepContext.tsx`)
 
    - Wrapped with error boundary
    - Fallback: "Failed to load Multistep context. Please refresh the page."
 
-5. **GiftContext** (`/app/contexts/gift/GiftContext.tsx`)
+4. **GiftContext** (`/app/contexts/gift/GiftContext.tsx`)
    - Wrapped with error boundary
    - Fallback: "Failed to load Gift context. Please refresh the page."
 

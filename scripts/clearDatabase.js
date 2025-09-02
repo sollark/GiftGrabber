@@ -107,7 +107,7 @@ const clearDatabase = async () => {
         "\n🚨 WARNING: This will PERMANENTLY DELETE ALL DATA from the database! 🚨"
       );
       console.log("📊 Collections that will be cleared:");
-      console.log("   • Person (applicants, approvers)");
+      console.log("   • Person (applicants)");
       console.log("   • Gift (all gift records)");
       console.log("   • Event (all events)");
       console.log("   • Order (all orders)");

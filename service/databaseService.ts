@@ -59,7 +59,6 @@ import OrderModel, { Order } from "@/database/models/order.model";
 import { PUBLIC_FIELD_SELECTIONS } from "./databaseConstants";
 import {
   populateEventApplicants,
-  populateEventApprovers,
   populateEvent,
 } from "./mongoPopulationService";
 import {
@@ -127,10 +126,6 @@ export const POPULATION_CONFIG = {
   },
   EVENT_APPLICANTS: {
     path: "applicantList",
-    select: PUBLIC_FIELD_SELECTIONS.PERSON,
-  },
-  EVENT_APPROVERS: {
-    path: "approverList",
     select: PUBLIC_FIELD_SELECTIONS.PERSON,
   },
   EVENT_GIFTS: {
@@ -296,44 +291,6 @@ export class EventService {
   }
 
   /**
-   * Finds an event with populated approvers.
-   * @param eventId {string}
-   * @returns Promise<Result<Event | null, Error>>
-   * @sideEffects DB read with population
-   * @publicAPI
-   */
-  static async findWithApprovers(
-    eventId: string
-  ): Promise<Result<Event | null, Error>> {
-    const query = EventModel.findOne(
-      { eventId },
-      PUBLIC_FIELD_SELECTIONS.EVENT
-    );
-    return fromPromise(populateEventApprovers(query).exec());
-  }
-
-  /**
-   * Gets only the approvers list for an event (populated).
-   * @param eventId {string}
-   * @returns Promise<Result<Person[], Error>>
-   * @sideEffects DB read with population
-   * @publicAPI
-   */
-  static async getApprovers(eventId: string): Promise<Result<Person[], Error>> {
-    const query = EventModel.findOne({ eventId }, { approverList: 1 });
-    const result = await fromPromise(populateEventApprovers(query).exec());
-
-    if (result._tag === "Failure") {
-      return failure(result.error);
-    }
-
-    // Return empty array if event not found or no approvers
-    const event = result.value as any;
-    const approverList = event?.approverList || [];
-    return success(serializeForClient<Person[]>(approverList));
-  }
-
-  /**
    * Gets only the applicants list for an event (populated).
    * @param eventId {string}
    * @returns Promise<Result<Person[], Error>>
@@ -379,7 +336,7 @@ export class EventService {
   }
 
   /**
-   * Creates an event with related documents (applicants, approvers, gifts).
+   * Creates an event with related documents (applicants, gifts).
    * Uses executeParallelQueries from optimizedQueries.ts for batch lookups.
    * @param eventData {object} - Event data with arrays of publicIds
    * @returns Promise<Result<Event, Error>>
@@ -395,7 +352,6 @@ export class EventService {
     eventQRCodeBase64: string;
     ownerIdQRCodeBase64: string;
     applicantPublicIds: string[];
-    approverPublicIds: string[];
     giftPublicIds: string[];
   }): Promise<Result<Event, Error>> {
     try {
@@ -404,13 +360,6 @@ export class EventService {
         applicants: () =>
           PersonModel.find(
             { publicId: { $in: eventData.applicantPublicIds } },
-            "_id"
-          )
-            .lean()
-            .exec(),
-        approvers: () =>
-          PersonModel.find(
-            { publicId: { $in: eventData.approverPublicIds } },
             "_id"
           )
             .lean()
@@ -426,7 +375,7 @@ export class EventService {
         return failure(lookupsResult.error);
       }
 
-      const { applicants, approvers, gifts } = lookupsResult.value;
+      const { applicants, gifts } = lookupsResult.value;
 
       const eventDoc = await EventModel.create({
         name: eventData.name,
@@ -436,7 +385,6 @@ export class EventService {
         eventQRCodeBase64: eventData.eventQRCodeBase64,
         ownerIdQRCodeBase64: eventData.ownerIdQRCodeBase64,
         applicantList: (applicants as any[]).map((doc: any) => doc._id),
-        approverList: (approvers as any[]).map((doc: any) => doc._id),
         giftList: (gifts as any[]).map((doc: any) => doc._id),
       });
 

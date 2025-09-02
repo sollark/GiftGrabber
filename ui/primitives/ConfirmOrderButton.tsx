@@ -1,8 +1,5 @@
 import { FC, useCallback } from "react";
-import {
-  useOrderStatus,
-  useApproverSelection,
-} from "@/app/contexts/order/OrderContext";
+import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import StyledButton from "./AccentButton";
 import ErrorMessage from "@/ui/form/ErrorMessage";
@@ -14,14 +11,9 @@ import ErrorMessage from "@/ui/form/ErrorMessage";
  */
 const ConfirmOrderButton: FC = () => {
   const orderStatus = useOrderStatus();
-  const approverSelection = useApproverSelection();
 
   const order =
     orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
-  const approver =
-    approverSelection.selectedApprover._tag === "Some"
-      ? approverSelection.selectedApprover.value
-      : null;
 
   const isOrderCompleted = order?.status === "completed";
 
@@ -34,11 +26,7 @@ const ConfirmOrderButton: FC = () => {
     execute: executeConfirmation,
   } = useSafeAsync(
     async () => {
-      if (!approver || !order) {
-        throw new Error("Missing approver or order data");
-      }
-
-      const result = await orderStatus.confirmOrder(approver);
+      const result = await orderStatus.confirmOrder();
       if (result._tag === "Failure") {
         throw new Error(result.error.message || "Order confirmation failed");
       }
@@ -48,15 +36,15 @@ const ConfirmOrderButton: FC = () => {
       return true;
     },
     {
-      deps: [approver, order],
+      deps: [order],
       maxRetries: 1,
     }
   );
 
   const handleConfirmOrder = useCallback(() => {
-    if (isConfirming || !approver || !order) return;
+    if (isConfirming || !order) return;
     executeConfirmation();
-  }, [isConfirming, approver, order, executeConfirmation]);
+  }, [isConfirming, order, executeConfirmation]);
 
   if (isOrderCompleted) {
     return <span>Congratulations</span>;
@@ -66,7 +54,7 @@ const ConfirmOrderButton: FC = () => {
     <>
       <StyledButton
         onClick={handleConfirmOrder}
-        disabled={!approver || !order || isConfirming}
+        disabled={!order || isConfirming}
       >
         {isConfirming ? "Confirming..." : "Confirm"}
       </StyledButton>
