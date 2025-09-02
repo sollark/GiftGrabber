@@ -2,6 +2,7 @@ import { FC } from "react";
 import { Event } from "@/database/models/event.model";
 import { ExcelFormatType } from "@/types/excel.types";
 import ListSkeleton from "@/components/ui/ListSkeleton";
+import { useErrorHandler } from "@/components/ErrorBoundary";
 
 /**
  * Props for the EventList component
@@ -10,6 +11,7 @@ interface EventListProps {
   events?: Event[];
   showFormatInfo?: boolean;
   isLoading?: boolean;
+  onError?: (error: Error) => void; // New prop for error callback
 }
 
 /**
@@ -31,7 +33,16 @@ const EventList: FC<EventListProps> = ({
   events = [],
   showFormatInfo = false,
   isLoading = false,
+  onError,
 }) => {
+  const { handleError, errorCount } = useErrorHandler("EventList");
+
+  // Track errors if onError callback is provided
+  const trackError = (error: Error) => {
+    handleError(error);
+    onError?.(error);
+  };
+
   // Show loading skeleton when loading and no data
   if (isLoading && events.length === 0) {
     return <ListSkeleton title="Events" rows={3} columns={2} />;
@@ -39,7 +50,14 @@ const EventList: FC<EventListProps> = ({
 
   if (events.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">No events found</div>
+      <div className="text-center text-gray-500 py-8">
+        No events found
+        {errorCount > 0 && (
+          <div style={{ fontSize: "0.8em", marginTop: "0.5rem" }}>
+            {errorCount} error(s) occurred while loading events
+          </div>
+        )}
+      </div>
     );
   }
 

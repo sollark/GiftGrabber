@@ -112,27 +112,33 @@ export function useEventForm() {
   };
 
   const validators = {
-    title: (value: string) =>
-      value.trim().length >= 3
-        ? success(value.trim())
-        : failure("Title must be at least 3 characters"),
-
-    description: (value: string) =>
-      value.trim().length >= 10
-        ? success(value.trim())
-        : failure("Description must be at least 10 characters"),
-
-    startDate: (value: string) => {
-      const date = new Date(value);
-      return date > new Date()
-        ? success(date)
-        : failure("Start date must be in the future");
+    title: (value: string | number) => {
+      if (typeof value === "string" && value.trim().length >= 3) {
+        return success(value.trim());
+      }
+      return failure("Title must be at least 3 characters");
     },
-
-    maxParticipants: (value: number) =>
-      value > 0 && value <= 100
-        ? success(value)
-        : failure("Max participants must be between 1 and 100"),
+    description: (value: string | number) => {
+      if (typeof value === "string" && value.trim().length >= 10) {
+        return success(value.trim());
+      }
+      return failure("Description must be at least 10 characters");
+    },
+    startDate: (value: string | number) => {
+      if (typeof value === "string") {
+        const date = new Date(value);
+        return date > new Date()
+          ? success(value)
+          : failure("Start date must be in the future");
+      }
+      return failure("Invalid date format");
+    },
+    maxParticipants: (value: string | number) => {
+      const num = typeof value === "number" ? value : Number(value);
+      return num > 0 && num <= 100
+        ? success(num)
+        : failure("Max participants must be between 1 and 100");
+    },
   };
 
   const form = useFormValidation(initialState, validators);

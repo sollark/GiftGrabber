@@ -41,7 +41,7 @@ const validateEvent = (event: Event | null): boolean => {
 
 /**
  * Orchestrates creation of a new event with all related applicants, and gifts.
- * Enhanced with direct service calls and functional Result composition.
+ * Enhanced with direct service calls, validation, and functional Result composition.
  * @param event - The event form data containing all necessary information.
  * @returns Promise<Result<boolean, string>> - Success if event was created, failure with error message otherwise.
  */
@@ -78,8 +78,8 @@ export const createEventInternal = async (
     return failure("Failed to create gifts");
   }
 
-  // Create event record using direct service call
-  const eventResult = await DatabaseEventService.create({
+  // Create event record using enhanced service call with validation
+  const eventResult = await DatabaseEventService.createEnhanced({
     name,
     email,
     eventId,
@@ -92,7 +92,7 @@ export const createEventInternal = async (
 
   if (eventResult._tag === "Failure") {
     console.error("Failed to create event:", eventResult.error);
-    return failure("Failed to create event");
+    return failure(`Failed to create event: ${eventResult.error.message}`);
   }
 
   return success(true);

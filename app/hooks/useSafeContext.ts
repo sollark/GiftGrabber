@@ -198,7 +198,7 @@ export function useValidatedContext<T, U extends T>(
  * Creates a safe context with built-in error handling
  * @param contextName - Name of the context for error messages
  * @param defaultValue - Optional default value
- * @returns Object with context, provider, and safe hook
+ * @returns Object with context, provider, and safe hook ContextErrorBoundary
  */
 export function createSafeContext<T>(contextName: string, defaultValue?: T) {
   const Context = React.createContext<T | undefined>(defaultValue);
@@ -422,6 +422,134 @@ export function useMigrationContext<T>(
   }
 
   return safeValue;
+}
+
+// ============================================================================
+// ENHANCED ERROR BOUNDARY INTEGRATION
+// ============================================================================
+
+/**
+ * Enhanced safe context hook with error boundary integration and recovery mechanisms
+ * Provides automatic retry logic and detailed error reporting for context access
+ *
+ * @param context - React Context<T | undefined> to access safely
+ * @param contextName - Descriptive name for error messages and debugging
+ * @param options - Configuration options for retry and recovery
+ * @returns Enhanced context result with error recovery capabilities
+ *
+ * @sideEffects May trigger error boundary if critical failure occurs
+ * @performance Includes retry mechanisms that may add slight overhead
+ * @notes Integrates with ErrorBoundary components for comprehensive error handling
+ * @publicAPI Enhanced context hook for components requiring robust error handling
+ */
+export function useEnhancedSafeContext<T>(
+  context: Context<T | undefined>,
+  contextName: string,
+  options: {
+    maxRetries?: number;
+    retryDelay?: number;
+    throwOnError?: boolean;
+    enableRecovery?: boolean;
+  } = {}
+): {
+  value: Maybe<T>;
+  error: Maybe<Error>;
+  isRetrying: boolean;
+  retryCount: number;
+  retry: () => void;
+  reset: () => void;
+} {
+  const {
+    maxRetries = 3,
+    retryDelay = 1000,
+    throwOnError = false,
+    enableRecovery = true,
+  } = options;
+
+  const [retryCount, setRetryCount] = React.useState(0);
+  const [isRetrying, setIsRetrying] = React.useState(false);
+  const [lastError, setLastError] = React.useState<Maybe<Error>>(none);
+  const retryTimeoutRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Get context value with error handling
+  const rawContextValue = useContext(context);
+
+  const contextResult = React.useMemo(() => {
+    try {
+      if (rawContextValue !== undefined) {
+        return { value: some(rawContextValue), error: none };
+      }
+
+      const error = new Error(
+        `${contextName} context is not available. Make sure component is wrapped with ${contextName}Provider.`
+      );
+      return { value: none, error: some(error) };
+    } catch (error) {
+      const contextError =
+        error instanceof Error
+          ? error
+          : new Error(
+              `Failed to access ${contextName} context: ${String(error)}`
+            );
+      return { value: none, error: some(contextError) };
+    }
+  }, [rawContextValue, contextName]);
+
+  // Update error state
+  React.useEffect(() => {
+    setLastError(contextResult.error);
+
+    // If throwOnError is enabled and we have an error, throw it to trigger error boundary
+    if (throwOnError && contextResult.error._tag === "Some") {
+      throw contextResult.error.value;
+    }
+  }, [contextResult.error, throwOnError]);
+
+  // Retry mechanism
+  const retry = React.useCallback(() => {
+    if (retryCount >= maxRetries) {
+      console.warn(
+        `Max retries (${maxRetries}) reached for ${contextName} context`
+      );
+      return;
+    }
+
+    setIsRetrying(true);
+
+    const delay = retryDelay * Math.pow(2, retryCount);
+    retryTimeoutRef.current = setTimeout(() => {
+      setRetryCount((prev) => prev + 1);
+      setIsRetrying(false);
+    }, delay);
+  }, [contextName, maxRetries, retryCount, retryDelay]);
+
+  // Reset mechanism
+  const reset = React.useCallback(() => {
+    setRetryCount(0);
+    setIsRetrying(false);
+    setLastError(none);
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+  }, []);
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  return {
+    value: contextResult.value,
+    error: lastError,
+    isRetrying,
+    retryCount,
+    retry: enableRecovery ? retry : () => {},
+    reset,
+  };
 }
 
 export default useSafeContext;

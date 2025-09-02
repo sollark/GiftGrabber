@@ -72,6 +72,32 @@ export function withDatabaseResult<T extends any[], R>(
 }
 
 /**
+ * Enhanced batch operation execution with Result pattern
+ * Executes multiple database operations concurrently with proper error handling
+ * @param operations - Array of async operations to execute in parallel
+ * @returns Promise<Result<T[], Error>> with all results or first error encountered
+ */
+export const executeBatchOperations = async <T>(
+  operations: (() => Promise<T>)[]
+): Promise<Result<T[], Error>> => {
+  if (operations.length === 0) {
+    return success([]);
+  }
+
+  try {
+    await getMemoizedConnection();
+
+    const results = await Promise.all(
+      operations.map((operation) => operation())
+    );
+
+    return success(results);
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
+};
+
+/**
  * Executes database operation with automatic connection and Result-based error handling
  *
  * @param operation - Database operation function to execute with connection

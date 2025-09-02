@@ -4,6 +4,7 @@ import { useApplicantList } from "@/app/contexts/ApplicantContext";
 import SortableFilterableTable, {
   TableColumn,
 } from "@/ui/table/SortableFilterableTable";
+import { useErrorHandler } from "@/components/ErrorBoundary";
 
 /**
  * ApplicantList component
@@ -25,6 +26,8 @@ const ApplicantList: FC<ApplicantListProps> = ({
   personArray,
   isLoading = false,
 }) => {
+  const { handleError, errorCount } = useErrorHandler("ApplicantList");
+
   // Use context for applicant list, but preserve original rendering and props
   const applicantList = useApplicantList();
 
@@ -33,6 +36,14 @@ const ApplicantList: FC<ApplicantListProps> = ({
     applicantList._tag === "Some" && Array.isArray(applicantList.value)
       ? applicantList.value
       : personArray;
+
+  // Track context access issues
+  if (applicantList._tag === "None" && personArray.length === 0) {
+    const error = new Error(
+      "No applicant data available from context or props"
+    );
+    handleError(error);
+  }
 
   // Define table columns for applicants
   const columns: TableColumn<Person>[] = [
@@ -58,7 +69,13 @@ const ApplicantList: FC<ApplicantListProps> = ({
       columns={columns}
       isLoading={isLoading && list.length === 0}
       title="Applicants"
-      emptyMessage="No applicants available"
+      emptyMessage={
+        errorCount > 0
+          ? `No applicants available (${errorCount} data loading error${
+              errorCount > 1 ? "s" : ""
+            })`
+          : "No applicants available"
+      }
       searchPlaceholder="Search applicants by name..."
       rowKey={(person, index) =>
         person.publicId || `${person.firstName}-${person.lastName}-${index}`

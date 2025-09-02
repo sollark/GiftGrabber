@@ -29,6 +29,8 @@ const FormFileSection: React.FC<FormFileSectionProps> = ({
       />
 
       <ControlledFileWithFormat
+        name="applicantsFile"
+        label="Extra file"
         required={false}
         inputProps={FORM_CONFIG.INPUT_STYLES}
         onFormatError={onFormatError}

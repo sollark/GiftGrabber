@@ -1,7 +1,7 @@
 import XLSX from "xlsx";
 import parse from "html-react-parser";
 import { ReactNode } from "react";
-import { parseExcelFile } from "./excel_utils";
+import { parseExcelFileSafe } from "./excel_utils";
 import { ExcelImportConfig, ExcelFormatType } from "@/types/excel.types";
 import { EXCEL_CONFIG } from "@/config/excelConfig";
 
@@ -40,40 +40,44 @@ export async function excelToTableEnhanced(
   file: File,
   config?: Partial<ExcelImportConfig>
 ): Promise<ExcelTableResult> {
-  try {
-    const result = await parseExcelFile(file, {
-      language: "auto",
-      skipEmptyRows: true,
-      validateRequired: false,
-      ...config,
-    });
+  const result = await parseExcelFileSafe(file, {
+    language: "auto",
+    skipEmptyRows: true,
+    validateRequired: false,
+    ...config,
+  });
 
-    // Convert structured data to HTML table
-    const tableHTML = generateEnhancedTableHTML(result.data, result.formatType);
-    const tableElement = extractTableFromHTML(tableHTML);
-
-    if (!tableElement) {
-      return {
-        success: false,
-        error: ERROR_MESSAGES.NO_TABLE_FOUND,
-        formatType: result.formatType,
-        detectedLanguage: result.language,
-      };
-    }
-
-    return {
-      success: true,
-      table: convertToReactTable(tableElement),
-      formatType: result.formatType,
-      detectedLanguage: result.language,
-    };
-  } catch (error) {
-    console.error("Enhanced Excel to table conversion failed:", error);
+  if (result._tag === "Failure") {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: result.error.message,
+      formatType: ExcelFormatType.BASIC_NAME,
+      detectedLanguage: "auto",
     };
   }
+
+  // Convert structured data to HTML table
+  const tableHTML = generateEnhancedTableHTML(
+    result.value.data,
+    result.value.formatType
+  );
+  const tableElement = extractTableFromHTML(tableHTML);
+
+  if (!tableElement) {
+    return {
+      success: false,
+      error: ERROR_MESSAGES.NO_TABLE_FOUND,
+      formatType: result.value.formatType,
+      detectedLanguage: result.value.language,
+    };
+  }
+
+  return {
+    success: true,
+    table: convertToReactTable(tableElement),
+    formatType: result.value.formatType,
+    detectedLanguage: result.value.language,
+  };
 }
 
 /**

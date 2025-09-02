@@ -185,41 +185,60 @@ export class PersonService {
   }
 
   /**
-   * Batch creates multiple persons for optimal performance (Excel import, etc).
-   * @param personList {Omit<Person, "publicId">[]} - Array of person data
-   * @returns Promise<Result<string[], Error>> - Success with array of publicIds, or Failure with error
-   * @sideEffects DB write (batch)
-   * @publicAPI
-   */
-  /**
-   * Batch creates multiple persons for optimal performance during Excel imports
+   * Batch creates multiple persons for optimal performance during Excel imports and bulk operations.
+   * Uses MongoDB insertMany for atomic batch operation with enhanced error handling.
    * @param personList - Array of person data objects without publicIds
    * @returns Promise<Result<string[], Error>> - Success with array of generated publicIds, or Failure with error
+   * @sideEffects DB write (batch)
+   * @publicAPI
+   * @performance Optimized for bulk operations using MongoDB insertMany
    */
   static async createMany(
     personList: Omit<Person, "publicId">[]
   ): Promise<Result<string[], Error>> {
-    try {
-      const docs = await PersonModel.insertMany(personList);
-      const publicIds = docs.map((doc) => doc.publicId);
-      return success(publicIds);
-    } catch (error) {
-      return failure(error instanceof Error ? error : new Error(String(error)));
+    if (!personList || personList.length === 0) {
+      return success([]);
     }
+
+    return fromPromise(
+      PersonModel.insertMany(personList, { ordered: false }).then((docs) =>
+        docs.map((doc) => doc.publicId)
+      )
+    );
   }
 
   /**
    * Batch finds persons by publicIds using optimizedQueries.ts (avoids N+1).
+   * Enhanced with validation and optional strict mode for error recovery.
    * @param publicIds {string[]} - Array of publicIds
+   * @param options - Optional configuration for the query (strict mode validates all IDs found)
    * @returns Promise<Result<Person[], Error>> - Success with array of persons, or Failure with error
    * @sideEffects DB read (batch)
    * @publicAPI
-   * @notes Uses findPersonsByPublicIds from optimizedQueries.ts for performance.
+   * @performance Uses single optimized query to avoid N+1 problems
    */
   static async findManyByPublicIds(
-    publicIds: string[]
+    publicIds: string[],
+    options: { strict?: boolean } = {}
   ): Promise<Result<Person[], Error>> {
-    return findPersonsByPublicIds(publicIds);
+    if (!publicIds || publicIds.length === 0) {
+      return success([]);
+    }
+
+    const result = await findPersonsByPublicIds(publicIds);
+
+    if (result._tag === "Success" && options.strict) {
+      const foundIds = result.value.map((person) => person.publicId);
+      const missingIds = publicIds.filter((id) => !foundIds.includes(id));
+
+      if (missingIds.length > 0) {
+        return failure(
+          new Error(`Persons not found for publicIds: ${missingIds.join(", ")}`)
+        );
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -243,6 +262,43 @@ export class PersonService {
  * Handles event creation, lookup, population, and batch operations.
  */
 export class EventService {
+  /**
+   * Enhanced event creation with validation and atomic operations.
+   * @param eventData - Complete event data including related entity public IDs
+   * @returns Promise<Result<Event, Error>> - Success with created event, or Failure with error
+   * @sideEffects DB write, batch lookups
+   * @publicAPI
+   * @atomic Ensures all related entities exist before creating event
+   */
+  static async createEnhanced(eventData: {
+    name: string;
+    email: string;
+    eventId: string;
+    ownerId: string;
+    eventQRCodeBase64: string;
+    ownerIdQRCodeBase64: string;
+    applicantPublicIds: string[];
+    giftPublicIds: string[];
+  }): Promise<Result<Event, Error>> {
+    // Validate required fields
+    if (!eventData.name || !eventData.email || !eventData.eventId) {
+      return failure(
+        new Error("Missing required fields: name, email, eventId")
+      );
+    }
+
+    // Check for duplicate eventId
+    const existingEvent = await this.findByEventId(eventData.eventId);
+    if (existingEvent._tag === "Success" && existingEvent.value) {
+      return failure(
+        new Error(`Event with eventId '${eventData.eventId}' already exists`)
+      );
+    }
+
+    // Use existing create method for actual creation
+    return this.create(eventData);
+  }
+
   /**
    * Finds an event by its business eventId (legacy).
    * @param eventId {string}

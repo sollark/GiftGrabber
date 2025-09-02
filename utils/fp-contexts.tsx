@@ -28,7 +28,7 @@ import {
   objectUtils,
   memoize,
 } from "@/utils/fp";
-import { useSafeContext } from "../app/hooks/useSafeContext";
+import { useSafeContext } from "@/app/hooks/useSafeContext";
 
 // Helper type for Maybe context value
 type MaybeContext<T> = { _tag: "Some"; value: T } | { _tag: "None" };

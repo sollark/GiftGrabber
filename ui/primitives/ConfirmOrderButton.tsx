@@ -3,14 +3,17 @@ import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import StyledButton from "./AccentButton";
 import ErrorMessage from "@/ui/form/ErrorMessage";
+import { useErrorHandler } from "@/components/ErrorBoundary";
 
 /**
  * Functional ConfirmOrderButton component.
- * Handles order confirmation with safe async patterns, loading states, and error handling.
- * Provides visual feedback during confirmation process.
+ * Handles order confirmation with safe async patterns, loading states, and enhanced error tracking.
+ * Provides visual feedback during confirmation process and tracks confirmation failures.
  */
 const ConfirmOrderButton: FC = () => {
   const orderStatus = useOrderStatus();
+  const { handleError, errorCount, lastError } =
+    useErrorHandler("ConfirmOrderButton");
 
   const order =
     orderStatus.order._tag === "Some" ? orderStatus.order.value : null;
@@ -18,7 +21,7 @@ const ConfirmOrderButton: FC = () => {
   const isOrderCompleted = order?.status === "completed";
 
   /**
-   * Safe order confirmation with proper error handling and success navigation
+   * Safe order confirmation with proper error handling, success navigation, and enhanced error tracking
    */
   const {
     error: confirmError,
@@ -26,14 +29,25 @@ const ConfirmOrderButton: FC = () => {
     execute: executeConfirmation,
   } = useSafeAsync(
     async () => {
-      const result = await orderStatus.confirmOrder();
-      if (result._tag === "Failure") {
-        throw new Error(result.error.message || "Order confirmation failed");
-      }
+      try {
+        const result = await orderStatus.confirmOrder();
+        if (result && result._tag === "Failure") {
+          const error = new Error(
+            result.error.message || "Order confirmation failed"
+          );
+          handleError(error); // Track the error
+          throw error;
+        }
 
-      // Navigate on success
-      window.location.reload();
-      return true;
+        // Navigate on success
+        window.location.reload();
+        return true;
+      } catch (error) {
+        const trackableError =
+          error instanceof Error ? error : new Error(String(error));
+        handleError(trackableError); // Track any unexpected errors
+        throw trackableError;
+      }
     },
     {
       deps: [order],
@@ -59,7 +73,16 @@ const ConfirmOrderButton: FC = () => {
         {isConfirming ? "Confirming..." : "Confirm"}
       </StyledButton>
       {confirmError._tag === "Some" && (
-        <ErrorMessage message={confirmError.value.message} />
+        <div>
+          <ErrorMessage message={confirmError.value.message} />
+          {errorCount > 1 && (
+            <div
+              style={{ fontSize: "0.8em", color: "#666", marginTop: "0.25rem" }}
+            >
+              Failed {errorCount} times
+            </div>
+          )}
+        </div>
       )}
     </>
   );

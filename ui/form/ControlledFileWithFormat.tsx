@@ -4,6 +4,7 @@ import ControlledFileInput from "@/ui/form/ControlledFileInput";
 import FormatDetectionInfo from "@/ui/data-display/FormatDetectionInfo";
 import { ExcelFormatType } from "@/types/excel.types";
 import { parseExcelFile } from "@/utils/excel_utils";
+import { useErrorHandler } from "@/components/ErrorBoundary";
 
 interface ControlledFileWithFormatProps {
   name: "applicantsFile";
@@ -32,6 +33,7 @@ const ControlledFileWithFormat: React.FC<ControlledFileWithFormatProps> = ({
   className,
 }) => {
   const { watch } = useFormContext();
+  const { handleError, errorCount } = useErrorHandler("FileFormatDetection");
   const [formatInfo, setFormatInfo] = useState<{
     applicantFormat?: ExcelFormatType;
     detectedLanguage?: string;
@@ -70,10 +72,12 @@ const ControlledFileWithFormat: React.FC<ControlledFileWithFormatProps> = ({
         // bubble up exactly as your original parent expected
         onFormatSuccess?.(update);
       } catch (error) {
-        const msg = `Format detection failed for ${name}: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`;
-        console.error(msg, error);
+        const trackableError =
+          error instanceof Error ? error : new Error(String(error));
+        handleError(trackableError); // Track the error
+
+        const msg = `Format detection failed for ${name}: ${trackableError.message}`;
+        console.error(msg, trackableError);
         setFormatInfo((prev) => ({
           ...prev,
           processingWarnings: [...(prev.processingWarnings ?? []), msg],

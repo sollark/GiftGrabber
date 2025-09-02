@@ -364,7 +364,7 @@ export function useResultMemo<T>(
  * @sideEffects None
  * @notes Uses custom memoize utility for argument-based caching
  */
-export function useMemoizedCallback<T extends any[], R>(
+export function useMemoizedCallback<T extends readonly unknown[], R>(
   fn: (...args: T) => R,
   deps: React.DependencyList
 ): (...args: T) => R {
@@ -381,26 +381,28 @@ export function useMemoizedCallback<T extends any[], R>(
  *
  * React hook for managing form state and validation using functional patterns.
  * @param initialState T - Initial form state
- * @param validators Partial<Record<keyof T, (value: any) => Result<any, string>>> - Field validators
- * @returns { values, errors, isValid, setValue, validate, reset } - Form state and handlers
+ * @param validators - Field validators with specific return types
+ * @returns Form state and handlers with enhanced type safety
  * @sideEffects Updates state
  * @notes Validates on demand, supports per-field and full-form validation
  */
-export function useFormValidation<T extends Record<string, any>>(
+export function useFormValidation<T extends Record<string, unknown>>(
   initialState: T,
-  validators: Partial<Record<keyof T, (value: any) => Result<any, string>>>
+  validators: Partial<
+    Record<keyof T, (value: T[keyof T]) => Result<T[keyof T], string>>
+  >
 ): {
   values: T;
   errors: Partial<Record<keyof T, string>>;
   isValid: boolean;
-  setValue: (key: keyof T, value: any) => void;
+  setValue: <K extends keyof T>(key: K, value: T[K]) => void;
   validate: (key?: keyof T) => boolean;
   reset: () => void;
 } {
   const [values, setValues] = useState<T>(initialState);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
-  const setValue = useCallback((key: keyof T, value: any) => {
+  const setValue = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }));
     // Clear error when value changes
     setErrors((prev) => ({ ...prev, [key]: undefined }));
@@ -518,7 +520,7 @@ export function useAsyncEffect(
  * @sideEffects None
  * @notes Useful for safe integration of legacy or third-party hooks
  */
-export function adaptHookToMaybe<T extends any[], R>(
+export function adaptHookToMaybe<T extends readonly unknown[], R>(
   hook: (...args: T) => R
 ): (...args: T) => Maybe<R> {
   return (...args: T) => {

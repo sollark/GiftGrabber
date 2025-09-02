@@ -15,7 +15,7 @@
  * - Promotes code reuse across different order-related components
  */
 
-import { Result, tryAsync } from "@/utils/fp";
+import { Result, success, failure, tryAsync } from "@/utils/fp";
 import { makeOrder } from "@/app/actions/order.action";
 import { getQRcodeBuffer } from "@/utils/utils";
 import { Gift } from "@/database/models/gift.model";
@@ -30,15 +30,15 @@ import { Person } from "@/database/models/person.model";
 export const generateQRCodeData = async (
   qrCodeRef: React.RefObject<HTMLDivElement>
 ): Promise<Result<string, Error>> => {
-  const asyncOperation = tryAsync(async () => {
+  try {
     const orderQRCodeBuffer = await getQRcodeBuffer(qrCodeRef);
     if (!orderQRCodeBuffer) {
-      throw new Error("Failed to generate QR code buffer");
+      return failure(new Error("Failed to generate QR code buffer"));
     }
-    return orderQRCodeBuffer.toString("base64");
-  });
-
-  return await asyncOperation();
+    return success(orderQRCodeBuffer.toString("base64"));
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**
@@ -56,15 +56,15 @@ export const submitOrder = async (
   orderId: string,
   qrCodeData: string
 ): Promise<Result<string, Error>> => {
-  const asyncOperation = tryAsync(async () => {
-    if (!applicant) {
-      throw new Error("No applicant selected");
-    }
+  if (!applicant) {
+    return failure(new Error("No applicant selected"));
+  }
 
-    if (!gifts || gifts.length === 0) {
-      throw new Error("No gifts selected");
-    }
+  if (!gifts || gifts.length === 0) {
+    return failure(new Error("No gifts selected"));
+  }
 
+  try {
     const orderPublicId = await makeOrder(
       applicant.publicId,
       gifts.map((gift) => gift.publicId),
@@ -73,13 +73,13 @@ export const submitOrder = async (
     );
 
     if (!orderPublicId) {
-      throw new Error("Order creation failed");
+      return failure(new Error("Order creation failed"));
     }
 
-    return orderPublicId;
-  });
-
-  return await asyncOperation();
+    return success(orderPublicId);
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
 
 /**

@@ -25,6 +25,7 @@ import { FC } from "react";
 import useSWR from "swr";
 import { ConfirmOrderButton } from "@/ui/primitives";
 import OrderDetails from "./OrderDetails";
+import { useErrorHandler } from "@/components/ErrorBoundary";
 
 // --- Constants ---
 const SWR_CONFIG = {
@@ -51,12 +52,16 @@ type ConfirmOrderProps = {
 
 /**
  * ConfirmOrder component
- * Fetches order  data, handles loading/error states, and renders the order confirmation UI.
+ * Fetches order data, handles loading/error states with enhanced error tracking, and renders the order confirmation UI.
  * @param eventId - The event ID
  * @param orderId - The order ID
  * @returns The order confirmation UI or appropriate loading/error state
  */
 const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
+  // Enhanced error tracking for order operations
+  const { handleError, errorCount, lastError, getErrorSummary } =
+    useErrorHandler("ConfirmOrder");
+
   // Fetch order data with SWR
   const {
     data: order,
@@ -65,7 +70,13 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
   } = useSWR(
     () => createOrderCacheKey(orderId),
     () => getOrder(orderId),
-    { revalidateOnFocus: SWR_CONFIG.REVALIDATE_ON_FOCUS }
+    {
+      revalidateOnFocus: SWR_CONFIG.REVALIDATE_ON_FOCUS,
+      onError: (error) => {
+        // Track errors with enhanced error handler
+        handleError(error instanceof Error ? error : new Error(String(error)));
+      },
+    }
   );
 
   // Simplified error and loading state handling with early returns
@@ -74,7 +85,21 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
   }
 
   if (orderError) {
-    return <div>{UI_MESSAGES.ORDER_ERROR}</div>;
+    const errorSummary = getErrorSummary();
+    return (
+      <div>
+        <div>{UI_MESSAGES.ORDER_ERROR}</div>
+        {errorSummary._tag === "Success" &&
+          errorSummary.value.errorCount > 1 && (
+            <div
+              style={{ fontSize: "0.8em", color: "#666", marginTop: "0.5rem" }}
+            >
+              Failed {errorSummary.value.errorCount} times. Last error:{" "}
+              {lastError?.message}
+            </div>
+          )}
+      </div>
+    );
   }
 
   if (!order) {

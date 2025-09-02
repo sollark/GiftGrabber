@@ -34,11 +34,27 @@ export const orderReducer = (
       if (!action.payload || typeof action.payload !== "object") {
         return failure(new Error("Invalid order data"));
       }
+      // Ensure payload matches newOrder type
+      const orderPayload = action.payload as Partial<
+        import("@/types/common.types").newOrder
+      >;
+      // Fill missing fields from defaultOrderData if needed
+      const defaultOrderData = {
+        createdAt: new Date(),
+        applicant: null,
+        gifts: [],
+        orderId: `order-${Date.now()}`,
+        confirmationRQCode: "",
+        status: OrderStatus.PENDING,
+      };
       return success({
         ...state,
         data: {
           ...state.data,
-          order: action.payload as Order,
+          order: {
+            ...defaultOrderData,
+            ...orderPayload,
+          },
         },
       });
     case "UPDATE_ORDER":

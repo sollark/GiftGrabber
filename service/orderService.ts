@@ -35,19 +35,13 @@ import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
 import OrderModel from "@/database/models/order.model";
 import PersonModel from "@/database/models/person.model";
-import GiftModel from "@/database/models/gift.model";
-import {
-  OrderCreationData,
-  OrderCreationPublicData,
-  isMongooseDocument,
-} from "@/types/common.types";
+import { OrderCreationPublicData } from "@/types/common.types";
 import {
   OrderService as DatabaseOrderService,
   PersonService,
 } from "./databaseService";
 import { populateOrder } from "./mongoPopulationService";
 import { Types } from "mongoose";
-import { saveObject } from "@/lib/castToDocument";
 
 // ============================================================================
 // CONFIGURATION CONSTANTS
@@ -123,26 +117,28 @@ export const createOrderData = (
 });
 
 /**
- * Creates a new order using PublicId strategy.
+ * Creates a new order using PublicId strategy with enhanced validation and error handling.
  * @param orderData - The order creation data with public IDs.
  * @returns Promise<Result<Order, string>> - The created order or error.
  */
 export const createOrderInternal = async (
   orderData: OrderCreationPublicData
 ): Promise<Result<Order, string>> => {
-  try {
-    const result = await DatabaseOrderService.create(orderData);
-    if (result._tag === "Failure") {
-      return failure(result.error.message);
-    }
-    return result;
-  } catch (error) {
-    return failure(
-      `Failed to create order: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+  // Validate required fields
+  if (!orderData.applicantPublicId || !orderData.orderId) {
+    return failure("Missing required fields: applicantPublicId, orderId");
   }
+
+  if (!orderData.giftPublicIds || orderData.giftPublicIds.length === 0) {
+    return failure("At least one gift must be selected for the order");
+  }
+
+  const result = await DatabaseOrderService.create(orderData);
+  if (result._tag === "Failure") {
+    return failure(`Order creation failed: ${result.error.message}`);
+  }
+
+  return result;
 };
 
 /**

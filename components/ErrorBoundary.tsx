@@ -1,3 +1,4 @@
+"use client";
 /**
  * ErrorBoundary.tsx
  *
@@ -18,26 +19,23 @@
  * - Enables production error monitoring and debugging capabilities
  */
 
-"use client";
-
-/**
- * ErrorBoundary component for graceful error handling in React contexts
- * Provides fallback UI and error reporting for context initialization failures
- */
-
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { failure, Result } from "@/utils/fp";
+import { failure, Result, success } from "@/utils/fp";
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   contextName?: string;
+  maxRetries?: number;
+  retryDelay?: number;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
+  retryCount: number;
+  isRetrying: boolean;
 }
 
 /**
@@ -52,9 +50,24 @@ interface State {
  * - Enables graceful degradation of context-dependent features
  */
 export class ContextErrorBoundary extends Component<Props, State> {
+  private retryTimeout?: NodeJS.Timeout;
+
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = {
+      hasError: false,
+      retryCount: 0,
+      isRetrying: false,
+    };
+  }
+
+  /**
+   * Cleanup retry timeout on unmount
+   */
+  componentWillUnmount() {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+    }
   }
 
   /**
@@ -68,7 +81,12 @@ export class ContextErrorBoundary extends Component<Props, State> {
    * @notes Static method called by React error boundary lifecycle
    */
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return {
+      hasError: true,
+      error,
+      retryCount: 0,
+      isRetrying: false,
+    };
   }
 
   /**
@@ -97,21 +115,66 @@ export class ContextErrorBoundary extends Component<Props, State> {
   }
 
   /**
-   * Renders error UI or children based on error state
+   * Handles retry logic with exponential backoff
+   */
+  private handleRetry = () => {
+    const { maxRetries = 3, retryDelay = 1000 } = this.props;
+
+    if (this.state.retryCount >= maxRetries) {
+      console.warn(
+        `Max retries (${maxRetries}) reached for ${
+          this.props.contextName || "context"
+        }`
+      );
+      return;
+    }
+
+    this.setState({ isRetrying: true });
+
+    // Exponential backoff: delay * (2 ^ retryCount)
+    const delay = retryDelay * Math.pow(2, this.state.retryCount);
+
+    this.retryTimeout = setTimeout(() => {
+      this.setState((prevState) => ({
+        hasError: false,
+        error: undefined,
+        retryCount: prevState.retryCount + 1,
+        isRetrying: false,
+      }));
+    }, delay);
+  };
+
+  /**
+   * Resets error state completely
+   */
+  private handleReset = () => {
+    this.setState({
+      hasError: false,
+      error: undefined,
+      retryCount: 0,
+      isRetrying: false,
+    });
+  };
+
+  /**
+   * Renders error UI or children based on error state with enhanced retry functionality
    *
    * @returns ReactNode with either error fallback UI or normal children
    *
    * @sideEffects None - pure render method
    * @performance Conditional rendering based on error state
-   * @notes Provides user-friendly error recovery interface with "Try Again" functionality
+   * @notes Provides user-friendly error recovery interface with retry and reset functionality
    */
   render() {
     if (this.state.hasError) {
-      const { fallback, contextName } = this.props;
+      const { fallback, contextName, maxRetries = 3 } = this.props;
+      const { retryCount, isRetrying } = this.state;
 
       if (fallback) {
         return fallback;
       }
+
+      const canRetry = retryCount < maxRetries;
 
       return (
         <div className="context-error-boundary">
@@ -123,11 +186,29 @@ export class ContextErrorBoundary extends Component<Props, State> {
             <br />
             {this.state.error?.stack}
           </details>
-          <button
-            onClick={() => this.setState({ hasError: false, error: undefined })}
-          >
-            Try Again
-          </button>
+          <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+            {canRetry && (
+              <button
+                onClick={this.handleRetry}
+                disabled={isRetrying}
+                style={{
+                  opacity: isRetrying ? 0.6 : 1,
+                  cursor: isRetrying ? "not-allowed" : "pointer",
+                }}
+              >
+                {isRetrying
+                  ? "Retrying..."
+                  : `Try Again (${retryCount}/${maxRetries})`}
+              </button>
+            )}
+            <button onClick={this.handleReset}>Reset</button>
+          </div>
+          {!canRetry && (
+            <p style={{ color: "#ef4444", marginTop: "0.5rem" }}>
+              Maximum retry attempts reached. Please refresh the page or contact
+              support.
+            </p>
+          )}
         </div>
       );
     }
@@ -154,17 +235,49 @@ export function withErrorBoundary<P extends object>(
 }
 
 /**
- * Hook-based error boundary for functional components
- * Uses Result pattern for consistent error handling
+ * Enhanced hook-based error handler with retry and recovery mechanisms
+ * Uses Result pattern for consistent error handling with functional composition
  */
 export function useErrorHandler(contextName: string) {
-  return React.useCallback(
+  const [errorCount, setErrorCount] = React.useState(0);
+  const [lastError, setLastError] = React.useState<Error | null>(null);
+
+  const handleError = React.useCallback(
     (error: Error): Result<never, Error> => {
-      console.error(`Error in ${contextName}:`, error);
+      setLastError(error);
+      setErrorCount((prev) => prev + 1);
+      console.error(
+        `Error in ${contextName} (count: ${errorCount + 1}):`,
+        error
+      );
       return failure(error);
     },
-    [contextName]
+    [contextName, errorCount]
   );
+
+  const clearErrors = React.useCallback(() => {
+    setErrorCount(0);
+    setLastError(null);
+  }, []);
+
+  const getErrorSummary = React.useCallback(
+    () =>
+      success({
+        contextName,
+        errorCount,
+        lastError,
+        hasErrors: errorCount > 0,
+      }),
+    [contextName, errorCount, lastError]
+  );
+
+  return {
+    handleError,
+    clearErrors,
+    getErrorSummary,
+    errorCount,
+    lastError,
+  };
 }
 
 export default ContextErrorBoundary;

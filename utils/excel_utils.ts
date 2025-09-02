@@ -62,6 +62,27 @@ import {
   SupportedLanguage,
   ExcelTranslations,
 } from "@/types/excel.types";
+import { Result, success, failure } from "@/utils/fp";
+
+/**
+ * Result-based wrapper for Excel file parsing with enhanced error handling.
+ * Provides safe parsing that returns Result<T, Error> instead of throwing.
+ *
+ * @param file - Excel file to process
+ * @param config - Configuration options for import behavior
+ * @returns Promise<Result<ExcelImportResult, Error>> - Parse result or error
+ */
+export async function parseExcelFileSafe(
+  file: File,
+  config: ExcelImportConfig = {}
+): Promise<Result<ExcelImportResult, Error>> {
+  try {
+    const result = await parseExcelFile(file, config);
+    return success(result);
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
+}
 
 // ============================================================================
 // CONSTANTS AND CONFIGURATION

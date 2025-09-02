@@ -4,12 +4,13 @@
  * Configuration constants for Excel to JSON conversion
  */
 import { EXCEL_CONFIG } from "@/config/excelConfig";
-import { parseExcelFile } from "./excel_utils";
+import { parseExcelFileSafe } from "./excel_utils";
 import {
   ExcelImportFormat,
   ExcelFormatType,
   ExcelImportConfig,
 } from "@/types/excel.types";
+import { Result, success, failure } from "@/utils/fp";
 
 /**
  * Dynamically imports XLSX library only when needed to reduce bundle size.
@@ -34,70 +35,46 @@ type ExcelData = ExcelRow[];
 type JsonRecord = Record<string, string>;
 
 // ============================================================================
-// ENHANCED EXCEL TO JSON - Format-aware processing
+// EXCEL TO JSON CONVERSION - Enhanced with functional error handling
 // ============================================================================
-
-/**
- * Enhanced Excel to JSON conversion with format detection and type awareness.
- * Uses the advanced parseExcelFile function for better format support.
- *
- * @param excelFile - The Excel file to convert
- * @param config - Optional configuration for processing
- * @returns Promise<JsonRecord[]> - Array of objects with string key-value pairs
- * @throws Error if conversion fails
- */
-export const convertExcelToJsonEnhanced = async (
-  excelFile: File,
-  config?: Partial<ExcelImportConfig>
-): Promise<JsonRecord[]> => {
-  try {
-    const result = await parseExcelFile(excelFile, {
-      language: "auto",
-      skipEmptyRows: true,
-      validateRequired: false,
-      ...config,
-    });
-
-    // Convert advanced format data to simple JSON records
-    return result.data.map((record: ExcelImportFormat): JsonRecord => {
-      const jsonRecord: JsonRecord = {};
-
-      // Convert typed format data to string key-value pairs
-      Object.entries(record).forEach(([key, value]) => {
-        jsonRecord[key] = String(value || "");
-      });
-
-      return jsonRecord;
-    });
-  } catch (error) {
-    console.error("Enhanced Excel to JSON conversion failed:", error);
-    throw error;
-  }
-};
 
 // ============================================================================
 // LEGACY EXCEL TO JSON - Backward compatibility
 // ============================================================================
 
 /**
- * Converts an Excel file to an array of JSON objects
+ * Converts an Excel file to an array of JSON objects with enhanced error handling and format support.
  * @param excelFile - The Excel file to convert
+ * @param config - Optional configuration for parsing
  * @returns Promise<Record<string, string>[]> - Array of objects with string key-value pairs
  * @throws Error if conversion fails
  */
 export const convertExcelToJson = async (
-  excelFile: File
+  excelFile: File,
+  config?: Partial<ExcelImportConfig>
 ): Promise<JsonRecord[]> => {
-  try {
-    const workbook = await processExcelFile(excelFile);
-    const worksheet = getFirstWorksheet(workbook);
-    const jsonData = await convertSheetToJsonData(worksheet);
+  const result = await parseExcelFileSafe(excelFile, {
+    language: "auto",
+    skipEmptyRows: true,
+    validateRequired: false,
+    ...config,
+  });
 
-    return processJsonData(jsonData);
-  } catch (error) {
-    console.error(ERROR_MESSAGES.CONVERSION_ERROR, error);
-    throw error;
+  if (result._tag === "Failure") {
+    throw result.error;
   }
+
+  // Convert advanced format data to simple JSON records
+  return result.value.data.map((record: ExcelImportFormat): JsonRecord => {
+    const jsonRecord: JsonRecord = {};
+
+    // Convert typed format data to string key-value pairs
+    Object.entries(record).forEach(([key, value]) => {
+      jsonRecord[key] = String(value || "");
+    });
+
+    return jsonRecord;
+  });
 };
 
 /**
@@ -203,4 +180,28 @@ const createRecordFromRow = (
   }
 
   return recordObject;
+};
+
+// ============================================================================
+// RESULT-BASED SAFE WRAPPERS
+// ============================================================================
+
+/**
+ * Safe wrapper for convertExcelToJson with Result pattern.
+ * Provides enhanced Excel to JSON conversion without throwing exceptions.
+ *
+ * @param excelFile - The Excel file to convert
+ * @param config - Optional configuration for processing
+ * @returns Promise<Result<JsonRecord[], Error>> - Conversion result or error
+ */
+export const convertExcelToJsonSafe = async (
+  excelFile: File,
+  config?: Partial<ExcelImportConfig>
+): Promise<Result<JsonRecord[], Error>> => {
+  try {
+    const result = await convertExcelToJson(excelFile, config);
+    return success(result);
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
 };
