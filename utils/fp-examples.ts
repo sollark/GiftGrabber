@@ -20,7 +20,6 @@ import {
 } from "@/utils/fp-hooks";
 import { withDatabaseResult, safeQuery } from "@/lib/withDatabase";
 import useSafeContext from "@/app/hooks/useSafeContext";
-// If you need useCombinedContexts, implement or import it from the correct module.
 import { useStepNavigation } from "@/app/contexts/multistep/useStepNavigation";
 
 // ============================================================================

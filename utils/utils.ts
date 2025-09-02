@@ -92,22 +92,6 @@ export function generateOrderId(): string {
   return nanoid();
 }
 
-/**
- * Extracts a QR code buffer from a React ref to a QR code element.
- * Returns a Buffer or undefined.
- * Impure: depends on DOM and React ref.
- */
-export const getQRcodeBuffer = async (qrRef: any) => {
-  if (qrRef.current) {
-    const canvas = qrRef.current.querySelector("canvas");
-    if (canvas) {
-      const pngUrl = canvas.toDataURL("image/png");
-      const buffer = Buffer.from(pngUrl.split(",")[1], "base64");
-      return buffer;
-    }
-  }
-};
-
 // ============================================================================
 // EXCEL PROCESSING UTILITIES - Re-exports for convenience
 // ============================================================================

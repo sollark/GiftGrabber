@@ -7,7 +7,6 @@ import {
   some,
   none,
   trySync,
-  tryAsync,
   memoize,
 } from "./fp";
 

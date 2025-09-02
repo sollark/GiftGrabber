@@ -1,32 +1,24 @@
 /**
  * qrcodeUtils.ts
  *
- * Purpose: Client-side QR code generation and processing utilities for DOM-based operations
+ * Purpose: Provides client-side QR code generation, extraction, and validation utilities for DOM-based operations.
  *
- * Main Responsibilities:
- * - Extracts QR code data from DOM canvas elements and converts to base64 format
- * - Provides validation utilities for QR code DOM references and generation state
- * - Handles client-side QR code processing for email attachments and storage
+ * Responsibilities:
+ * - Extracts QR code data from DOM canvas elements and converts to base64 format or Buffer
+ * - Validates QR code DOM references for availability
+ * - Handles QR code processing for email attachments, event access, and owner verification
  * - Implements functional error handling for QR code generation failures
- * - Supports QR code operations for event access and owner verification workflows
+ * - Promotes maintainable, readable, and type-safe QR code operations
  *
- * Architecture Role:
- * - Bridge between React QR code components and application data processing
- * - Client-side utility layer for QR code manipulation and export
- * - Foundation for QR code integration in email and document workflows
- * - Provides type-safe QR code operations with Result pattern error handling
- * - Critical component for mobile-friendly event access and verification
+ * Usage:
+ * - Used by event creation forms, order workflows, and QR code-related business logic
+ * - All functions are pure except those that access DOM/canvas
  */
 
 import { Result, success, failure } from "@/utils/fp";
 
 /**
- * Client-side QR code utilities
- * Handles DOM-related QR code operations
- */
-
-/**
- * Output type for generated QR codes.
+ * Output type for generated QR codes (event and owner).
  */
 export type GenerateQRCodesOutput = {
   eventQRCodeBase64: string;
@@ -34,38 +26,60 @@ export type GenerateQRCodesOutput = {
 };
 
 /**
- * Error messages for QR code operations
+ * Error messages for QR code operations.
  */
 const QR_CODE_ERRORS = {
   QR_CODE_ERROR: "Failed to generate QR codes. Please try again.",
 } as const;
 
 /**
- * Extracts QR code data from DOM canvas elements and converts to base64 strings
+ * Extracts a QR code buffer from a React ref to a QR code element.
  *
- * @param eventQRCodeRef - React ref to DOM element containing event QR code canvas
- * @param ownerQRCodeRef - React ref to DOM element containing owner verification QR code canvas
+ * @param qrRef - React ref to QR code DOM container
+ * @returns Buffer containing QR code PNG data, or undefined if not found
+ * @notes Impure: depends on DOM and React ref
+ */
+export const getQRcodeBuffer = async (
+  qrRef: React.RefObject<HTMLDivElement>
+): Promise<Buffer | undefined> => {
+  if (qrRef.current) {
+    const canvas = qrRef.current.querySelector("canvas");
+    if (canvas) {
+      const pngUrl = canvas.toDataURL("image/png");
+      return Buffer.from(pngUrl.split(",")[1], "base64");
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Generates a base64-encoded QR code string from a DOM element reference.
+ *
+ * @param qrCodeRef - React ref to QR code DOM container
+ * @returns Promise<Result<string, Error>> - Base64 QR code string or error
+ * @notes Uses getQRcodeBuffer internally
+ */
+export const generateQRCodeData = async (
+  qrCodeRef: React.RefObject<HTMLDivElement>
+): Promise<Result<string, Error>> => {
+  try {
+    const qrCodeBuffer = await getQRcodeBuffer(qrCodeRef);
+    if (!qrCodeBuffer) {
+      return failure(new Error("Failed to generate QR code buffer"));
+    }
+    return success(qrCodeBuffer.toString("base64"));
+  } catch (error) {
+    return failure(error instanceof Error ? error : new Error(String(error)));
+  }
+};
+
+/**
+ * Extracts QR code data from two DOM canvas elements and converts to base64 strings.
+ *
+ * @param eventQRCodeRef - React ref to event QR code DOM container
+ * @param ownerQRCodeRef - React ref to owner QR code DOM container
  * @returns Promise<Result<GenerateQRCodesOutput, string>> with base64 QR codes or error message
- *
- * @sideEffects
- * - Accesses DOM elements through React refs
- * - Reads canvas data for base64 conversion
- *
- * @performance
- * - Canvas.toDataURL() operations can be CPU intensive for large QR codes
- * - Synchronous DOM operations with minimal memory allocation
- *
- * @businessLogic
- * - Generates base64 strings suitable for email attachments and database storage
- * - Removes data URL prefix to return pure base64 content
- * - Both event and owner QR codes required for complete event setup
- *
- * @notes
- * - Requires QR code components to be rendered before extraction
- * - Canvas elements must be present in DOM for successful operation
- * - Pure client-side operation suitable for browser environments only
- *
- * @publicAPI Core utility used by event creation forms and QR code workflows
+ * @notes Requires QR code components to be rendered before extraction
  */
 export const generateQRCodes = async (
   eventQRCodeRef: React.RefObject<HTMLDivElement>,
@@ -75,41 +89,28 @@ export const generateQRCodes = async (
     if (!eventQRCodeRef.current || !ownerQRCodeRef.current) {
       return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
     }
-
-    // Extract canvas elements from QR code containers
     const eventCanvas = eventQRCodeRef.current.querySelector("canvas");
     const ownerCanvas = ownerQRCodeRef.current.querySelector("canvas");
-
     if (!eventCanvas || !ownerCanvas) {
       return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
     }
-
-    // Convert canvas to base64
     const eventQRCodeBase64 = eventCanvas.toDataURL("image/png").split(",")[1];
     const ownerIdQRCodeBase64 = ownerCanvas
       .toDataURL("image/png")
       .split(",")[1];
-
-    return success({
-      eventQRCodeBase64,
-      ownerIdQRCodeBase64,
-    });
+    return success({ eventQRCodeBase64, ownerIdQRCodeBase64 });
   } catch (error) {
     return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
   }
 };
 
 /**
- * Validates QR code DOM references for availability and accessibility
+ * Validates QR code DOM references for availability and accessibility.
  *
  * @param eventQRCodeRef - React ref to event QR code DOM container
  * @param ownerQRCodeRef - React ref to owner QR code DOM container
- * @returns Result<boolean, string> indicating validation success or specific error message
- *
- * @sideEffects None - pure function checking DOM ref availability
- * @performance O(1) - simple reference checking without DOM traversal
- * @notes Useful for preventing QR code generation attempts before rendering completion
- * @publicAPI Validation utility used before QR code extraction operations
+ * @returns Result<boolean, string> indicating validation success or error message
+ * @notes Pure function, does not access DOM
  */
 export const validateQRCodeRefs = (
   eventQRCodeRef: React.RefObject<HTMLDivElement>,
