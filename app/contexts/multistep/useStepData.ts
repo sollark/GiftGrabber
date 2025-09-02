@@ -23,8 +23,9 @@ export const useStepData = (): {
   const context = MultistepContext.useMultistepContext();
   const state = context._tag === "Some" ? context.value.state.data : {};
   const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
-  const stepData = state.stepData || {};
-  const currentStepId = state.currentStepId || "";
+  // Memoize stepData and currentStepId for stable dependencies
+  const stepData = React.useMemo(() => state.stepData || {}, [state.stepData]);
+  const currentStepId = React.useMemo(() => state.currentStepId || "", [state.currentStepId]);
 
   /**
    * Sets step data for a given stepId. Returns Result<void, Error>.

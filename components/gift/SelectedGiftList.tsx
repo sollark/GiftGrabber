@@ -84,10 +84,10 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   const giftContext = useGiftContext();
   const orderContext = useOrderContext();
   // Extract state and dispatch from context
-  const applicantGifts =
-    giftContext._tag === "Some"
-      ? giftContext.value.state.data.applicantGifts
-      : [];
+  const applicantGifts = React.useMemo(
+    () => (giftContext._tag === "Some" ? giftContext.value.state.data.applicantGifts : []),
+    [giftContext]
+  );
   const giftDispatch =
     giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
   const order =

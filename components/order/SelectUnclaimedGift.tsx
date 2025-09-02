@@ -58,8 +58,11 @@ const SelectUnclaimedGift: FC = () => {
   const applicantList = useApplicantList();
   const selectedApplicant = useSelectedApplicant();
   const giftContext = useGiftContext();
-  const giftList =
-    giftContext._tag === "Some" ? giftContext.value.state.data.giftList : [];
+  const giftList = useMemo(
+    () =>
+      giftContext._tag === "Some" ? giftContext.value.state.data.giftList : [],
+    [giftContext]
+  );
   const giftDispatch =
     giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
 
