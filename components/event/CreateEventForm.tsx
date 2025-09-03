@@ -64,7 +64,7 @@ import { generateEventId, generateOwnerId } from "@/utils/utils";
 import { EventSchema } from "@/utils/validator";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useCallback, useMemo, FC } from "react";
-import ErrorMessage from "@/ui/form/ErrorMessage";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import { useErrorHandler } from "@/components/ErrorBoundary";
 import Form from "@/ui/form/Form";
 import FormInputSection from "./FormInputSection";
@@ -72,7 +72,7 @@ import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
 import { processFormData } from "@/service/createEventFormService";
 import { generateQRCodes } from "@/utils/qrcodeUtils";
-import { success, failure, isFailure } from "@/utils/fp";
+import { success, isFailure } from "@/utils/fp";
 import {
   FORM_CONFIG,
   BASE_URL,

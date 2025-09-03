@@ -1,5 +1,4 @@
-import ErrorMessage from "@/components/ui/ErrorMessage";
-("use client");
+"use client";
 /**
  * ApplicantContext.tsx
  *
@@ -33,15 +32,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 
 import React from "react";
 import { Person } from "@/database/models/person.model";
-import {
-  Result,
-  Maybe,
-  some,
-  none,
-  success,
-  failure,
-  flatMapMaybe,
-} from "@/utils/fp";
+import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import {
   createFunctionalContext,
   FunctionalState,
@@ -51,6 +42,7 @@ import {
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { isPersonInList } from "@/utils/utils";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 // ============================================================================
 // TYPES AND INTERFACES

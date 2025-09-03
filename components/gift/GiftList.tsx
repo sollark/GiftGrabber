@@ -1,9 +1,8 @@
 import React from "react";
 import { Gift } from "@/database/models/gift.model";
-import ErrorMessage from "@/ui/form/ErrorMessage";
-import SortableFilterableTable, {
-  TableColumn,
-} from "@/ui/table/SortableFilterableTable";
+import SortableFilterableTable from "@/ui/table/SortableFilterableTable";
+import { buildGiftTableColumns } from "@/ui/table/columnBuilder";
+import ErrorMessage from "../ui/ErrorMessage";
 
 interface GiftListProps {
   giftList: Gift[];
@@ -30,67 +29,16 @@ const GiftList: React.FC<GiftListProps> = ({
   showLoadingWhenEmpty = false,
   error = null,
 }) => {
-  // Define table columns for gifts
-  const columns: TableColumn<Gift>[] = React.useMemo(
-    () => [
-      {
-        key: "ownerFirstName",
-        label: "Owner First Name",
-        sortable: true,
-        filterable: true,
-        getValue: (gift: Gift) => gift.owner?.firstName || "",
-        render: (gift: Gift) => (
-          <span>{gift.owner?.firstName || "Unknown"}</span>
-        ),
-      },
-      {
-        key: "ownerLastName",
-        label: "Owner Last Name",
-        sortable: true,
-        filterable: true,
-        getValue: (gift: Gift) => gift.owner?.lastName || "",
-        render: (gift: Gift) => (
-          <span>{gift.owner?.lastName || "Unknown"}</span>
-        ),
-      },
-      {
-        key: "status",
-        label: "Status",
-        sortable: true,
-        filterable: true,
-        getValue: (gift: Gift) => (gift.applicant ? "Claimed" : "Available"),
-        render: (gift: Gift) => (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              gift.applicant
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
-            }`}
-          >
-            {gift.applicant ? "Claimed" : "Available"}
-          </span>
-        ),
-      },
-      {
-        key: "applicant",
-        label: "Claimed By",
-        sortable: true,
-        filterable: true,
-        getValue: (gift: Gift) =>
-          gift.applicant
-            ? `${gift.applicant.firstName} ${gift.applicant.lastName}`
-            : "",
-        render: (gift: Gift) => (
-          <span className="text-gray-600">
-            {gift.applicant
-              ? `${gift.applicant.firstName} ${gift.applicant.lastName}`
-              : "-"}
-          </span>
-        ),
-      },
-    ],
-    []
-  );
+  // Determine formats for owner and applicant
+  const ownerFormat =
+    giftList.length > 0 ? giftList[0].owner?.sourceFormat : undefined;
+  const applicantFormat =
+    giftList.length > 0 && giftList[0].applicant
+      ? giftList[0].applicant.sourceFormat
+      : undefined;
+  const columns = ownerFormat
+    ? buildGiftTableColumns(ownerFormat, applicantFormat)
+    : [];
 
   // Show error state if there's an error
   if (error) {
@@ -105,7 +53,7 @@ const GiftList: React.FC<GiftListProps> = ({
       title="Gifts"
       emptyMessage="No gifts available"
       searchPlaceholder="Search gifts by owner, status, or applicant..."
-      rowKey={(gift, index) => gift.publicId || `gift-${index}`}
+      rowKey={(gift) => gift.publicId}
     />
   );
 };

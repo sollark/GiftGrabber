@@ -1,12 +1,8 @@
 import { Person } from "@/database/models/person.model";
 import { FC } from "react";
-import {
-  useApplicantList,
-  useApplicantContext,
-} from "@/app/contexts/ApplicantContext";
-import SortableFilterableTable, {
-  TableColumn,
-} from "@/ui/table/SortableFilterableTable";
+import { useApplicantList } from "@/app/contexts/ApplicantContext";
+import SortableFilterableTable from "@/ui/table/SortableFilterableTable";
+import { buildTableColumnsByFormat } from "@/ui/table/columnBuilder";
 import { useErrorHandler } from "@/components/ErrorBoundary";
 
 /**
@@ -49,23 +45,9 @@ const ApplicantList: FC<ApplicantListProps> = ({
     handleError(error);
   }
 
-  // Define table columns for applicants
-  const columns: TableColumn<Person>[] = [
-    {
-      key: "firstName",
-      label: "First Name",
-      sortable: true,
-      filterable: true,
-      getValue: (person: Person) => person.firstName || "",
-    },
-    {
-      key: "lastName",
-      label: "Last Name",
-      sortable: true,
-      filterable: true,
-      getValue: (person: Person) => person.lastName || "",
-    },
-  ];
+  // Use column builder based on format (assume all persons have same format)
+  const format = list.length > 0 ? list[0].sourceFormat : undefined;
+  const columns = format ? buildTableColumnsByFormat(format) : [];
 
   return (
     <SortableFilterableTable<Person>
@@ -81,9 +63,7 @@ const ApplicantList: FC<ApplicantListProps> = ({
           : "No applicants available"
       }
       searchPlaceholder="Search applicants by name..."
-      rowKey={(person, index) =>
-        person.publicId || `${person.firstName}-${person.lastName}-${index}`
-      }
+      rowKey={(person) => person.publicId}
     />
   );
 };

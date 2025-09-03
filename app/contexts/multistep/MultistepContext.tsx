@@ -1,5 +1,4 @@
-import ErrorMessage from "@/components/ui/ErrorMessage";
-("use client");
+"use client";
 /**
  * MultistepContext.tsx
  * Purpose: Provides the main React context for multistep workflows (e.g., forms, wizards).
@@ -24,6 +23,7 @@ import { success } from "@/utils/fp";
 import { useStepData } from "./useStepData";
 import { useStepNavigation } from "./useStepNavigation";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 /**
  * Validation middleware for multistep context.

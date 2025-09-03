@@ -52,11 +52,11 @@ export const submitOrder = async (
       qrCodeData
     );
 
-    if (!orderPublicId) {
-      return failure(new Error("Order creation failed"));
+    if (orderPublicId._tag === "Failure") {
+      return orderPublicId;
     }
 
-    return success(orderPublicId);
+    return success(orderPublicId.value);
   } catch (error) {
     return failure(error instanceof Error ? error : new Error(String(error)));
   }

@@ -1,5 +1,4 @@
-import ErrorMessage from "@/components/ui/ErrorMessage";
-("use client");
+"use client";
 /**
  * GiftContext: Isolated context for gift management logic.
  * Provides immutable state management and action-based updates for gifts.
@@ -15,6 +14,7 @@ import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { isGiftInList, areGiftsEqual } from "@/utils/utils";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 // ============================================================================
 // TYPES AND INTERFACES

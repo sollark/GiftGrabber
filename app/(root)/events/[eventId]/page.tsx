@@ -19,8 +19,6 @@ export default function ApplicantPage({
   params: Promise<{ eventId: string }>;
 }) {
   const [eventId, setEventId] = useState<string | null>(null);
-
-  // All hooks must be called unconditionally at the top
   const applicantContext = useApplicantContext();
   const giftContext = useGiftContext();
   const eventContext = useEventContext();
@@ -78,13 +76,13 @@ export default function ApplicantPage({
   );
 
   useEffect(() => {
-    if (event && eventContext._tag === "Some") {
+    if (event && event._tag === "Success" && eventContext._tag === "Some") {
       eventContext.value.dispatch({
         type: "SET_EVENT_DETAILS",
         payload: {
-          name: event.name,
-          email: event.email,
-          eventId: event.publicId,
+          name: event.value.name,
+          email: event.value.email,
+          eventId: event.value.publicId,
         },
       });
     }

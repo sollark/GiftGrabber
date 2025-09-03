@@ -51,8 +51,9 @@ export function useEventDataSync(
     setIsLoading(true);
 
     try {
-      const event = await getEvent(eventId);
-      if (event) {
+      const eventResult = await getEvent(eventId);
+      if (eventResult && eventResult._tag === "Success") {
+        const event = eventResult.value;
         const actions = contextActionsRef.current;
 
         // Dispatch event details to Event Context if available
