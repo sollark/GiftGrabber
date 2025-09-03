@@ -74,7 +74,7 @@ export const createEvent = async (
  * @returns The full Event object or null if not found.
  */
 export const getEvent = withDatabase(
-  async (eventId: string): Promise<Event | null> => {
+  async (eventId: string): Promise<Result<Event, string>> => {
     logger.info("[FETCH] getEvent", { eventId, timestamp: Date.now() });
     const result = await getEventWithDetails(eventId);
     if (isSuccess(result)) {
@@ -83,14 +83,14 @@ export const getEvent = withDatabase(
         found: !!result.value,
         timestamp: Date.now(),
       });
-      return result.value;
+      return success(result.value);
     } else {
       logger.error("[FETCH:ERROR] getEvent", {
         eventId,
         error: result.error,
         timestamp: Date.now(),
       });
-      return null;
+      return failure(result.error?.message || "Failed to fetch event");
     }
   }
 );
@@ -107,7 +107,7 @@ export interface EventDetails {
 }
 
 export const getEventDetails = withDatabase(
-  async (eventId: string): Promise<EventDetails | null> => {
+  async (eventId: string): Promise<Result<EventDetails, string>> => {
     logger.info("[FETCH] getEventDetails", { eventId, timestamp: Date.now() });
     const result = await getEventWithDetails(eventId);
     if (isSuccess(result) && result.value) {
@@ -119,21 +119,21 @@ export const getEventDetails = withDatabase(
         email,
         timestamp: Date.now(),
       });
-      return { publicId, name, email };
+      return success({ publicId, name, email });
     } else if (result._tag === "Failure") {
       logger.error("[FETCH:ERROR] getEventDetails", {
         eventId,
         error: result.error,
         timestamp: Date.now(),
       });
-      return null;
+      return failure(result.error?.message || "Failed to fetch event details");
     } else {
       logger.error("[FETCH:ERROR] getEventDetails", {
         eventId,
         error: "Unknown error",
         timestamp: Date.now(),
       });
-      return null;
+      return failure("Unknown error");
     }
   }
 );

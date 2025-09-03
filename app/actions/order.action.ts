@@ -9,10 +9,10 @@ import {
 } from "@/service/orderService";
 import { serializeForClient } from "@/service/databaseService";
 import { OrderCreationPublicData } from "@/types/common.types";
-import { failure, Result, success, fromPromise } from "@/utils/fp";
+import { failure, Result, success } from "@/utils/fp";
 
 /**
- * Log messages for order operations - Updated for PublicId Strategy
+ * Log messages for order operations
  */
 const LOG_MESSAGES = {
   MAKE_ORDER_ERROR: "Error in makeOrder",
@@ -29,43 +29,49 @@ const LOG_MESSAGES = {
  */
 const ERROR_MESSAGES = {
   ORDER_NOT_FOUND: "Order not found",
-  ORDER_NOT_FOUND_OR_CONFIRMED: "Order not found or already confirmed",
 } as const;
 
 /**
- * Logs order creation success
+ * Logs order creation success using logger
  */
 const logOrderCreation = (order: Order): void => {
-  console.log(LOG_MESSAGES.NEW_ORDER_CREATED(order));
+  logger.info(LOG_MESSAGES.NEW_ORDER_CREATED(order), {
+    publicId: order.publicId,
+    timestamp: Date.now(),
+  });
 };
 
 /**
- * Logs order-related errors
+ * Logs order-related errors using logger
  */
-const logOrderError = (message: string): void => {
-  console.log(message);
+const logOrderError = (message: string, error?: unknown): void => {
+  logger.error(message, {
+    error,
+    timestamp: Date.now(),
+  });
 };
 
 /**
- * Logs order retrieval start
+ * Logs order retrieval start using logger
  */
 const logOrderRetrieval = (): void => {
-  console.log(LOG_MESSAGES.GET_ORDER_START);
+  logger.info(LOG_MESSAGES.GET_ORDER_START, {
+    timestamp: Date.now(),
+  });
 };
 
 /**
  * Creates a new order in the database using publicIds (orchestration + error handling)
- * @returns The created order's publicId for further operations, or undefined on failure
+ * @returns Result<string, Error> - Success with publicId or Failure with Error
  */
 const makeOrderInternal = async (
   applicantPublicId: string,
   giftPublicIds: string[],
   orderId: string,
   confirmationRQCode: string
-): Promise<string | undefined> => {
-  // Changed return type to return publicId
+): Promise<Result<string, Error>> => {
   try {
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+    logger.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
 
     const orderData: OrderCreationPublicData = {
       applicantPublicId,
@@ -77,16 +83,17 @@ const makeOrderInternal = async (
     const result = await createOrderInternal(orderData);
 
     if (result._tag === "Failure") {
-      logOrderError(result.error);
-      return undefined;
+      logOrderError(LOG_MESSAGES.MAKE_ORDER_ERROR, result.error);
+      return failure(new Error(result.error));
     }
 
     const newOrder = result.value;
     logOrderCreation(newOrder);
-    return newOrder.publicId; // Return the publicId instead of boolean
+    return success(newOrder.publicId);
   } catch (error) {
-    logOrderError(LOG_MESSAGES.MAKE_ORDER_ERROR);
-    return undefined;
+    logOrderError(LOG_MESSAGES.MAKE_ORDER_ERROR, error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    return failure(err);
   }
 };
 
@@ -95,8 +102,7 @@ export const makeOrder = async (
   giftPublicIds: string[],
   orderId: string,
   confirmationRQCode: string
-): Promise<string | undefined> => {
-  // Changed return type to return publicId
+): Promise<Result<string, Error>> => {
   return makeOrderInternal(
     applicantPublicId,
     giftPublicIds,
@@ -105,14 +111,6 @@ export const makeOrder = async (
   );
 };
 
-/**
- * Retrieves an order by its ID with populated fields (orchestration + error handling)
- * Old version. Dont delete, it is example how to modify this kind of function
- */
-
-// const getOrderInternal = async (
-//   orderId: string
-// ): Promise<Record<string, unknown> | null> => {
 /**
  * Fetches an order with populated data and serializes it - Fixed for publicId consistency
  * @param orderPublicId - The public identifier for the order
@@ -126,12 +124,12 @@ export const getOrderInternal = async (
     timestamp: Date.now(),
   });
   try {
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
+    logger.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
     const orderResult = await findOrderByPublicId(orderPublicId);
 
     if (orderResult._tag === "Failure") {
       const err = new Error(orderResult.error);
-      logOrderError(LOG_MESSAGES.GET_ORDER_ERROR);
+      logOrderError(LOG_MESSAGES.GET_ORDER_ERROR, orderResult.error);
       return failure(err);
     }
 
@@ -154,7 +152,7 @@ export const getOrderInternal = async (
     return success(serializeForClient(orderResult.value));
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    logOrderError(err.message);
+    logOrderError(err.message, error);
     return failure(err);
   }
 };
@@ -170,29 +168,33 @@ export const getOrder = withDatabase(
 /**
  * Confirms an order and updates associated gifts (orchestration + error handling) - Fixed for publicId consistency
  */
-const confirmOrderInternalAction = async (
-  orderPublicId: string // Changed from orderId to orderPublicId
-): Promise<Record<string, unknown> | false> => {
-  try {
-    console.log(LOG_MESSAGES.USING_PUBLIC_ID);
 
-    const result = await confirmOrderInternal(orderPublicId); // Now passes correct publicId
+const confirmOrderInternalAction = async (
+  orderPublicId: string
+): Promise<Result<Record<string, unknown>, Error>> => {
+  try {
+    logger.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
+
+    const result = await confirmOrderInternal(orderPublicId);
 
     if (result._tag === "Failure") {
-      logOrderError(result.error);
-      return false;
+      logOrderError(LOG_MESSAGES.CONFIRM_ORDER_ERROR, result.error);
+      return failure(new Error(result.error));
     }
 
     // Return the confirmed order with publicId (not business orderId)
     const confirmedOrder = result.value;
-    return {
+    return success({
       publicId: confirmedOrder.publicId,
       status: "COMPLETED",
-    };
+    });
   } catch (error) {
-    logOrderError(LOG_MESSAGES.CONFIRM_ORDER_ERROR);
-    return false;
+    logOrderError(LOG_MESSAGES.CONFIRM_ORDER_ERROR, error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    return failure(err);
   }
 };
 
-export const confirmOrder = withDatabase(confirmOrderInternalAction);
+export const confirmOrder = withDatabase(async (orderPublicId: string) => {
+  return confirmOrderInternalAction(orderPublicId);
+});

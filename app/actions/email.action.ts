@@ -21,6 +21,7 @@ import logger from "@/lib/logger";
  */
 
 import { sendEmail } from "@/lib/email";
+import { success, failure, Result } from "@/utils/fp";
 
 /**
  * Configuration constants for email actions
@@ -67,56 +68,6 @@ interface EmailParameters {
 }
 
 /**
- * Server action for sending QR codes to event owners via email
- *
- * @param data - EmailPayload containing recipient address, HTML content, and QR code attachments
- * @returns Promise<void> - Resolves when email is successfully sent or logs error
- *
- * @sideEffects
- * - Sends email through external email service
- * - Logs sending progress and results to console
- * - May trigger external SMTP or email API calls
- *
- * @performance
- * - Async operation dependent on email service response time
- * - Network latency affects completion time
- * - Error handling prevents server action failures
- *
- * @businessLogic
- * - Primary workflow for event owner notifications
- * - Delivers QR codes for event access and owner verification
- * - Critical for event creation completion workflow
- *
- * @publicAPI Server action called from event creation forms and workflows
- */
-export const sendQRCodesToOwner = async (data: EmailPayload): Promise<void> => {
-  logger.info("[EMAIL] sendQRCodesToOwner", {
-    to: data.to,
-    timestamp: Date.now(),
-  });
-  logEmailSending(data.to);
-
-  try {
-    const emailParameters = createEmailParameters(data);
-    await sendEmailToRecipient(emailParameters);
-    logger.info("[EMAIL:RESULT] sendQRCodesToOwner", {
-      to: data.to,
-      status: "sent",
-      timestamp: Date.now(),
-    });
-    logEmailSuccess();
-  } catch (error) {
-    logger.error("[EMAIL:RESULT] sendQRCodesToOwner", {
-      to: data.to,
-      status: "failed",
-      error,
-      timestamp: Date.now(),
-    });
-    logEmailError(error);
-  }
-};
-
-/**
  * Logs the initiation of email sending process with recipient information
  *
  * @param recipient - Email address receiving the notification
@@ -126,8 +77,12 @@ export const sendQRCodesToOwner = async (data: EmailPayload): Promise<void> => {
  * @notes Provides audit trail for email delivery attempts
  * @internalAPI Helper function for email operation logging
  */
+
 const logEmailSending = (recipient: string): void => {
-  console.log(LOG_MESSAGES.SENDING(recipient));
+  logger.info(LOG_MESSAGES.SENDING(recipient), {
+    recipient,
+    timestamp: Date.now(),
+  });
 };
 
 /**
@@ -138,8 +93,11 @@ const logEmailSending = (recipient: string): void => {
  * @notes Confirms successful email delivery for operational monitoring
  * @internalAPI Helper function for email operation logging
  */
+
 const logEmailSuccess = (): void => {
-  console.log(LOG_MESSAGES.SUCCESS);
+  logger.info(LOG_MESSAGES.SUCCESS, {
+    timestamp: Date.now(),
+  });
 };
 
 /**
@@ -152,8 +110,12 @@ const logEmailSuccess = (): void => {
  * @notes Critical for troubleshooting email delivery issues in production
  * @internalAPI Helper function for email operation error logging
  */
+
 const logEmailError = (error: unknown): void => {
-  console.error(LOG_MESSAGES.FAILED, error);
+  logger.error(LOG_MESSAGES.FAILED, {
+    error,
+    timestamp: Date.now(),
+  });
 };
 
 /**
@@ -202,3 +164,60 @@ const sendEmailToRecipient = async (
 ): Promise<void> => {
   await sendEmail(emailParameters);
 };
+
+/**
+ * Server action for sending QR codes to event owners via email
+ *
+ * @param data - EmailPayload containing recipient address, HTML content, and QR code attachments
+ * @returns Promise<void> - Resolves when email is successfully sent or logs error
+ *
+ * @sideEffects
+ * - Sends email through external email service
+ * - Logs sending progress and results to console
+ * - May trigger external SMTP or email API calls
+ *
+ * @performance
+ * - Async operation dependent on email service response time
+ * - Network latency affects completion time
+ * - Error handling prevents server action failures
+ *
+ * @businessLogic
+ * - Primary workflow for event owner notifications
+ * - Delivers QR codes for event access and owner verification
+ * - Critical for event creation completion workflow
+ *
+ * @publicAPI Server action called from event creation forms and workflows
+ */
+const sendQRCodesToOwner = async (
+  data: EmailPayload
+): Promise<Result<{ to: string }, Error>> => {
+  logger.info("[EMAIL] sendQRCodesToOwner", {
+    to: data.to,
+    timestamp: Date.now(),
+  });
+  logEmailSending(data.to);
+
+  try {
+    const emailParameters = createEmailParameters(data);
+    await sendEmailToRecipient(emailParameters);
+    logger.info("[EMAIL:RESULT] sendQRCodesToOwner", {
+      to: data.to,
+      status: "sent",
+      timestamp: Date.now(),
+    });
+    logEmailSuccess();
+    return success({ to: data.to });
+  } catch (error) {
+    logger.error("[EMAIL:RESULT] sendQRCodesToOwner", {
+      to: data.to,
+      status: "failed",
+      error,
+      timestamp: Date.now(),
+    });
+    logEmailError(error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    return failure(err);
+  }
+};
+
+export { sendQRCodesToOwner };
