@@ -11,6 +11,7 @@ import ApplicantPageClient from "./ApplicantPageClient";
 import { useApplicantContext } from "@/app/contexts/ApplicantContext";
 import { useGiftContext } from "@/app/contexts/gift/GiftContext";
 import { useEventContext } from "@/app/contexts/EventContext";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 
 export default function ApplicantPage({
   params,
@@ -105,8 +106,8 @@ export default function ApplicantPage({
   if (eventLoading || applicantsLoading || giftsLoading || !eventId)
     return <div>Loading...</div>;
   if (eventError || applicantsError || giftsError)
-    return <div>Error loading event data</div>;
-  if (!event) return <div>Event not found</div>;
+    return <ErrorMessage message="Error loading event data" />;
+  if (!event) return <ErrorMessage message="Event not found" />;
 
   return <ApplicantPageClient />;
 }

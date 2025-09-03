@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 import { EventProvider } from "@/app/contexts/EventContext";
 import { ApplicantProvider } from "@/app/contexts/ApplicantContext";
 import { GiftProvider } from "@/app/contexts/gift/GiftContext";
-import OptimisticEventDetailsClient from "./OptimisticEventDetailsClient";
+import EventDetailsClient from "./EventDetailsClient";
 
 /**
  * Event details page component with owner access control and context providers
@@ -88,7 +88,7 @@ export default function EventDetails({
     <EventProvider eventId={eventId}>
       <ApplicantProvider applicantList={[]}>
         <GiftProvider giftList={[]}>
-          <OptimisticEventDetailsClient eventId={eventId} ownerId={ownerId} />
+          <EventDetailsClient eventId={eventId} ownerId={ownerId} />
         </GiftProvider>
       </ApplicantProvider>
     </EventProvider>

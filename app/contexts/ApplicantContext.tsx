@@ -1,4 +1,5 @@
-"use client";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+("use client");
 /**
  * ApplicantContext.tsx
  *
@@ -43,7 +44,6 @@ import {
 } from "@/utils/fp";
 import {
   createFunctionalContext,
-  FunctionalAction,
   FunctionalState,
   loggingMiddleware,
   validationMiddleware,
@@ -225,7 +225,7 @@ const ApplicantProviderComponent: React.FC<ApplicantProviderProps> = ({
 export const ApplicantProvider = withErrorBoundary(
   ApplicantProviderComponent,
   "ApplicantContext",
-  <div>Failed to load Applicant context. Please refresh the page.</div>
+  <ErrorMessage message="Failed to load Applicant context. Please refresh the page." />
 );
 
 // ============================================================================

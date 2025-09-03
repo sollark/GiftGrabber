@@ -48,7 +48,7 @@ export default function RootLayout({
 }>) {
   "use client";
   // Wrap all pages in global context providers to preserve state across navigation
-  // This fixes context loss when navigating between CreateEventForm and OptimisticEventDetailsClient
+  // This fixes context loss when navigating between CreateEventForm and EventDetailsClient
   // Providers are imported from their respective modules
   // If providers require initial data, enhance them to hydrate from storage in future steps
   return (

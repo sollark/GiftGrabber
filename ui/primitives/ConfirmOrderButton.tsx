@@ -3,7 +3,7 @@ import { useOrderStatus } from "@/app/contexts/order/OrderContext";
 import { OrderStatus } from "@/types/common.types";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import StyledButton from "./AccentButton";
-import ErrorMessage from "@/ui/form/ErrorMessage";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import { useErrorHandler } from "@/components/ErrorBoundary";
 
 /**

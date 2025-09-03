@@ -1,3 +1,4 @@
+import ErrorMessage from "@/components/ui/ErrorMessage";
 /**
  * EventContext.tsx
  *
@@ -298,7 +299,7 @@ const EventProviderComponent: React.FC<EventProviderProps> = ({
 export const EventProvider = withErrorBoundary(
   EventProviderComponent,
   "EventContext",
-  <div>Failed to load Event context. Please refresh the page.</div>
+  <ErrorMessage message="Failed to load Event context. Please refresh the page." />
 );
 
 // ============================================================================

@@ -1,3 +1,4 @@
+import ErrorMessage from "@/components/ui/ErrorMessage";
 /**
  * OrderContext.tsx
  * Purpose: Provides the main React context for order state management in the app.
@@ -120,7 +121,7 @@ const OrderProviderComponent: React.FC<OrderProviderProps> = ({ children }) => {
 export const OrderProvider = withErrorBoundary(
   OrderProviderComponent,
   "OrderContext",
-  <div>Failed to load Order context. Please refresh the page.</div>
+  <ErrorMessage message="Failed to load Order context. Please refresh the page." />
 );
 
 const OrderContextExports = {

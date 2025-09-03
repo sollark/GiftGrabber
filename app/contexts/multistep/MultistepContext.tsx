@@ -1,4 +1,5 @@
-"use client";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+("use client");
 /**
  * MultistepContext.tsx
  * Purpose: Provides the main React context for multistep workflows (e.g., forms, wizards).
@@ -104,7 +105,7 @@ const MultistepProviderComponent: React.FC<MultistepProviderProps> = ({
 export const MultistepProvider = withErrorBoundary(
   MultistepProviderComponent,
   "MultistepContext",
-  <div>Failed to load Multistep context. Please refresh the page.</div>
+  <ErrorMessage message="Failed to load Multistep context. Please refresh the page." />
 );
 
 /**

@@ -1,5 +1,5 @@
 /**
- * OptimisticEventDetailsClient.tsx
+ * EventDetailsClient.tsx
  *
  * Purpose: Renders the event details page for event owners, providing optimistic UI and context-driven data management.
  *
@@ -18,16 +18,18 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { getMaybeOrElse } from "@/utils/fp";
 import { useEventContext } from "@/app/contexts/EventContext";
 import { useApplicantContext } from "@/app/contexts/ApplicantContext";
 import { useGiftContext } from "@/app/contexts/gift/GiftContext";
+import { Person } from "@/database/models/person.model";
 import { useEventDataSync } from "@/hooks/useEventDataSync";
 import ApplicantList from "@/components/applicant/ApplicantList";
 import ListSkeleton from "@/components/ui/ListSkeleton";
-import ErrorMessage from "@/ui/form/ErrorMessage";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import GiftList from "@/components/gift/GiftList";
 
-interface OptimisticEventDetailsClientProps {
+interface EventDetailsClientProps {
   eventId: string;
   ownerId: string;
 }
@@ -62,31 +64,42 @@ interface OptimisticEventDetailsClientProps {
  *
  * @publicAPI Component used by event details page for owner interface
  */
-export default function OptimisticEventDetailsClient({
+export default function EventDetailsClient({
   eventId,
   ownerId,
-}: OptimisticEventDetailsClientProps) {
+}: EventDetailsClientProps) {
   // --- Context Access ---
   const eventContext = useEventContext();
   const applicantContext = useApplicantContext();
   const giftContext = useGiftContext();
 
-  // Helper to safely extract value from a Maybe type, fallback to default.
-  const extractOrDefault = <T,>(maybe: any, fallback: T): T => {
-    return maybe && maybe._tag === "Some" ? maybe.value : fallback;
-  };
-
   // Extract values from context
-  const eventDetails =
-    eventContext._tag === "Some"
-      ? eventContext.value.state.data
-      : { eventId, name: "", email: "" };
-  const applicantList =
-    applicantContext._tag === "Some"
-      ? applicantContext.value.state.data.applicantList
-      : [];
-  const giftList =
-    giftContext._tag === "Some" ? giftContext.value.state.data.giftList : [];
+  const eventDetails = getMaybeOrElse({ eventId, name: "", email: "" })(
+    eventContext._tag === "Some" && eventContext.value.state.data.eventId
+      ? {
+          _tag: "Some",
+          value: {
+            eventId: eventContext.value.state.data.eventId,
+            name: eventContext.value.state.data.name ?? "",
+            email: eventContext.value.state.data.email ?? "",
+          },
+        }
+      : { _tag: "None" }
+  );
+
+  const applicantList = getMaybeOrElse<Person[]>([])(
+    applicantContext._tag === "Some" &&
+      Array.isArray(applicantContext.value.state.data.applicantList)
+      ? { _tag: "Some", value: applicantContext.value.state.data.applicantList }
+      : { _tag: "None" }
+  );
+
+  const giftList = getMaybeOrElse<any[]>([])(
+    giftContext._tag === "Some" &&
+      Array.isArray(giftContext.value.state.data.giftList)
+      ? { _tag: "Some", value: giftContext.value.state.data.giftList }
+      : { _tag: "None" }
+  );
 
   // Create stable context actions object - memoized by actual action functions
   const contextActions = useMemo(() => {

@@ -1,4 +1,5 @@
-"use client";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+("use client");
 /**
  * GiftContext: Isolated context for gift management logic.
  * Provides immutable state management and action-based updates for gifts.
@@ -248,7 +249,7 @@ const GiftProviderComponent: React.FC<GiftProviderProps> = ({
 export const GiftProvider = withErrorBoundary(
   GiftProviderComponent,
   "GiftContext",
-  <div>Failed to load Gift context. Please refresh the page.</div>
+  <ErrorMessage message="Failed to load Gift context. Please refresh the page." />
 );
 
 /**
