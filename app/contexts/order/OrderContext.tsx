@@ -6,6 +6,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
  * Architecture: Centralizes order state, connects reducer and middleware, and enables modular access to order logic.
  */
 import React from "react";
+import useSafeContext from "@/app/hooks/useSafeContext";
 import { newOrder, OrderStatus } from "@/types/common.types";
 import { OrderState, OrderAction } from "./types";
 import { none } from "@/utils/fp";
@@ -42,7 +43,7 @@ const defaultOrderData: newOrder = {
   createdAt: new Date(),
   applicant: null,
   gifts: [],
-  orderId: `order-${Date.now()}`,
+  publicOrderId: `order-${Date.now()}`,
   confirmationRQCode: "",
   status: OrderStatus.PENDING,
 };
@@ -82,7 +83,9 @@ const contextResult = createFunctionalContext<OrderState, OrderAction>({
  */
 export const OrderContext = contextResult.Context;
 export const BaseOrderProvider = contextResult.Provider;
-export const useOrderContext = contextResult.useContext;
+export const useOrderContext = () => {
+  return useSafeContext(OrderContext, "OrderContext");
+};
 
 // =======================
 // Provider Component

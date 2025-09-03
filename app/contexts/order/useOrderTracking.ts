@@ -14,11 +14,9 @@ import { OrderNotification, OrderHistoryEntry } from "./types";
  */
 export const useOrderTracking = () => {
   const context = useOrderContext();
-  const orderHistory =
-    context._tag === "Some" ? context.value.state.data.orderHistory : [];
-  const notifications =
-    context._tag === "Some" ? context.value.state.data.notifications : [];
-  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
+  const orderHistory = context?.state?.data?.orderHistory ?? [];
+  const notifications = context?.state?.data?.notifications ?? [];
+  const dispatch = context?.dispatch;
 
   // Add history entry
   const addHistoryEntry = (

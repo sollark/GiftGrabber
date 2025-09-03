@@ -15,18 +15,9 @@ import { Result, success, failure } from "@/utils/fp";
 export function useEventDataSync(
   eventId: string,
   contextActions: {
-    eventActions?: {
-      _tag: string;
-      value: { dispatch: (action: any) => void };
-    };
-    applicantActions: {
-      _tag: string;
-      value: { dispatch: (action: any) => void };
-    };
-    giftActions: {
-      _tag: string;
-      value: { dispatch: (action: any) => void };
-    };
+    eventActions?: { dispatch: (action: any) => void };
+    applicantActions: { dispatch: (action: any) => void };
+    giftActions: { dispatch: (action: any) => void };
   }
 ) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -57,23 +48,23 @@ export function useEventDataSync(
         const actions = contextActionsRef.current;
 
         // Dispatch event details to Event Context if available
-        if (actions.eventActions && actions.eventActions._tag === "Some") {
-          actions.eventActions.value.dispatch({
+        if (actions.eventActions) {
+          actions.eventActions.dispatch({
             type: "SET_EVENT_DETAILS" as const,
             payload: { name: event.name, email: event.email, eventId },
           });
         }
 
         // Dispatch to applicant context
-        if (actions.applicantActions._tag === "Some") {
-          actions.applicantActions.value.dispatch({
+        if (actions.applicantActions) {
+          actions.applicantActions.dispatch({
             type: "SET_EVENT_APPLICANTS" as const,
             payload: { applicantList: event.applicantList || [] },
           });
         }
         // Dispatch to gift context
-        if (actions.giftActions._tag === "Some") {
-          actions.giftActions.value.dispatch({
+        if (actions.giftActions) {
+          actions.giftActions.dispatch({
             type: "SET_GIFT_LIST" as const,
             payload: event.giftList || [],
           });

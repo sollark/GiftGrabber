@@ -43,7 +43,7 @@ export const orderReducer = (
         createdAt: new Date(),
         applicant: null,
         gifts: [],
-        orderId: `order-${Date.now()}`,
+        publicOrderId: `order-${Date.now()}`,
         confirmationRQCode: "",
         status: OrderStatus.PENDING,
       };

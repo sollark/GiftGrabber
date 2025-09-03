@@ -24,7 +24,7 @@ export const PUBLIC_FIELD_SELECTIONS = {
   EVENT:
     "publicId eventId name email ownerId eventQRCodeBase64 ownerIdQRCodeBase64",
   GIFT: "publicId owner applicant order",
-  ORDER: "publicId createdAt applicant gifts orderId  status",
+  ORDER: "publicId createdAt applicant gifts publicOrderId  status",
 };
 
 /**

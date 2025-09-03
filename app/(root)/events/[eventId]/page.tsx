@@ -76,8 +76,8 @@ export default function ApplicantPage({
   );
 
   useEffect(() => {
-    if (event && event._tag === "Success" && eventContext._tag === "Some") {
-      eventContext.value.dispatch({
+    if (event && event._tag === "Success") {
+      eventContext.dispatch({
         type: "SET_EVENT_DETAILS",
         payload: {
           name: event.value.name,
@@ -86,15 +86,15 @@ export default function ApplicantPage({
         },
       });
     }
-    if (applicants.length && applicantContext._tag === "Some") {
-      applicantContext.value.dispatch({
+    if (applicants.length) {
+      applicantContext.dispatch({
         type: "SET_EVENT_APPLICANTS",
         payload: { applicantList: applicants },
       });
     }
 
-    if (gifts.length && giftContext._tag === "Some") {
-      giftContext.value.dispatch({
+    if (gifts.length) {
+      giftContext.dispatch({
         type: "SET_GIFT_LIST",
         payload: gifts,
       });

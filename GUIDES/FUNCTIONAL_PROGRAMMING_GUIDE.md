@@ -206,7 +206,7 @@ const eventResult = await createEventSafely({
 });
 
 // Safe data retrieval
-const maybeOrder = await findOrderSafely(orderId);
+const maybeOrder = await findOrderSafely(publicOrderId);
 ```
 
 ### Form Management

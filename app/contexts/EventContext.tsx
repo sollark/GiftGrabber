@@ -44,6 +44,7 @@ import {
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, Maybe, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import useSafeContext from "@/app/hooks/useSafeContext";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -167,56 +168,47 @@ const eventReducer = (
         },
       });
     }
-    case "RESET_EVENT":
+    case "RESET_EVENT": {
       return success(createInitialState());
+    }
     default:
-      return failure(new Error(`Unknown action type: ${action.type}`));
+      return failure(new Error("Unknown action type"));
   }
 };
+
 // ============================================================================
 // ENHANCED HOOKS FOR COMMON OPERATIONS
 // ============================================================================
 
 /**
  * useEventSelection
- * High-level hook for event selection operations.
- * @returns {object} Selection state and actions: { eventId, eventData, selectEvent, clearEvent, hasSelection }
+      context.dispatch({
  */
+export function useEventContext() {
+  return useSafeContext(EventContext, "EventContext");
+}
+
 export const useEventSelection = () => {
   const context = useEventContext();
-  const eventId =
-    context._tag === "Some" ? context.value.state.data.eventId : undefined;
-  const eventData =
-    context._tag === "Some" ? context.value.state.data : undefined;
+  const eventId = context.state.data.eventId;
+  const eventData = context.state.data;
 
-  /**
-   * selectEvent
-   * Selects an event by id.
-   * @param id - Event ID to select
-   * @returns {Result<EventState, Error>} Result of dispatch
-   */
   const selectEvent = React.useCallback(
     (id: string) => {
-      if (context._tag === "Some") {
-        context.value.dispatch({
-          type: "SET_EVENT_ID",
-          payload: id,
-        });
-        return success(context.value.state);
-      }
-      return failure(new Error("Event context not available"));
+      context.dispatch({
+        type: "SET_EVENT_ID",
+        payload: id,
+      });
+      return success(context.state);
     },
     [context]
   );
 
   const clearEvent = React.useCallback(() => {
-    if (context._tag === "Some") {
-      context.value.dispatch({
-        type: "RESET_EVENT",
-      });
-      return success(context.value.state);
-    }
-    return failure(new Error("Event context not available"));
+    context.dispatch({
+      type: "RESET_EVENT",
+    });
+    return success(context.state);
   }, [context]);
 
   return {
@@ -255,15 +247,6 @@ export const EventContext = contextResult.Context;
  * BaseEventProvider: Provider component for the event context (without error boundary).
  */
 export const BaseEventProvider = contextResult.Provider;
-
-/**
- * useEventContext: Hook to access the raw event context value.
- */
-export const useEventContext = contextResult.useContext;
-
-// ============================================================================
-// ENHANCED PROVIDER WITH ERROR BOUNDARY
-// ============================================================================
 
 /**
  * EventProviderComponent

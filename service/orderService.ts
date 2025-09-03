@@ -99,19 +99,19 @@ export const validateOrderForConfirmation = (
  * Creates order data object from public IDs.
  * @param applicantPublicId - The applicant's public ID.
  * @param giftPublicIds - Array of gift public IDs.
- * @param orderId - The order ID string.
+ * @param publicOrderId - The order ID string.
  * @param confirmationRQCode - The confirmation QR code string.
  * @returns OrderCreationPublicData object.
  */
 export const createOrderData = (
   applicantPublicId: string,
   giftPublicIds: string[],
-  orderId: string,
+  publicOrderId: string,
   confirmationRQCode: string
 ): OrderCreationPublicData => ({
   applicantPublicId,
   giftPublicIds,
-  orderId,
+  publicOrderId,
   confirmationRQCode,
 });
 
@@ -123,7 +123,7 @@ export const createOrderData = (
 export type CreateOrderParams = {
   applicantPublicId: string;
   giftPublicIds: string[];
-  orderId: string;
+  publicOrderId: string;
   confirmationRQCode: string;
 };
 
@@ -131,8 +131,8 @@ export const createOrderInternal = async (
   params: CreateOrderParams
 ): Promise<Result<Order, string>> => {
   // Validate required fields
-  if (!params.applicantPublicId || !params.orderId) {
-    return failure("Missing required fields: applicantPublicId, orderId");
+  if (!params.applicantPublicId || !params.publicOrderId) {
+    return failure("Missing required fields: applicantPublicId, publicOrderId");
   }
 
   if (!params.giftPublicIds || params.giftPublicIds.length === 0) {
@@ -236,14 +236,14 @@ export const getAllOrdersInternal = async (): Promise<
 
 /**
  * Finds an order with populated fields using centralized population logic.
- * @param orderId - The unique identifier for the order.
+ * @param publicOrderId - The unique identifier for the order.
  * @returns Promise<Result<Order, Error>> - Order with populated fields or error.
  */
 export const findOrderWithPopulation = async (
-  orderId: string
+  publicOrderId: string
 ): Promise<Result<Order, Error>> => {
   try {
-    const result = await DatabaseOrderService.findWithPopulation(orderId);
+    const result = await DatabaseOrderService.findWithPopulation(publicOrderId);
     if (result._tag === "Failure") return failure(result.error);
     if (!result.value) return failure(new Error("Order not found"));
     return success(result.value);
@@ -254,15 +254,15 @@ export const findOrderWithPopulation = async (
 
 /**
  * Finds an unconfirmed order using centralized population logic.
- * @param orderId - The unique identifier for the order.
+ * @param publicOrderId - The unique identifier for the order.
  * @returns Promise<Result<Order, Error>> - Unconfirmed order or error.
  */
 export const findUnconfirmedOrder = async (
-  orderId: string
+  publicOrderId: string
 ): Promise<Result<Order, Error>> => {
   try {
     const result = await DatabaseOrderService.findUnconfirmedWithPopulation(
-      orderId
+      publicOrderId
     );
     if (result._tag === "Failure") return failure(result.error);
     if (!result.value) return failure(new Error("Unconfirmed order not found"));

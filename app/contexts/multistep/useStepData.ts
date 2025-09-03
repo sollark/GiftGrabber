@@ -1,15 +1,30 @@
 /**
  * useStepData.ts
- * Purpose: Provides a custom React hook for accessing and managing step-specific data within a multistep form context.
+ *
+ * Purpose:
+ *   Provides a custom React hook for accessing and managing step-specific data within the multistep workflow context.
+ *
  * Main Responsibilities:
- *   - Exposes step data and helper functions for setting, updating, clearing, and retrieving step data.
- *   - Acts as the public API for consumers of the MultistepContext, abstracting context internals.
+ *   - Exposes step data and helper functions for updating, clearing, and retrieving step data.
+ *   - Acts as the public API for consumers of MultistepContext, abstracting context internals.
  *   - Ensures safe access to context state and dispatch, handling missing context gracefully.
+ *
  * Architectural Role:
  *   - Sits at the boundary between UI components and the multistep context state management.
  *   - Promotes encapsulation and separation of concerns by hiding context details from consumers.
  *   - Relies on functional programming patterns for error handling (success/failure).
+ *
+ * Business Logic:
+ *   - Step data is keyed by step ID and can be updated or cleared atomically.
+ *   - All mutations are dispatched to the context reducer, ensuring centralized state management.
+ *   - Returns functional Result objects for error handling.
+ *
+ * Patterns:
+ *   - Uses React.memo and React.callback for performance and stable dependencies.
+ *   - Defensive context access: returns failure if context is unavailable.
+ *   - No direct state mutation; all changes go through context dispatch.
  */
+
 import React from "react";
 import { success, failure } from "@/utils/fp";
 import { useMultistepContext } from "./MultistepContext";
@@ -20,7 +35,6 @@ import { useMultistepContext } from "./MultistepContext";
  *
  * Returns:
  *   - stepData: object mapping step IDs to their data.
- *   - updateStepData: function to update data for a step.
  *   - updateStepData: function to update data for a step.
  *   - clearStepData: function to clear data for a step.
  *   - getCurrentStepData: function to get data for the current step.
@@ -43,9 +57,10 @@ export const useStepData = (): {
 } => {
   // Internal: Access context state and dispatch, fallback to empty if missing.
   const context = useMultistepContext();
-  const state = context._tag === "Some" ? context.value.state.data : {};
-  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
-  // Internal: Memoize stepData and currentStepId for stable dependencies.
+  const state = context?.state?.data ?? {};
+  const dispatch = context?.dispatch;
+
+  // Memoize stepData and currentStepId for stable dependencies.
   const stepData = React.useMemo(() => state.stepData || {}, [state.stepData]);
   const currentStepId = React.useMemo(
     () => state.currentStepId || "",

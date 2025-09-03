@@ -25,6 +25,7 @@ import { Person } from "@/database/models/person.model";
 import PersonAutocomplete from "../PersonAutocomplete";
 import GiftInfo from "../gift/GiftInfo";
 import { PrimaryButton } from "@/ui/primitives";
+import { isSome } from "@/utils/fp";
 
 /**
  * findPersonGift
@@ -59,16 +60,15 @@ const SelectUnclaimedGift: FC = () => {
   const selectedApplicant = useSelectedApplicant();
   const giftContext = useGiftContext();
   const giftList = useMemo(
-    () =>
-      giftContext._tag === "Some" ? giftContext.value.state.data.giftList : [],
+    () => giftContext.state.data.giftList,
     [giftContext]
   );
-  const giftDispatch =
-    giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
+  const giftDispatch = giftContext.dispatch;
 
   // Local state for selected person and their gift
-  const initialPerson =
-    selectedApplicant._tag === "Some" ? selectedApplicant.value : null;
+  const initialPerson = isSome(selectedApplicant)
+    ? (selectedApplicant as any).value
+    : null;
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(
     initialPerson
   );

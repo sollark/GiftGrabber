@@ -58,7 +58,7 @@ export function buildGiftTableColumns(
       getValue: (gift) => (gift.applicant ? "Claimed" : "Available"),
     },
     {
-      key: "orderId",
+      key: "publicOrderId",
       label: "Order",
       sortable: true,
       filterable: true,

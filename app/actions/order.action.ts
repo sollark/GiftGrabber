@@ -67,7 +67,7 @@ const logOrderRetrieval = (): void => {
 const makeOrderInternal = async (
   applicantPublicId: string,
   giftPublicIds: string[],
-  orderId: string,
+  publicOrderId: string,
   confirmationRQCode: string
 ): Promise<Result<string, Error>> => {
   try {
@@ -76,7 +76,7 @@ const makeOrderInternal = async (
     const orderData: OrderCreationPublicData = {
       applicantPublicId,
       giftPublicIds,
-      orderId,
+      publicOrderId,
       confirmationRQCode,
     };
 
@@ -100,13 +100,13 @@ const makeOrderInternal = async (
 export const makeOrder = async (
   applicantPublicId: string,
   giftPublicIds: string[],
-  orderId: string,
+  publicOrderId: string,
   confirmationRQCode: string
 ): Promise<Result<string, Error>> => {
   return makeOrderInternal(
     applicantPublicId,
     giftPublicIds,
-    orderId,
+    publicOrderId,
     confirmationRQCode
   );
 };
@@ -182,7 +182,7 @@ const confirmOrderInternalAction = async (
       return failure(new Error(result.error));
     }
 
-    // Return the confirmed order with publicId (not business orderId)
+    // Return the confirmed order with publicId (not business publicOrderId)
     const confirmedOrder = result.value;
     return success({
       publicId: confirmedOrder.publicId,

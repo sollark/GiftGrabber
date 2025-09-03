@@ -1,17 +1,13 @@
 /**
  * SelectedGiftList.tsx
  *
- * Purpose:
- * - Displays and manages a list of gifts for the selected applicant.
- * - Allows removal of gifts and processes orders.
- * - Integrates with context for applicant, gift, and order state.
- * - Uses format-driven columns for maintainable, dynamic table rendering.
- *
+ * Purpose: Renders and manages the list of gifts for the selected applicant, including removal and order processing.
  * Responsibilities:
- * - Context-driven state management and safe access patterns.
- * - Memoized computations for performance.
- * - Error handling for QR code generation and order submission.
- * - No UI or styling changes; only code quality and structure improvements.
+ *   - Integrates with applicant, gift, and order contexts.
+ *   - Handles order creation and navigation.
+ *   - Renders a table of selected gifts with removal actions.
+ *   - Provides error handling and loading states.
+ *   - No UI or styling changes; only code quality and structure improvements.
  */
 
 import React, { FC, useRef, useCallback, useMemo } from "react";
@@ -21,7 +17,6 @@ import { processCompleteOrder } from "@/utils/orderProcessing";
 import { useSelectedApplicant } from "@/app/contexts/ApplicantContext";
 import { useGiftContext } from "@/app/contexts/gift/GiftContext";
 import { Gift } from "@/database/models/gift.model";
-import { generateOrderId } from "@/utils/utils";
 import { BASE_URL } from "@/config/eventFormConfig";
 import { useSafeAsync } from "@/utils/fp-hooks";
 import ListSkeleton from "@/components/ui/ListSkeleton";
@@ -35,7 +30,7 @@ import { ExcelFormatType } from "@/types/excel.types";
 import { useOrderContext } from "@/app/contexts/order/OrderContext";
 import ErrorMessage from "../ui/ErrorMessage";
 
-// Component styles and messages
+// Styles and messages used in the component
 const GIFT_LIST_STYLES = {
   container: { paddingTop: "3rem" },
   giftItem: { marginBottom: "1rem" },
@@ -49,7 +44,8 @@ const MESSAGES = {
 } as const;
 
 /**
- * Props for SelectedGiftList component
+ * SelectedGiftListProps
+ * Props for SelectedGiftList component.
  * @property isLoading - Whether the component is in a loading state
  */
 export interface SelectedGiftListProps {
@@ -57,11 +53,10 @@ export interface SelectedGiftListProps {
 }
 
 /**
- * SelectedGiftList Component
- * Renders a list of gifts for the selected applicant with removal functionality and order processing.
- * Integrates with multiple contexts to manage applicant and gift state.
+ * SelectedGiftList
+ * Main component for displaying and managing the selected gifts for an applicant.
  * @param isLoading - Whether the component is in a loading state
- * @returns JSX.Element - The gift list interface with order processing
+ * @returns JSX.Element
  */
 const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   const router = useRouter();
@@ -73,43 +68,35 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   const orderContext = useOrderContext();
 
   /**
+   * applicantGifts
    * Extracts the list of gifts for the selected applicant from context.
-   * @returns Gift[]
    */
   const applicantGifts = useMemo(
-    () =>
-      giftContext._tag === "Some"
-        ? giftContext.value.state.data.applicantGifts
-        : [],
+    () => giftContext.state.data.applicantGifts,
     [giftContext]
   );
 
   /**
-   * Extracts the dispatch function for gift actions from context.
-   * @returns Dispatch function or undefined
+   * giftDispatch
+   * Dispatch function for gift actions from context.
    */
-  const giftDispatch =
-    giftContext._tag === "Some" ? giftContext.value.dispatch : undefined;
+  const giftDispatch = giftContext.dispatch;
 
   /**
+   * order
    * Extracts the order object from context.
-   * @returns Order or undefined
    */
-  const order =
-    orderContext._tag === "Some"
-      ? orderContext.value.state.data.order
-      : undefined;
+  const order = useMemo(() => orderContext?.state?.data?.order, [orderContext]);
 
   /**
-   * Extracts the dispatch function for order actions from context.
-   * @returns Dispatch function or undefined
+   * orderDispatch
+   * Dispatch function for order actions from context.
    */
-  const orderDispatch =
-    orderContext._tag === "Some" ? orderContext.value.dispatch : undefined;
+  const orderDispatch = orderContext?.dispatch;
 
   /**
+   * eventId
    * Extracts the eventId from the current URL pathname.
-   * @returns string
    */
   const pathname = usePathname();
   const eventId = useMemo(() => {
@@ -117,11 +104,9 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     return match ? match[1] : "";
   }, [pathname]);
 
-  // applicantGifts already extracted above
-
   /**
+   * removeGiftAction
    * Returns a function to remove a gift by publicId using context dispatch.
-   * @returns (gift: Gift) => void
    */
   const removeGiftAction = useMemo(
     () =>
@@ -136,31 +121,31 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   );
 
   /**
-   * Generates a unique order ID for the order.
-   * @returns string
+   * publicOrderId
+   * Gets the order ID from context if available, otherwise generates a new one.
    */
-  const orderId = useMemo(() => generateOrderId(), []);
+  const publicOrderId = useMemo(() => order.publicOrderId, [order]);
 
   /**
+   * orderUrl
    * Constructs the order URL for QR code generation.
-   * @returns string
    */
   const orderUrl = useMemo(
-    () => `${BASE_URL}/events/${eventId}/orders/${orderId}`,
-    [eventId, orderId]
+    () => `${BASE_URL}/events/${eventId}/orders/${publicOrderId}`,
+    [eventId, publicOrderId]
   );
 
   /**
+   * applicant
    * Extracts the applicant object from context.
-   * @returns Person or null
    */
   const applicant = useMemo(() => {
     return selectedApplicant._tag === "Some" ? selectedApplicant.value : null;
   }, [selectedApplicant]);
 
   /**
+   * applicantDisplayName
    * Gets the display name for the applicant.
-   * @returns string
    */
   const applicantDisplayName = useMemo(
     () => applicant?.firstName || "Unknown",
@@ -168,8 +153,8 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   );
 
   /**
+   * hasGifts
    * Returns true if the applicant has any gifts selected.
-   * @returns boolean
    */
   const hasGifts = useMemo(
     () => applicantGifts.length > 0,
@@ -177,9 +162,8 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   );
 
   /**
+   * useSafeAsync for order processing
    * Handles the complete order processing workflow using extracted utilities.
-   * Navigates to the order page on success, throws error on failure.
-   * @returns Promise<string> - The public ID of the created order
    */
   const {
     data: orderResult,
@@ -195,25 +179,24 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
       const result = await processCompleteOrder(
         applicant,
         applicantGifts,
-        orderId,
+        publicOrderId,
         orderQRCodeRef
       );
       if (result._tag === "Failure") {
         throw result.error;
       }
-      router.push(`/events/${eventId}/orders/${orderId}`);
+      router.push(`/events/${eventId}/orders/${publicOrderId}`);
       return result.value;
     },
     {
-      deps: [applicant, applicantGifts, eventId, orderId],
+      deps: [applicant, applicantGifts, eventId, publicOrderId],
       maxRetries: 1,
     }
   );
 
   /**
+   * processOrder
    * Initiates the order processing workflow.
-   * Updates order context and triggers async order creation.
-   * @returns void
    */
   const processOrder = useCallback(() => {
     if (!applicant || isProcessingOrder) return;
@@ -236,17 +219,14 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   ]);
 
   /**
+   * renderGiftCell
    * Renders a gift cell using the GiftComponent.
-   * @param gift {Gift}
-   * @returns JSX.Element
    */
   const renderGiftCell = (gift: Gift) => <GiftComponent gift={gift} />;
 
   /**
+   * renderRemoveButtonCell
    * Renders a remove button cell for a gift.
-   * @param gift {Gift}
-   * @param removeGiftAction {(gift: Gift) => void}
-   * @returns JSX.Element
    */
   const renderRemoveButtonCell = (
     gift: Gift,
@@ -258,8 +238,8 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   );
 
   /**
+   * formatColumns
    * Generates table columns for gifts using format-driven logic and adds a custom remove button column.
-   * @returns BaseTableColumn<Gift>[]
    */
   const ownerFormat: ExcelFormatType | undefined =
     applicantGifts.length > 0
@@ -278,6 +258,10 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
     }));
   }, [ownerFormat, applicantFormat, applicantGifts]);
 
+  /**
+   * columns
+   * Table columns including the remove button column.
+   */
   const columns: BaseTableColumn<Gift>[] = useMemo(
     () => [
       ...formatColumns,
@@ -291,8 +275,8 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
   );
 
   /**
+   * renderGiftsTable
    * Renders the complete gift list or empty state message using ControlledBaseTable.
-   * @returns JSX.Element - Either the gift list or no-gifts message
    */
   const renderGiftsTable = useCallback(() => {
     if (isLoading && applicantGifts.length === 0) {

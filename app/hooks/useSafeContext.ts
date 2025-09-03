@@ -67,30 +67,31 @@ import { Maybe, some, none, Result, success, failure } from "@/utils/fp";
 // ============================================================================
 
 /**
- * Safe context access hook returning Maybe<T> for null-safe context operations
+ * Required context access hook
  *
- * @param context - React Context<T | undefined> to access safely
- * @param contextName - Optional descriptive name for error messages and debugging
- * @returns Maybe<T> - Some(value) if context available, None if undefined or error
+ * @param context - React Context<T | undefined> to access
+ * @param contextName - Descriptive name for error messages
+ * @returns T - Always returns context value
+ * @throws Error - If context is missing, triggers Next.js error page
  *
- * @sideEffects None - pure function reading React context state
- * @performance O(1) - simple context access with minimal error handling overhead
- * @notes Prevents runtime errors from undefined context access patterns
- * @publicAPI Primary safe context hook used throughout component hierarchy
+ * @sideEffects Throws to force error boundary rendering
+ * @performance O(1) - direct context access
+ * @notes Use for all context access; ensures provider presence
+ * @publicAPI Core hook for context access in the application
  */
 export function useSafeContext<T>(
   context: Context<T | undefined>,
-  contextName?: string
-): Maybe<T> {
-  try {
-    const value = useContext(context);
-    return value !== undefined ? some(value) : none;
-  } catch (error) {
-    if (contextName) {
-      console.warn(`Context "${contextName}" access failed:`, error);
-    }
-    return none;
+  contextName: string
+): T {
+  const value = useContext(context);
+
+  if (value === undefined) {
+    throw new Error(
+      `Missing required context: ${contextName}. Wrap your tree with ${contextName}Provider.`
+    );
   }
+
+  return value;
 }
 
 export default useSafeContext;

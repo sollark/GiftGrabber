@@ -87,7 +87,7 @@ export function generateOwnerId(): string {
  * Generates a unique order ID using a custom alphabet.
  * Pure function.
  */
-export function generateOrderId(): string {
+export function generatepublicOrderId(): string {
   const nanoid = customAlphabet("1234567890order", 15);
   return nanoid();
 }

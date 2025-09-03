@@ -3,19 +3,19 @@ import ConfirmOrder from "@/components/order/ConfirmOrder";
 
 interface OrderPageClientProps {
   eventId: string;
-  orderId: string;
+  publicOrderId: string;
 }
 
 /**
  * Client component for rendering order confirmation UI.
  * Props:
  *   - eventId: string
- *   - orderId: string
+ *   - publicOrderId: string
  * Returns: JSX.Element
  */
 export default function OrderPageClient({
   eventId,
-  orderId,
+  publicOrderId,
 }: OrderPageClientProps) {
-  return <ConfirmOrder orderId={orderId} eventId={eventId} />;
+  return <ConfirmOrder publicOrderId={publicOrderId} eventId={eventId} />;
 }

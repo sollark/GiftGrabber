@@ -18,11 +18,9 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { getMaybeOrElse } from "@/utils/fp";
 import { useEventContext } from "@/app/contexts/EventContext";
 import { useApplicantContext } from "@/app/contexts/ApplicantContext";
 import { useGiftContext } from "@/app/contexts/gift/GiftContext";
-import { Person } from "@/database/models/person.model";
 import { useEventDataSync } from "@/hooks/useEventDataSync";
 import ApplicantList from "@/components/applicant/ApplicantList";
 import ListSkeleton from "@/components/ui/ListSkeleton";
@@ -73,47 +71,27 @@ export default function EventDetailsClient({
   const applicantContext = useApplicantContext();
   const giftContext = useGiftContext();
 
-  // Extract values from context
-  const eventDetails = getMaybeOrElse({ eventId, name: "", email: "" })(
-    eventContext._tag === "Some" && eventContext.value.state.data.eventId
-      ? {
-          _tag: "Some",
-          value: {
-            eventId: eventContext.value.state.data.eventId,
-            name: eventContext.value.state.data.name ?? "",
-            email: eventContext.value.state.data.email ?? "",
-          },
-        }
-      : { _tag: "None" }
-  );
+  // Extract values from context (direct property access)
+  const eventDetails = {
+    eventId: eventContext.state.data.eventId,
+    name: eventContext.state.data.name ?? "",
+    email: eventContext.state.data.email ?? "",
+  };
 
-  const applicantList = getMaybeOrElse<Person[]>([])(
-    applicantContext._tag === "Some" &&
-      Array.isArray(applicantContext.value.state.data.applicantList)
-      ? { _tag: "Some", value: applicantContext.value.state.data.applicantList }
-      : { _tag: "None" }
-  );
+  const applicantList = Array.isArray(applicantContext.state.data.applicantList)
+    ? applicantContext.state.data.applicantList
+    : [];
 
-  const giftList = getMaybeOrElse<any[]>([])(
-    giftContext._tag === "Some" &&
-      Array.isArray(giftContext.value.state.data.giftList)
-      ? { _tag: "Some", value: giftContext.value.state.data.giftList }
-      : { _tag: "None" }
-  );
+  const giftList = Array.isArray(giftContext.state.data.giftList)
+    ? giftContext.state.data.giftList
+    : [];
 
   // Create stable context actions object - memoized by actual action functions
   const contextActions = useMemo(() => {
-    const toActions = (ctx: any, fallbackTag = "Some") =>
-      ctx && ctx._tag === "Some"
-        ? { _tag: fallbackTag, value: { dispatch: ctx.value.dispatch } }
-        : { _tag: fallbackTag, value: { dispatch: () => {} } };
     return {
-      eventActions:
-        eventContext && eventContext._tag === "Some"
-          ? { _tag: "Some", value: { dispatch: eventContext.value.dispatch } }
-          : undefined,
-      applicantActions: toActions(applicantContext),
-      giftActions: toActions(giftContext),
+      eventActions: { dispatch: eventContext.dispatch },
+      applicantActions: { dispatch: applicantContext.dispatch },
+      giftActions: { dispatch: giftContext.dispatch },
     };
   }, [eventContext, applicantContext, giftContext]);
 

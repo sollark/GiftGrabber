@@ -78,7 +78,7 @@ export interface OrderCreationData {
   createdAt: Date;
   applicant: ObjectId;
   gifts: ObjectId[];
-  orderId: string;
+  publicOrderId: string;
   confirmationRQCode: string;
 }
 
@@ -89,7 +89,7 @@ export interface OrderCreationData {
 export interface OrderCreationPublicData {
   applicantPublicId: string;
   giftPublicIds: string[];
-  orderId: string;
+  publicOrderId: string;
   confirmationRQCode: string;
 }
 
@@ -113,7 +113,7 @@ export type newOrder = {
   createdAt: Date;
   applicant: Person | null;
   gifts: Gift[];
-  orderId: string;
+  publicOrderId: string;
   confirmationRQCode: string;
   status: OrderStatus;
 };

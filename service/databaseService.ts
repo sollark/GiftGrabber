@@ -666,7 +666,7 @@ export class OrderService {
   static async create(orderData: {
     applicantPublicId: string;
     giftPublicIds: string[];
-    orderId: string;
+    publicOrderId: string;
     confirmationRQCode: string;
   }): Promise<Result<Order, Error>> {
     try {
@@ -689,7 +689,7 @@ export class OrderService {
       const orderDoc = await OrderModel.create({
         applicant: applicantDoc._id,
         gifts: giftDocs.map((doc) => doc._id),
-        orderId: orderData.orderId,
+        publicOrderId: orderData.publicOrderId,
         confirmationRQCode: orderData.confirmationRQCode,
       });
 
@@ -711,17 +711,17 @@ export class OrderService {
   }
 
   /**
-   * Finds an order with populated fields by orderId.
-   * @param orderId {string}
+   * Finds an order with populated fields by publicOrderId.
+   * @param publicOrderId {string}
    * @returns Promise<Result<Order | null, Error>>
    * @sideEffects DB read with population
    * @publicAPI
    */
   static async findWithPopulation(
-    orderId: string
+    publicOrderId: string
   ): Promise<Result<Order | null, Error>> {
     return fromPromise(
-      OrderModel.findOne({ orderId }, PUBLIC_FIELD_SELECTIONS.ORDER)
+      OrderModel.findOne({ publicOrderId }, PUBLIC_FIELD_SELECTIONS.ORDER)
         .populate([
           POPULATION_CONFIG.ORDER_APPLICANT,
           POPULATION_CONFIG.ORDER_GIFTS,
@@ -731,18 +731,18 @@ export class OrderService {
   }
 
   /**
-   * Finds an unconfirmed order with populated fields by orderId.
-   * @param orderId {string}
+   * Finds an unconfirmed order with populated fields by publicOrderId.
+   * @param publicOrderId {string}
    * @returns Promise<Result<Order | null, Error>>
    * @sideEffects DB read with population
    * @publicAPI
    */
   static async findUnconfirmedWithPopulation(
-    orderId: string
+    publicOrderId: string
   ): Promise<Result<Order | null, Error>> {
     return fromPromise(
       OrderModel.findOne(
-        { orderId, status: OrderStatus.PENDING },
+        { publicOrderId, status: OrderStatus.PENDING },
         PUBLIC_FIELD_SELECTIONS.ORDER
       )
         .populate([

@@ -31,6 +31,7 @@
  */
 
 import React from "react";
+import useSafeContext from "@/app/hooks/useSafeContext";
 import { Person } from "@/database/models/person.model";
 import { Result, Maybe, some, none, success, failure } from "@/utils/fp";
 import {
@@ -179,7 +180,9 @@ const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
 
 export const ApplicantContext = contextResult.Context;
 export const BaseApplicantProvider = contextResult.Provider;
-export const useApplicantContext = contextResult.useContext;
+export function useApplicantContext() {
+  return useSafeContext(ApplicantContext, "ApplicantContext");
+}
 
 // ============================================================================
 // ENHANCED PROVIDER WITH ERROR BOUNDARY
@@ -229,11 +232,14 @@ export const ApplicantProvider = withErrorBoundary(
  * Hook for accessing the applicant list from context.
  * @returns Maybe<Person[]> - The current applicant list
  */
+/**
+ * useApplicantList
+ * Hook for accessing the applicant list from context.
+ * @returns Person[] - The current applicant list
+ */
 export const useApplicantList = () => {
   const context = useApplicantContext();
-  return context._tag === "Some"
-    ? context.value.state.data.applicantList
-    : undefined;
+  return context.state.data.applicantList;
 };
 
 /**
@@ -241,13 +247,14 @@ export const useApplicantList = () => {
  * Hook for accessing the selected applicant from context (read-only).
  * @returns Maybe<Person> - The currently selected applicant
  */
+/**
+ * useSelectedApplicant
+ * Hook for accessing the selected applicant from context (read-only).
+ * @returns Maybe<Person> - The currently selected applicant
+ */
 export const useSelectedApplicant = (): Maybe<Person> => {
   const context = useApplicantContext();
-  const selected =
-    context._tag === "Some"
-      ? context.value.state.data.selectedApplicant
-      : undefined;
-  return selected ?? none;
+  return context.state.data.selectedApplicant;
 };
 
 // ============================================================================

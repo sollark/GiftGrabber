@@ -116,8 +116,6 @@ export const CombinedContextProvider: React.FC<FlexibleProviderProps> = ({
   return <>{wrappedChildren}</>;
 };
 
-// ...removed deprecated legacy provider...
-
 // ============================================================================
 // COMPOSITE HOOKS FOR COMPLEX OPERATIONS
 // ============================================================================
@@ -137,10 +135,8 @@ export const useOrderCreationWorkflow = () => {
   const selectedApplicant = useSelectedApplicant();
   // Use direct context access for actions
   const giftContext = useGiftContext();
-  const applicantGifts = isSome(giftContext)
-    ? giftContext.value.state.data.applicantGifts
-    : [];
-  const giftDispatch = isSome(giftContext) ? giftContext.value.dispatch : undefined;
+  const applicantGifts = giftContext.state.data.applicantGifts;
+  const giftDispatch = giftContext.dispatch;
   /**
    * addGift - Adds a gift using context actions. Returns Result.
    * @param gift - Gift object to add

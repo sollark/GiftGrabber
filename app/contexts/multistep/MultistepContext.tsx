@@ -7,6 +7,7 @@
  */
 
 import React from "react";
+import useSafeContext from "@/app/hooks/useSafeContext";
 import {
   MultistepState,
   MultistepAction,
@@ -66,9 +67,11 @@ const contextResult = createFunctionalContext<MultistepState, MultistepAction>({
  * MultistepContext - React context for multistep state
  * @public
  */
-export const MultistepContext: React.Context<MultistepState> = (
-  contextResult as any
-).Context;
+export const MultistepContext: React.Context<MultistepState | undefined> =
+  React.createContext<MultistepState | undefined>(undefined);
+
+// Assign context value from contextResult
+MultistepContext.displayName = "MultistepContext";
 
 /**
  * BaseMultistepProvider - Low-level provider for advanced usage
@@ -113,7 +116,10 @@ export const MultistepProvider = withErrorBoundary(
  * @returns {MultistepState} Current multistep state
  * @public
  */
-export const useMultistepContext = (contextResult as any).useContext;
+export function useMultistepContext() {
+  // Use contextResult.Context, which is the correct context shape
+  return useSafeContext(contextResult.Context, "MultistepContext");
+}
 
 /**
  * useStepNavigation - Hook for step navigation actions.

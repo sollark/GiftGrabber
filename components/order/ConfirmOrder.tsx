@@ -43,21 +43,21 @@ const UI_MESSAGES = {
 /**
  * Props for ConfirmOrder component
  * @property eventId - The event ID
- * @property orderId - The order ID
+ * @property publicOrderId - The order ID
  */
 type ConfirmOrderProps = {
   eventId: string;
-  orderId: string;
+  publicOrderId: string;
 };
 
 /**
  * ConfirmOrder component
  * Fetches order data, handles loading/error states with enhanced error tracking, and renders the order confirmation UI.
  * @param eventId - The event ID
- * @param orderId - The order ID
+ * @param publicOrderId - The order ID
  * @returns The order confirmation UI or appropriate loading/error state
  */
-const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
+const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, publicOrderId }) => {
   // Enhanced error tracking for order operations
   const { handleError, errorCount, lastError, getErrorSummary } =
     useErrorHandler("ConfirmOrder");
@@ -68,8 +68,8 @@ const ConfirmOrder: FC<ConfirmOrderProps> = ({ eventId, orderId }) => {
     error: orderError,
     isValidating: orderLoading,
   } = useSWR(
-    () => createOrderCacheKey(orderId),
-    () => getOrder(orderId),
+    () => createOrderCacheKey(publicOrderId),
+    () => getOrder(publicOrderId),
     {
       revalidateOnFocus: SWR_CONFIG.REVALIDATE_ON_FOCUS,
       onError: (error) => {
@@ -143,9 +143,10 @@ const OrderConfirmationSection: FC = () => (
 
 /**
  * Creates a cache key for order data fetching
- * @param orderId - The order ID
+ * @param publicOrderId - The order ID
  * @returns Cache key string for SWR
  */
-const createOrderCacheKey = (orderId: string): string => `orders/${orderId}`;
+const createOrderCacheKey = (publicOrderId: string): string =>
+  `orders/${publicOrderId}`;
 
 export default ConfirmOrder;

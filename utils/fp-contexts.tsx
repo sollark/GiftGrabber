@@ -108,11 +108,11 @@ export interface FunctionalContextResult<S, A extends FunctionalAction> {
     children: React.ReactNode;
     initialState?: Partial<S>;
   }>;
-  useContext: () => MaybeContext<{
+  useContext: () => {
     state: S;
     dispatch: (action: A) => void;
     getState: () => S;
-  }>;
+  };
   name: string;
 }
 
@@ -293,30 +293,12 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
    * @returns MaybeContext<{ state, dispatch, getState }>
    * @sideEffects None
    */
-  const useContext = (): MaybeContext<{
+  const useContext = (): {
     state: S;
     dispatch: (action: A) => void;
     getState: () => S;
-  }> => {
-    return useSafeContext(StateContext, name) as MaybeContext<{
-      state: S;
-      dispatch: (action: A) => void;
-      getState: () => S;
-    }>;
-  };
-
-  // Hook with Result error handling
-  /**
-   * useContextResult (Public API)
-   * Hook to access the context value as a Result (Success/Failure).
-   * @returns Result<{ state, dispatch, getState }, Error>
-   * @sideEffects None
-   */
-  const useContextResult = () => {
-    const context = useContext();
-    return context._tag === "Some"
-      ? success(context.value)
-      : failure(new Error(`${name} context not available`));
+  } => {
+    return useSafeContext(StateContext, name);
   };
 
   // Selector hook for specific state slices
@@ -341,17 +323,14 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
     );
 
     return React.useMemo(() => {
-      if (context._tag === "Some") {
-        try {
-          return some(memoizedSelector(context.value.state));
-        } catch (error) {
-          if (debugMode) {
-            console.warn(`Selector error in ${name}:`, error);
-          }
-          return none;
+      try {
+        return some(memoizedSelector(context.state));
+      } catch (error) {
+        if (debugMode) {
+          console.warn(`Selector error in ${name}:`, error);
         }
+        return none;
       }
-      return none;
     }, [context, memoizedSelector]);
   };
 
@@ -367,10 +346,6 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
 
     // Memoize action creators to prevent infinite loops in useEffect dependencies
     const actions = useMemo(() => {
-      if (context._tag !== "Some") {
-        return none;
-      }
-
       const createAction = (type: string, payload?: any): A =>
         ({
           type,
@@ -383,7 +358,7 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
 
       const dispatchSafe = (action: A): Result<void, Error> => {
         try {
-          context.value.dispatch(action);
+          context.dispatch(action);
           return success(undefined);
         } catch (error) {
           return failure(
@@ -406,13 +381,13 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
       };
 
       return some({
-        dispatch: context.value.dispatch,
+        dispatch: context.dispatch,
         dispatchSafe,
         dispatchAsync,
         createAction,
-        getState: context.value.getState,
+        getState: context.getState,
       });
-    }, [context._tag === "Some" ? context.value.dispatch : null]);
+    }, [context.dispatch]);
 
     return actions;
   };

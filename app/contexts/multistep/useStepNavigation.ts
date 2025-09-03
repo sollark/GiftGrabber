@@ -18,8 +18,8 @@ import { StepDefinition } from "./types";
  */
 export const useStepNavigation = () => {
   const context = useMultistepContext();
-  const state = context._tag === "Some" ? context.value.state.data : undefined;
-  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
+  const state = context?.state?.data;
+  const dispatch = context?.dispatch;
 
   // Destructure for cleaner access
   const {

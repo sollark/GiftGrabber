@@ -54,12 +54,10 @@ const Applicant: FC = () => {
    */
   const processApplicantSelection = useCallback(
     (person: Person) => {
-      if (context._tag === "Some") {
-        context.value.dispatch({
-          type: "SELECT_APPLICANT",
-          payload: person,
-        });
-      }
+      context.dispatch({
+        type: "SELECT_APPLICANT",
+        payload: person,
+      });
       goToNextStep();
     },
     [goToNextStep, context]

@@ -26,14 +26,14 @@ import { generateQRCodeData } from "./qrcodeUtils";
  *
  * @param applicant - The person placing the order
  * @param gifts - Array of gifts to include in the order
- * @param orderId - Unique identifier for the order
+ * @param publicOrderId - Unique identifier for the order
  * @param qrCodeData - Base64-encoded QR code string
  * @returns Promise<Result<string, Error>> - Order public ID or error
  */
 export const submitOrder = async (
   applicant: Person,
   gifts: Gift[],
-  orderId: string,
+  publicOrderId: string,
   qrCodeData: string
 ): Promise<Result<string, Error>> => {
   if (!applicant) {
@@ -48,7 +48,7 @@ export const submitOrder = async (
     const orderPublicId = await makeOrder(
       applicant.publicId,
       gifts.map((gift) => gift.publicId),
-      orderId,
+      publicOrderId,
       qrCodeData
     );
 
@@ -67,14 +67,14 @@ export const submitOrder = async (
  *
  * @param applicant - The person placing the order
  * @param gifts - Array of gifts to include in the order
- * @param orderId - Unique identifier for the order
+ * @param publicOrderId - Unique identifier for the order
  * @param qrCodeRef - React ref to the QR code DOM element
  * @returns Promise<Result<string, Error>> - Order public ID or error
  */
 export const processCompleteOrder = async (
   applicant: Person,
   gifts: Gift[],
-  orderId: string,
+  publicOrderId: string,
   qrCodeRef: React.RefObject<HTMLDivElement>
 ): Promise<Result<string, Error>> => {
   // Step 1: Generate QR code
@@ -87,7 +87,7 @@ export const processCompleteOrder = async (
   const orderResult = await submitOrder(
     applicant,
     gifts,
-    orderId,
+    publicOrderId,
     qrCodeResult.value
   );
 

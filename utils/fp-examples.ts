@@ -70,9 +70,11 @@ export const createEventSafely = withDatabaseResult(async (eventData: any) => {
 /**
  * Example: Safe order retrieval with Maybe types
  */
-export const findOrderSafely = async (orderId: string): Promise<Maybe<any>> => {
+export const findOrderSafely = async (
+  publicOrderId: string
+): Promise<Maybe<any>> => {
   const result = await safeQuery(() =>
-    mockOrder.findOne({ publicId: orderId }).exec()
+    mockOrder.findOne({ publicId: publicOrderId }).exec()
   );
 
   return result._tag === "Success"
@@ -187,7 +189,7 @@ export function useEventData(eventId: string) {
   return {
     event: eventDisplay,
     error,
-    loading,
+    loading, // ...removed deprecated legacy provider...
     retry,
   };
 }
@@ -304,8 +306,10 @@ const mockUserContext = React.createContext<any>(undefined);
  * Example: Order summary logic with direct context integration
  */
 // Direct hook exports that can be used in React components
-export const useOrderContext = () => useSafeContext(mockOrderContext);
-export const useUserContext = () => useSafeContext(mockUserContext);
+export const useOrderContext = () =>
+  useSafeContext(mockOrderContext, "OrderContext");
+export const useUserContext = () =>
+  useSafeContext(mockUserContext, "UserContext");
 
 // Combined context access using existing patterns
 // Combined context access using existing patterns
@@ -443,7 +447,7 @@ export function createMigrationExample() {
   const getLegacyData = () => ({ name: "Legacy User", id: 123 });
 
   // New functional approach (would be used in component)
-  const useSafeData = () => useSafeContext(mockOrderContext);
+  const useSafeData = () => useSafeContext(mockOrderContext, "OrderContext");
 
   // Hybrid approach during migration (for use in component)
   const useMigrationData = () => {

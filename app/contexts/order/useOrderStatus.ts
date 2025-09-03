@@ -15,9 +15,8 @@ import { OrderStatus } from "@/types/common.types";
  */
 export const useOrderStatus = () => {
   const context = useOrderContext();
-  const order =
-    context._tag === "Some" ? context.value.state.data.order : undefined;
-  const dispatch = context._tag === "Some" ? context.value.dispatch : undefined;
+  const order = context?.state?.data?.order;
+  const dispatch = context?.dispatch;
 
   // Confirm order
   const confirmOrder = async () => {

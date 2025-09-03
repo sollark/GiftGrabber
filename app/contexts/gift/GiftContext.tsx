@@ -1,26 +1,37 @@
 "use client";
 /**
- * GiftContext: Isolated context for gift management logic.
- * Provides immutable state management and action-based updates for gifts.
- * Uses functional programming patterns for state, actions, and error handling.
+ * GiftContext.tsx
+ *
+ * Purpose: Provides a React context for managing gift-related state and actions in a functional, type-safe way.
+ * Responsibilities:
+ *   - Centralizes gift state and actions for the application.
+ *   - Exposes hooks and provider for context consumers.
+ *   - Integrates middleware for logging, validation, and persistence.
+ *   - Ensures robust error handling via error boundary wrapping.
+ *
+ * No UI or styling logic is present; only context and business logic.
  */
 
 import React from "react";
 import { Gift } from "@/database/models/gift.model";
 import { createFunctionalContext, FunctionalState } from "@/utils/fp-contexts";
-import { loggingMiddleware } from "@/utils/fp-contexts";
-import { validationMiddleware } from "@/utils/fp-contexts";
+import { loggingMiddleware, validationMiddleware } from "@/utils/fp-contexts";
 import { persistenceMiddleware } from "@/app/middleware/persistenceMiddleware";
 import { Result, none, success, failure } from "@/utils/fp";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { isGiftInList, areGiftsEqual } from "@/utils/utils";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import useSafeContext from "@/app/hooks/useSafeContext";
 
-// ============================================================================
-// TYPES AND INTERFACES
-// ============================================================================
+// =====================
+// Types and Interfaces
+// =====================
 
-// Minimal GiftAction type definition to resolve type errors
+/**
+ * GiftAction: Supported actions for gift state transitions.
+ * @property type - Action type string
+ * @property payload - Optional action payload
+ */
 export interface GiftAction {
   type:
     | "SET_GIFT_LIST"
@@ -33,6 +44,13 @@ export interface GiftAction {
   payload?: unknown;
 }
 
+/**
+ * GiftState: Shape of the gift context state.
+ * @property giftList - List of all gifts
+ * @property applicantGifts - Gifts selected by applicant
+ * @property searchQuery - Current search query
+ * @property filters - Filter settings
+ */
 export interface GiftState
   extends FunctionalState<{
     giftList: Gift[];
@@ -45,9 +63,9 @@ export interface GiftState
     };
   }> {}
 
-// ============================================================================
-// INITIAL STATE AND REDUCER
-// ============================================================================
+// =====================
+// Initial State and Reducer
+// =====================
 
 /**
  * Creates the initial state for the gift context.
@@ -72,8 +90,11 @@ const createGiftInitialState = (giftList: Gift[] = []): GiftState => ({
 });
 
 /**
- * Reducer for gift context actions.
- * Returns a Result<GiftState, Error> for all state transitions.
+ * giftReducer
+ * Handles all state transitions for the gift context.
+ * @param state - Current GiftState
+ * @param action - GiftAction to apply
+ * @returns Result<GiftState, Error> - New state or error
  */
 const giftReducer = (
   state: GiftState,
@@ -167,13 +188,16 @@ const giftReducer = (
   }
 };
 
-// ============================================================================
-// VALIDATION MIDDLEWARE
-// ============================================================================
+// =====================
+// Validation Middleware
+// =====================
 
 /**
- * Validation middleware for gift actions.
- * Ensures business rules are enforced before state changes.
+ * giftValidation
+ * Middleware to enforce business rules before state changes.
+ * @param action - GiftAction being dispatched
+ * @param state - Current GiftState
+ * @returns Result<boolean, string> - Success or error message
  */
 const giftValidation = validationMiddleware<GiftState, GiftAction>(
   (action, state) => {
@@ -195,9 +219,9 @@ const giftValidation = validationMiddleware<GiftState, GiftAction>(
   }
 );
 
-// ============================================================================
-// CONTEXT CREATION
-// ============================================================================
+// =====================
+// Context Creation and Hook
+// =====================
 
 /**
  * Creates the functional context for gifts, with logging, validation, and persistence middleware.
@@ -216,19 +240,38 @@ const contextResult = createFunctionalContext<GiftState, GiftAction>({
   debugMode: process.env.NODE_ENV === "development",
 });
 
-/** GiftContext - React context for gift state */
+/**
+ * GiftContext: The React context object for gift state.
+ */
 export const GiftContext = contextResult.Context;
-/** BaseGiftProvider - Low-level provider for advanced usage */
-export const BaseGiftProvider = contextResult.Provider;
-export const useGiftContext = contextResult.useContext;
 
+/**
+ * BaseGiftProvider: Provider component for advanced usage.
+ */
+export const BaseGiftProvider = contextResult.Provider;
+
+/**
+ * useGiftContext
+ * Hook to access the gift context value safely.
+ * @returns Gift context value
+ */
+export function useGiftContext() {
+  return useSafeContext(GiftContext, "GiftContext");
+}
+
+/**
+ * GiftProviderProps: Props for the GiftProvider component.
+ * @property giftList - Initial list of gifts
+ * @property children - React children
+ */
 type GiftProviderProps = {
   giftList?: Gift[];
   children: React.ReactNode;
 };
 
 /**
- * GiftProvider: Supplies gift context to child components.
+ * GiftProviderComponent
+ * Provider component for GiftContext, initializes state with giftList.
  * @param giftList - Initial list of gifts
  * @param children - React children
  */
@@ -245,7 +288,10 @@ const GiftProviderComponent: React.FC<GiftProviderProps> = ({
   );
 };
 
-// Apply error boundary to the provider
+/**
+ * GiftProvider
+ * Provider component for GiftContext, wrapped with error boundary.
+ */
 export const GiftProvider = withErrorBoundary(
   GiftProviderComponent,
   "GiftContext",

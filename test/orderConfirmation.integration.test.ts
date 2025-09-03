@@ -11,7 +11,7 @@ describe("Order Confirmation Integration", () => {
   jest.setTimeout(30000);
   let applicant: any;
   let gifts: any[];
-  let orderId: string;
+  let publicOrderId: string;
   let confirmationRQCode: string;
 
   beforeAll(async () => {
@@ -31,7 +31,7 @@ describe("Order Confirmation Integration", () => {
       await GiftModel.create({ owner: applicant._id }),
     ];
 
-    orderId = new Types.ObjectId().toHexString();
+    publicOrderId = new Types.ObjectId().toHexString();
     confirmationRQCode = "test-code";
   });
 
@@ -46,7 +46,7 @@ describe("Order Confirmation Integration", () => {
     const orderPublicId = await makeOrder(
       applicant.publicId, // Use publicId instead of _id
       gifts.map((gift) => gift.publicId), // Use publicIds for gifts
-      orderId,
+      publicOrderId,
       confirmationRQCode
     );
     expect(orderPublicId).toBeTruthy(); // Should return publicId string
@@ -96,7 +96,7 @@ describe("Order Confirmation Integration", () => {
     const orderPublicId = await makeOrder(
       applicant.publicId,
       gifts.map((gift) => gift.publicId),
-      orderId,
+      publicOrderId,
       confirmationRQCode
     );
     expect(orderPublicId).toBeTruthy();
@@ -104,7 +104,7 @@ describe("Order Confirmation Integration", () => {
     // Now retrieve order using its publicId (correct PublicId strategy)
     const order = await getOrder(orderPublicId!);
     expect(order).toBeTruthy();
-    expect(order && order.orderId).toBe(orderId); // Business field should match
+    expect(order && order.publicOrderId).toBe(publicOrderId); // Business field should match
     expect(order && order.publicId).toBe(orderPublicId); // PublicId should match
   });
 });
