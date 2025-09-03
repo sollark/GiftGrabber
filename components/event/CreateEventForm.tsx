@@ -1,63 +1,33 @@
+"use client";
 /**
  * CreateEventForm.tsx
  *
- * Purpose: Comprehensive form component for event creation with Excel import, QR generation, and email integration
+ * Purpose: Comprehensive form component for event creation with Excel import, QR generation, and email integration.
  *
  * Main Responsibilities:
- * - Handles complete event creation workflow from form input to database persistence
- * - Manages Excel file uploads for applicant data import
- * - Generates QR codes for event access and owner verification
- * - Validates form data and processes multi-format Excel imports
- * - Coordinates email delivery with QR codes and event details
- * - Manages complex form state with multiple file inputs and validation steps
+ * - Orchestrates the entire event creation workflow, from user input to backend persistence.
+ * - Manages Excel file uploads for applicant data import and validation.
+ * - Generates QR codes for event access and owner verification.
+ * - Validates form data and processes multi-format Excel imports.
+ * - Coordinates email delivery with QR codes and event details.
+ * - Manages complex form state, error handling, and validation steps.
  *
  * Architecture Role:
- * - Central component orchestrating event creation business logic
- * - Integration point between UI form components and backend services
- * - Coordinates multiple context providers for form state management
- * - Bridge between file processing utilities and database services
- * - Critical component in event organizer onboarding workflow
+ * - Central UI component integrating business logic, context providers, and backend services.
+ * - Bridge between file processing utilities, QR code generation, and database/email services.
+ * - Critical entry point for event organizer onboarding and event creation.
  *
- * @businessLogic
- * - Generates unique event and owner IDs for security and identification
- * - Processes Excel files with automatic format detection and validation
- * - Creates QR codes linking to event pages and owner verification
- * - Sends confirmation emails with embedded QR codes for offline access
- * - Validates all input data before database operations
- *
- * File: CreateEventForm.tsx
- * Purpose: UI and logic for creating a new event, including form handling, validation, QR code generation, and event creation.
- * Responsibilities:
- *   - Renders the event creation form and handles user input.
- *   - Validates and processes form data.
- *   - Generates unique event and owner IDs.
- *   - Generates and displays QR codes for the event and owner.
- *   - Sends confirmation emails and creates the event in the backend.
- * Architecture:
- *   - Top-level page component in the event creation workflow.
- *   - Integrates with service, utility, and UI modules for modularity.
- */
-
-/**
- * @file CreateEventForm.tsx
- * @description
- * Comprehensive form component for event creation with Excel import, QR generation, and email integration.
- * Handles the complete event creation workflow, including form input, file upload, QR code generation, validation, email delivery, and context/database updates.
- *
- * Responsibilities:
- * - Renders the event creation form and manages user input
- * - Validates and processes form data
- * - Generates unique event and owner IDs
- * - Generates and displays QR codes for the event and owner
- * - Sends confirmation emails and creates the event in the backend
- * - Integrates with service, utility, and UI modules for modularity
- * - Coordinates multiple context providers for form state management
+ * Business Logic Rules:
+ * - Generates unique event and owner IDs for security and identification.
+ * - Processes Excel files with automatic format detection and validation.
+ * - Creates QR codes linking to event pages and owner verification.
+ * - Sends confirmation emails with embedded QR codes for offline access.
+ * - Validates all input data before database operations.
  *
  * Constraints:
- * - No new UI elements or styling changes
- * - No new features; only code quality, structure, and maintainability improvements
+ * - No new UI elements or styling changes.
+ * - No new features; only code quality, structure, and maintainability improvements.
  */
-("use client");
 
 import { createEvent } from "@/app/actions/event.action";
 import { generateEventId, generateOwnerId } from "@/utils/utils";
@@ -84,7 +54,12 @@ import { sendMailToClient } from "@/service/mailService";
  * Main CreateEventForm component.
  * Public API.
  * Renders the event creation form, handles submission, and coordinates all event creation logic.
- * Side effects: Navigates, updates state, triggers backend calls, sends email.
+ *
+ * Side effects:
+ * - Navigates using Next.js router
+ * - Updates React state
+ * - Triggers backend calls and email delivery
+ * - Logs to console
  */
 
 const CreateEventForm: FC = () => {
@@ -113,6 +88,7 @@ const CreateEventForm: FC = () => {
   // --- QR Code Refs ---
   /**
    * Ref for the event QR code element (for image capture).
+   * Used to generate and capture QR code images for event access.
    */
   // These refs must be RefObject<HTMLDivElement> (not HTMLDivElement | null)
   const eventQRCodeRef = useRef<HTMLDivElement>(
@@ -120,6 +96,7 @@ const CreateEventForm: FC = () => {
   ) as React.RefObject<HTMLDivElement>;
   /**
    * Ref for the owner QR code element (for image capture).
+   * Used to generate and capture QR code images for owner verification.
    */
   const ownerQRCodeRef = useRef<HTMLDivElement>(
     null
@@ -128,7 +105,10 @@ const CreateEventForm: FC = () => {
   // --- Helper: Aggregate error messages for display ---
   /**
    * Aggregates all error messages for display.
+   *
    * @returns {string} Combined error message string or empty string if no errors.
+   * @sideEffects None
+   * @notes Ensures user sees all relevant errors at once.
    */
   const getAggregatedErrorMessage = useCallback((): string => {
     const errors = [
@@ -141,7 +121,10 @@ const CreateEventForm: FC = () => {
   // --- File Processing Error Handlers ---
   /**
    * Handles file processing errors by aggregating them for display.
-   * @param error Error message from file format detection.
+   *
+   * @param error {string} Error message from file format detection.
+   * @sideEffects Updates fileProcessingErrors state.
+   * @notes Ensures all file errors are tracked.
    */
   const handleFileError = useCallback((error: string) => {
     setFileProcessingErrors((prev) => [...prev, error]);
@@ -149,7 +132,10 @@ const CreateEventForm: FC = () => {
 
   /**
    * Handles successful file processing by clearing related errors.
-   * @param formatInfo Successfully detected format information.
+   *
+   * @param formatInfo {any} Successfully detected format information.
+   * @sideEffects Updates fileProcessingErrors state.
+   * @notes Resets error state after successful file handling.
    */
   const handleFileSuccess = useCallback((_formatInfo: any) => {
     setFileProcessingErrors([]);
@@ -158,8 +144,11 @@ const CreateEventForm: FC = () => {
   // --- Form Processing Helpers ---
   /**
    * Processes and validates form data with consistent Result pattern.
-   * @param data Form input data containing event name, email, and files.
-   * @returns Promise<Result<ProcessFormDataOutput, string>>
+   *
+   * @param data {object} Form input data containing eventName, eventEmail, applicantsFile.
+   * @returns {Promise<Result<ProcessFormDataOutput, string>>} Success or error result.
+   * @sideEffects Calls external service for processing.
+   * @notes Uses Result pattern for error handling.
    */
   const processAndValidateForm = useCallback(
     async (data: {
@@ -172,7 +161,10 @@ const CreateEventForm: FC = () => {
 
   /**
    * Generates QR codes from DOM refs with consistent Result pattern.
-   * @returns Promise<Result<GenerateQRCodesOutput, string>>
+   *
+   * @returns {Promise<Result<GenerateQRCodesOutput, string>>} Success or error result.
+   * @sideEffects Calls QR code utility.
+   * @notes Ensures QR codes are generated before event creation.
    */
   const generateAndValidateQRCodes = useCallback(
     async () => generateQRCodes(eventQRCodeRef, ownerQRCodeRef),
@@ -181,8 +173,11 @@ const CreateEventForm: FC = () => {
 
   /**
    * Saves processed data to contexts with consistent Result pattern.
-   * @param processedData The validated form data to save to contexts.
-   * @returns Promise<Result<void, string>>
+   *
+   * @param processedData {any} The validated form data to save to contexts.
+   * @returns {Promise<Result<void, string>>} Success or error result.
+   * @sideEffects Logs to console; intended to update context state.
+   * @notes Context saving is temporarily disabled.
    */
   const saveToContexts = useCallback(
     async (processedData: any) => {
@@ -199,9 +194,11 @@ const CreateEventForm: FC = () => {
   // --- Main Form Submission Handler ---
   /**
    * Handles form submission and orchestrates the event creation workflow.
-   * @param data Form data from user input.
+   *
+   * @param data {object} Form data from user input.
    * @returns {Promise<void>} (async)
-   * Side effects: Updates error state, triggers backend and email services, navigates on success.
+   * @sideEffects Updates error state, triggers backend and email services, navigates on success.
+   * @notes Implements stepwise workflow; uses Result pattern for error handling.
    */
   const handleSubmit = useCallback(
     async (data: {
