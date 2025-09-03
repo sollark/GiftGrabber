@@ -11,7 +11,7 @@
 
 import React, { FC } from "react";
 import MultistepNavigator from "@/ui/navigation/MultistepNavigator";
-import Applicant from "../applicant/Applicant";
+import ApplicantSelection from "../applicant/ApplicantSelection";
 import SelectUnclaimedGift from "./SelectUnclaimedGift";
 import SelectedGiftList from "../gift/SelectedGiftList";
 
@@ -28,7 +28,7 @@ import SelectedGiftList from "../gift/SelectedGiftList";
 const WorkflowSteps: FC = () => {
   return (
     <MultistepNavigator>
-      <Applicant />
+      <ApplicantSelection />
       <>
         <SelectUnclaimedGift />
         <SelectedGiftList />

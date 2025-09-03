@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Applicant.tsx
+ * ApplicantSelection.tsx
  *
- * This file defines the Applicant component, which manages applicant selection and gift assignment in the Gift Grabber app.
+ * This file defines the ApplicantSelection component, which manages applicant selection and gift assignment in the Gift Grabber app.
  *
  * Responsibilities:
  * - Display an autocomplete for selecting an applicant
@@ -28,12 +28,12 @@ import { Person } from "@/database/models/person.model";
 import PersonAutocomplete from "../PersonAutocomplete";
 
 /**
- * Applicant
+ * ApplicantSelection
  * Handles applicant selection, gift assignment, and step navigation.
  * Uses context for applicant, gift, and navigation state.
  * @returns The applicant selection UI
  */
-const Applicant: FC = () => {
+const ApplicantSelection: FC = () => {
   /**
    * Get applicant list and selected applicant from context.
    */
@@ -85,4 +85,4 @@ const Applicant: FC = () => {
   );
 };
 
-export default Applicant;
+export default ApplicantSelection;

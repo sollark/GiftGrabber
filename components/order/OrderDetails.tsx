@@ -1,40 +1,38 @@
 import { FC } from "react";
-import { useOrderStatus } from "@/app/contexts/order/OrderContext";
-import OrderGifts from "./OrderGifts";
+import useSWR from "swr";
+import ApplicantDetails from "../applicant/ApplicantDetails";
+
+export interface OrderDetailsProps {
+  publicOrderId: string;
+  eventId: string;
+}
 
 /**
- * Formats a person's full name
- * @param person - Person object with firstName and lastName
- * @returns Formatted full name string
+ * Fetches order details by publicOrderId and eventId.
+ * @param publicOrderId - The public order identifier
+ * @param eventId - The event identifier
+ * @returns Order object or null
  */
-const formatPersonName = (person: {
-  firstName: string;
-  lastName: string;
-}): string => `${person.firstName} ${person.lastName}`;
+const fetchOrder = async (publicOrderId: string, eventId: string) => {
+  const res = await fetch(`/api/events/${eventId}/orders/${publicOrderId}`);
+  if (!res.ok) throw new Error("Failed to fetch order details");
+  return res.json();
+};
 
 /**
- * Functional OrderDetails component for displaying detailed order information.
- *
- * @returns JSX.Element containing order details or null if no order exists
- *
- * Responsibilities:
- * - Displays order date, applicant information
- * - Integrates with OrderGifts component for complete order view
- * - Uses OrderContext  for state management
- *
- * Performance:
- * - Uses memoized calculations for derived state
- * - Leverages React's built-in rendering optimizations
- * - No React.memo needed due to stable context subscriptions
+ * OrderDetails
+ * Displays order information and applicant details.
+ * @param publicOrderId - The public order identifier
+ * @param eventId - The event identifier
  */
-const OrderDetails: FC = () => {
-  const orderStatus = useOrderStatus();
+const OrderDetails: FC<OrderDetailsProps> = ({ publicOrderId, eventId }) => {
+  const { data: order, error } = useSWR(
+    publicOrderId && eventId ? [`order`, publicOrderId, eventId] : null,
+    () => fetchOrder(publicOrderId, eventId)
+  );
 
-  // Extract order from context (null/undefined safe)
-  const order = orderStatus.order ?? null;
-
-  // Early return if no order exists
-  if (!order) return null;
+  if (error) return <div>Error loading order details.</div>;
+  if (!order) return <div>Loading...</div>;
 
   const { createdAt, applicant } = order;
 
@@ -43,19 +41,17 @@ const OrderDetails: FC = () => {
       <h2>Order Details</h2>
       <div>
         <p>
-          <strong>Order date:</strong> {new Date(createdAt).toLocaleString()}
+          <strong>Order date:</strong>{" "}
+          {createdAt ? new Date(createdAt).toLocaleString() : "N/A"}
         </p>
         <p>
           <strong>Applicant:</strong>{" "}
-          {applicant && applicant.firstName && applicant.lastName
-            ? formatPersonName({
-                firstName: applicant.firstName,
-                lastName: applicant.lastName,
-              })
-            : "N/A"}
+          {applicant && applicant.publicId ? (
+            <ApplicantDetails publicId={applicant.publicId} />
+          ) : (
+            "N/A"
+          )}
         </p>
-
-        <OrderGifts />
       </div>
     </div>
   );

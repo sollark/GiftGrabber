@@ -1,7 +1,8 @@
 "use client";
-import ConfirmOrder from "@/components/order/ConfirmOrder";
 
-interface OrderPageClientProps {
+import OrderDetails from "@/components/order/OrderDetails";
+
+export interface OrderPageClientProps {
   eventId: string;
   publicOrderId: string;
 }
@@ -14,9 +15,8 @@ interface OrderPageClientProps {
  * @returns JSX.Element
  * @publicAPI
  */
-export default function OrderPageClient({
-  eventId,
-  publicOrderId,
-}: OrderPageClientProps) {
-  return <ConfirmOrder publicOrderId={publicOrderId} eventId={eventId} />;
-}
+const OrderPageClient = ({ eventId, publicOrderId }: OrderPageClientProps) => {
+  return <OrderDetails publicOrderId={publicOrderId} eventId={eventId} />;
+};
+
+export default OrderPageClient;
