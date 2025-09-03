@@ -248,7 +248,7 @@ export const GiftContext = contextResult.Context;
 /**
  * BaseGiftProvider: Provider component for advanced usage.
  */
-export const BaseGiftProvider = contextResult.Provider;
+const BaseGiftProvider = contextResult.Provider;
 
 /**
  * useGiftContext

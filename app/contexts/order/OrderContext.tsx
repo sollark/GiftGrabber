@@ -82,7 +82,7 @@ const contextResult = createFunctionalContext<OrderState, OrderAction>({
  * All exports are properly typed from the functional context factory.
  */
 export const OrderContext = contextResult.Context;
-export const BaseOrderProvider = contextResult.Provider;
+const BaseOrderProvider = contextResult.Provider;
 export const useOrderContext = () => {
   return useSafeContext(OrderContext, "OrderContext");
 };

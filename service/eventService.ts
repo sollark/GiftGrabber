@@ -73,6 +73,7 @@ export const createEventInternal = async (
   const giftResult = await GiftService.createForApplicants(
     applicantResult.value
   );
+
   if (giftResult._tag === "Failure") {
     console.error("Failed to create gifts:", giftResult.error);
     return failure("Failed to create gifts");

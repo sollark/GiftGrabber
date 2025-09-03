@@ -181,6 +181,8 @@ const CreateEventForm: FC = () => {
    */
   const saveToContexts = useCallback(
     async (processedData: any) => {
+      console.log("CHECK: Save to contexts is currently disabled.");
+
       // Context saving temporarily disabled - will be re-enabled when contexts are properly configured
       console.log("Event data processed:", {
         eventId,

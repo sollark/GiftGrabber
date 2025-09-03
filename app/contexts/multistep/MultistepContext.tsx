@@ -77,7 +77,7 @@ MultistepContext.displayName = "MultistepContext";
  * BaseMultistepProvider - Low-level provider for advanced usage
  * @public
  */
-export const BaseMultistepProvider = (contextResult as any).Provider;
+const BaseMultistepProvider = (contextResult as any).Provider;
 
 /**
  * MultistepProvider - Convenience provider component for easy setup.

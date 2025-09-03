@@ -179,7 +179,7 @@ const contextResult = createFunctionalContext<ApplicantState, ApplicantAction>({
 });
 
 export const ApplicantContext = contextResult.Context;
-export const BaseApplicantProvider = contextResult.Provider;
+const BaseApplicantProvider = contextResult.Provider;
 export function useApplicantContext() {
   return useSafeContext(ApplicantContext, "ApplicantContext");
 }

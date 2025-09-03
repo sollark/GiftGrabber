@@ -246,7 +246,7 @@ export const EventContext = contextResult.Context;
 /**
  * BaseEventProvider: Provider component for the event context (without error boundary).
  */
-export const BaseEventProvider = contextResult.Provider;
+const BaseEventProvider = contextResult.Provider;
 
 /**
  * EventProviderComponent

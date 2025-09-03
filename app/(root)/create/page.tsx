@@ -20,8 +20,6 @@
 import CreateEventForm from "@/components/event/CreateEventForm";
 import { Section } from "@/ui/layout";
 import { FC } from "react";
-import { BaseEventProvider } from "@/app/contexts/EventContext";
-import { BaseApplicantProvider } from "@/app/contexts/ApplicantContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 /**
@@ -37,16 +35,12 @@ import ErrorBoundary from "@/components/ErrorBoundary";
  */
 const CreatePage: FC = () => {
   return (
-    <BaseEventProvider>
-      <BaseApplicantProvider>
-        <Section>
-          <Section.Title>Create New Event</Section.Title>
-          <ErrorBoundary>
-            <CreateEventForm />
-          </ErrorBoundary>
-        </Section>
-      </BaseApplicantProvider>
-    </BaseEventProvider>
+    <Section>
+      <Section.Title>Create New Event</Section.Title>
+      <ErrorBoundary>
+        <CreateEventForm />
+      </ErrorBoundary>
+    </Section>
   );
 };
 
