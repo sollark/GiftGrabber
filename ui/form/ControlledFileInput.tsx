@@ -41,9 +41,14 @@ const ControlledFileInput: FC<ControlledFileInputProps> = ({
     <Controller
       control={control}
       name={name}
-      render={({ field }) => (
+      render={({ field: { onChange, value, onBlur, ref } }) => (
         <MuiFileInput
-          {...field}
+          ref={ref}
+          value={value || null}
+          onChange={(newValue) => {
+            onChange(newValue);
+          }}
+          onBlur={onBlur}
           className={FILE_INPUT_CONFIG.CSS_CLASS}
           label={label}
           placeholder={label}
