@@ -29,7 +29,6 @@ import GiftList from "@/components/gift/GiftList";
 
 interface EventDetailsClientProps {
   eventId: string;
-  ownerId: string;
 }
 
 /**
@@ -64,7 +63,6 @@ interface EventDetailsClientProps {
  */
 export default function EventDetailsClient({
   eventId,
-  ownerId,
 }: EventDetailsClientProps) {
   // --- Context Access ---
   const eventContext = useEventContext();

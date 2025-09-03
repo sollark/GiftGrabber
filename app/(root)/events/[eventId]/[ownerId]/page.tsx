@@ -82,13 +82,11 @@ export default function EventDetails({
 
   const { eventId, ownerId } = resolvedParams;
 
-  // Use optimistic approach - render UI immediately with contexts
-  // Data will be fetched client-side through context hooks
   return (
     <EventProvider eventId={eventId}>
       <ApplicantProvider applicantList={[]}>
         <GiftProvider giftList={[]}>
-          <EventDetailsClient eventId={eventId} ownerId={ownerId} />
+          <EventDetailsClient eventId={eventId} />
         </GiftProvider>
       </ApplicantProvider>
     </EventProvider>
