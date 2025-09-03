@@ -3,6 +3,12 @@ import { tokens } from "@/ui/colorTokens";
 import { Box } from "@mui/material";
 import { FC } from "react";
 
+/**
+ * ColorTestPage
+ * Renders color tokens for both light and dark modes using MUI Box components.
+ * @returns JSX.Element
+ * @publicAPI
+ */
 const ColorTestPage: FC = () => {
   const lightColorTokens = tokens("light");
   const darkColorTokens = tokens("dark");
@@ -22,6 +28,7 @@ const ColorTestPage: FC = () => {
                 display: "inline-block",
                 margin: 1,
               }}
+              aria-label={`${colorName} ${shade} ${color}`}
             >
               <p style={{ color: "#fff", padding: "10px" }}>
                 {shade}: {color}

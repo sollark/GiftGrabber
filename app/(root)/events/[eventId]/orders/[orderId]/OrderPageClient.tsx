@@ -7,11 +7,12 @@ interface OrderPageClientProps {
 }
 
 /**
+ * OrderPageClient
  * Client component for rendering order confirmation UI.
- * Props:
- *   - eventId: string
- *   - publicOrderId: string
- * Returns: JSX.Element
+ * @param eventId - Event identifier
+ * @param publicOrderId - Public order identifier
+ * @returns JSX.Element
+ * @publicAPI
  */
 export default function OrderPageClient({
   eventId,

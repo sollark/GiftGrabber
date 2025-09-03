@@ -17,6 +17,7 @@
  * - Foundation for global state providers and error boundaries
  */
 
+"use client";
 import "@/styles/main.css";
 
 /**
@@ -43,10 +44,9 @@ import "@/styles/main.css";
  */
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  "use client";
+}) {
   // Wrap all pages in global context providers to preserve state across navigation
   // This fixes context loss when navigating between CreateEventForm and EventDetailsClient
   // Providers are imported from their respective modules

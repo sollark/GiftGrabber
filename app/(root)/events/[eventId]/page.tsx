@@ -12,7 +12,17 @@ import { useApplicantContext } from "@/app/contexts/ApplicantContext";
 import { useGiftContext } from "@/app/contexts/gift/GiftContext";
 import { useEventContext } from "@/app/contexts/EventContext";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import { getOrElse } from "@/utils/fp";
+import { Person } from "@/database/models/person.model";
+import { Gift } from "@/database/models/gift.model";
 
+/**
+ * ApplicantPage
+ * Handles data fetching and context synchronization for event applicants and gifts.
+ * @param params - Route parameters containing eventId
+ * @returns JSX.Element
+ * @publicAPI
+ */
 export default function ApplicantPage({
   params,
 }: {
@@ -64,14 +74,16 @@ export default function ApplicantPage({
   // Memoize unwrapped results to avoid useEffect dependency warnings
   const applicants = useMemo(
     () =>
-      applicantsResult && applicantsResult._tag === "Success"
-        ? applicantsResult.value
-        : [],
+      getOrElse<Person[], string>([])(
+        applicantsResult ?? { _tag: "Failure", error: "No data" }
+      ),
     [applicantsResult]
   );
   const gifts = useMemo(
     () =>
-      giftsResult && giftsResult._tag === "Success" ? giftsResult.value : [],
+      getOrElse<Gift[], string>([])(
+        giftsResult ?? { _tag: "Failure", error: "No data" }
+      ),
     [giftsResult]
   );
 

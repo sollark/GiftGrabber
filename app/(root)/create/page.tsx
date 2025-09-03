@@ -17,13 +17,12 @@
  * - Entry point for Excel import and event configuration workflows
  */
 
-"use client";
-
 import CreateEventForm from "@/components/event/CreateEventForm";
 import { Section } from "@/ui/layout";
 import { FC } from "react";
 import { BaseEventProvider } from "@/app/contexts/EventContext";
 import { BaseApplicantProvider } from "@/app/contexts/ApplicantContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 /**
  * Event creation page component with form and layout structure
@@ -42,7 +41,9 @@ const CreatePage: FC = () => {
       <BaseApplicantProvider>
         <Section>
           <Section.Title>Create New Event</Section.Title>
-          <CreateEventForm />
+          <ErrorBoundary>
+            <CreateEventForm />
+          </ErrorBoundary>
         </Section>
       </BaseApplicantProvider>
     </BaseEventProvider>
