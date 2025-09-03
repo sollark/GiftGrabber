@@ -22,13 +22,13 @@ import { Person } from "@/database/models/person.model";
 import { generateQRCodeData } from "./qrcodeUtils";
 
 /**
- * Submits an order with applicant data, gifts, and QR code
- *
+ * Submits an order with applicant data, gifts, and QR code.
+ * Handles validation and error reporting.
  * @param applicant - The person placing the order
  * @param gifts - Array of gifts to include in the order
  * @param publicOrderId - Unique identifier for the order
  * @param qrCodeData - Base64-encoded QR code string
- * @returns Promise<Result<string, Error>> - Order public ID or error
+ * @returns {Promise<Result<string, Error>>} Order public ID or error
  */
 export const submitOrder = async (
   applicant: Person,
@@ -63,13 +63,13 @@ export const submitOrder = async (
 };
 
 /**
- * Complete order processing workflow that combines QR generation and order submission
- *
+ * Complete order processing workflow that combines QR generation and order submission.
+ * Generates QR code and submits order in one step.
  * @param applicant - The person placing the order
  * @param gifts - Array of gifts to include in the order
  * @param publicOrderId - Unique identifier for the order
  * @param qrCodeRef - React ref to the QR code DOM element
- * @returns Promise<Result<string, Error>> - Order public ID or error
+ * @returns {Promise<Result<string, Error>>} Order public ID or error
  */
 export const processCompleteOrder = async (
   applicant: Person,

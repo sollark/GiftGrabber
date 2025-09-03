@@ -25,11 +25,10 @@
  *   if (isSuccess(result)) { ... } else { ... }
  */
 /**
- * Converts a Promise to a Result type for safe async operations
- *
+ * Converts a Promise to a Result type for safe async operations.
+ * Wraps promise execution and captures errors in Failure.
  * @param promise - Promise<T> to convert to Result-based async operation
- * @returns Promise<Result<T, E>> that never throws, errors are captured in Failure
- *
+ * @returns {Promise<Result<T, E>>} that never throws, errors are captured in Failure
  * @sideEffects None - wraps promise execution without side effects
  * @performance Minimal overhead - single try/catch wrapper around promise execution
  * @notes Essential for database operations and API calls to avoid unhandled rejections
@@ -67,11 +66,9 @@ export interface Failure<E> {
 }
 
 /**
- * Creates a Success result containing a successful value
- *
+ * Creates a Success result containing a successful value.
  * @param value - The successful value of type T to wrap
- * @returns Success<T> result with the provided value
- *
+ * @returns {Success<T>} result with the provided value
  * @sideEffects None - pure function creating immutable data structure
  * @performance O(1) - simple object creation
  * @notes Part of Result monad constructor functions
@@ -83,11 +80,9 @@ export const success = <T>(value: T): Success<T> => ({
 });
 
 /**
- * Creates a Failure result containing an error value
- *
+ * Creates a Failure result containing an error value.
  * @param error - The error value of type E to wrap
- * @returns Failure<E> result with the provided error
- *
+ * @returns {Failure<E>} result with the provided error
  * @sideEffects None - pure function creating immutable data structure
  * @performance O(1) - simple object creation
  * @notes Part of Result monad constructor functions for error cases

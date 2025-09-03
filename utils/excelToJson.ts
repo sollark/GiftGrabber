@@ -44,9 +44,10 @@ type JsonRecord = Record<string, string>;
 
 /**
  * Converts an Excel file to an array of JSON objects with enhanced error handling and format support.
+ * Uses functional error handling and supports multiple formats.
  * @param excelFile - The Excel file to convert
  * @param config - Optional configuration for parsing
- * @returns Promise<Record<string, string>[]> - Array of objects with string key-value pairs
+ * @returns {Promise<JsonRecord[]>} Array of objects with string key-value pairs
  * @throws Error if conversion fails
  */
 export const convertExcelToJson = async (
@@ -78,9 +79,10 @@ export const convertExcelToJson = async (
 };
 
 /**
- * Processes the Excel file and returns a workbook object
+ * Processes the Excel file and returns a workbook object.
+ * Dynamically loads XLSX and reads the file as a workbook.
  * @param excelFile - The Excel file to process
- * @returns Promise<XLSX.WorkBook> - The processed workbook
+ * @returns {Promise<XLSX.WorkBook>} The processed workbook
  */
 const processExcelFile = async (
   excelFile: File
@@ -91,9 +93,9 @@ const processExcelFile = async (
 };
 
 /**
- * Gets the first worksheet from the workbook
+ * Gets the first worksheet from the workbook.
  * @param workbook - The Excel workbook
- * @returns XLSX.WorkSheet - The first worksheet
+ * @returns {XLSX.WorkSheet} The first worksheet
  */
 const getFirstWorksheet = (
   workbook: import("xlsx").WorkBook

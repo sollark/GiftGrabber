@@ -1,7 +1,6 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { deepEqual } from "@/utils/utils";
 import { Result, success, failure } from "@/utils/fp";
-
 /**
  * useContextSync
  * Generic hook to synchronize context state with server data using deep comparison.
@@ -13,22 +12,7 @@ import { Result, success, failure } from "@/utils/fp";
  * @param contextActions - The context action dispatcher (must have ._tag and .value.dispatchSafe)
  * @param buildAction - Function to build the action object for dispatchSafe
  * @returns { isLoading: boolean, result: Result<true, string> | null }
- *
- * Usage:
- *   const fetchServerData = useCallback(() => getEventDetails(eventId), [eventId]);
- *   const buildAction = useCallback((serverData) => ({
- *     type: "SET_EVENT_APPLICANTS",
- *     payload: { applicantList: serverData.applicantList || [] }
- *   }), []);
- *
- *   useContextSync({
- *     fetchServerData,
- *     contextValue: applicantList,
- *     contextActions: applicantActions,
- *     buildAction
- *   });
  */
-
 export function useContextSync<T, A = any>({
   fetchServerData,
   contextValue,
@@ -36,7 +20,7 @@ export function useContextSync<T, A = any>({
   buildAction,
 }: {
   fetchServerData: () => Promise<T>;
-  contextValue: any;
+  contextValue: T;
   contextActions: {
     _tag: string;
     value: { dispatchSafe: (action: A) => void };

@@ -34,10 +34,9 @@ const QR_CODE_ERRORS = {
 
 /**
  * Extracts a QR code buffer from a React ref to a QR code element.
- *
+ * Impure: depends on DOM and React ref.
  * @param qrRef - React ref to QR code DOM container
- * @returns Buffer containing QR code PNG data, or undefined if not found
- * @notes Impure: depends on DOM and React ref
+ * @returns {Promise<Buffer | undefined>} Buffer containing QR code PNG data, or undefined if not found
  */
 export const getQRcodeBuffer = async (
   qrRef: React.RefObject<HTMLDivElement>
@@ -54,10 +53,9 @@ export const getQRcodeBuffer = async (
 
 /**
  * Generates a base64-encoded QR code string from a DOM element reference.
- *
+ * Uses getQRcodeBuffer internally.
  * @param qrCodeRef - React ref to QR code DOM container
- * @returns Promise<Result<string, Error>> - Base64 QR code string or error
- * @notes Uses getQRcodeBuffer internally
+ * @returns {Promise<Result<string, Error>>} Base64 QR code string or error
  */
 export const generateQRCodeData = async (
   qrCodeRef: React.RefObject<HTMLDivElement>
@@ -75,11 +73,10 @@ export const generateQRCodeData = async (
 
 /**
  * Extracts QR code data from two DOM canvas elements and converts to base64 strings.
- *
+ * Requires QR code components to be rendered before extraction.
  * @param eventQRCodeRef - React ref to event QR code DOM container
  * @param ownerQRCodeRef - React ref to owner QR code DOM container
- * @returns Promise<Result<GenerateQRCodesOutput, string>> with base64 QR codes or error message
- * @notes Requires QR code components to be rendered before extraction
+ * @returns {Promise<Result<GenerateQRCodesOutput, string>>} with base64 QR codes or error message
  */
 export const generateQRCodes = async (
   eventQRCodeRef: React.RefObject<HTMLDivElement>,
@@ -106,11 +103,10 @@ export const generateQRCodes = async (
 
 /**
  * Validates QR code DOM references for availability and accessibility.
- *
+ * Pure function, does not access DOM.
  * @param eventQRCodeRef - React ref to event QR code DOM container
  * @param ownerQRCodeRef - React ref to owner QR code DOM container
- * @returns Result<boolean, string> indicating validation success or error message
- * @notes Pure function, does not access DOM
+ * @returns {Result<boolean, string>} indicating validation success or error message
  */
 export const validateQRCodeRefs = (
   eventQRCodeRef: React.RefObject<HTMLDivElement>,

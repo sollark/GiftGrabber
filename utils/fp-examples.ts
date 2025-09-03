@@ -1,6 +1,7 @@
 /**
- * Comprehensive examples showing functional programming patterns in GiftGrabber
- * Demonstrates how to use the new FP utilities, hooks, and database operations
+ * Comprehensive examples showing functional programming patterns in GiftGrabber.
+ * Demonstrates how to use the new FP utilities, hooks, and database operations.
+ * All examples are for documentation and testing purposes only.
  */
 
 import React, { useMemo, useCallback } from "react";

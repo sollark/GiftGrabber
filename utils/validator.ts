@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 /**
- * Main validation schema for event creation form
- * Validates event name, email, and file uploads
+ * EventSchema
+ * Main validation schema for event creation form.
+ * Validates event name, email, and file uploads using zod.
+ * @type {z.ZodObject}
  */
 export const EventSchema = z.object({
   eventName: z

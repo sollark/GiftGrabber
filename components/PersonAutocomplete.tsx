@@ -22,6 +22,9 @@ import { SecondaryButton } from "@/ui/primitives";
 
 /**
  * Option structure for the autocomplete component
+ * @property id - Unique identifier for the option
+ * @property label - Display label for the option
+ * @property person - The Person object represented by this option
  */
 export interface OptionType {
   id: string;
@@ -31,6 +34,9 @@ export interface OptionType {
 
 /**
  * Props for the PersonAutocomplete component
+ * @property peopleList - Array of Person objects to display
+ * @property onSelectPerson - Callback when a person is confirmed
+ * @property value - Currently selected Person (optional)
  */
 interface PersonAutocompleteProps {
   peopleList: Person[];
@@ -50,7 +56,7 @@ const AUTOCOMPLETE_CONFIG = {
 /**
  * mapPersonListToOptions
  * Maps a list of Person objects to OptionType objects for the autocomplete.
- * Moved outside component to avoid recreation on every render.
+ * Pure function, referentially stable.
  * @param people - Array of Person objects
  * @returns Array of OptionType objects
  */
@@ -64,7 +70,7 @@ const mapPersonListToOptions = (people: Person[]): OptionType[] =>
 /**
  * isOptionEqualToValue
  * Compares two options for equality by ID.
- * Moved outside component for consistent reference equality.
+ * Pure function, referentially stable.
  */
 const isOptionEqualToValue = (option: OptionType, value: OptionType): boolean =>
   option.id === value.id;
@@ -72,7 +78,7 @@ const isOptionEqualToValue = (option: OptionType, value: OptionType): boolean =>
 /**
  * PersonAutocomplete component with focused performance optimizations.
  * Provides search functionality and requires explicit selection confirmation.
- * Optimized without over-engineering for better maintainability.
+ * Optimized for maintainability and isolation.
  */
 const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   peopleList,
@@ -105,6 +111,8 @@ const PersonAutocomplete: FC<PersonAutocompleteProps> = ({
   /**
    * handleOptionSelect
    * Handles selection from the autocomplete dropdown (does not confirm selection).
+   * @param event - SyntheticEvent from Autocomplete
+   * @param value - OptionType selected
    */
   const handleOptionSelect = useCallback(
     (event: SyntheticEvent, value: OptionType | null) => {

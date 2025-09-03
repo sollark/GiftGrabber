@@ -15,6 +15,7 @@
  */
 /**
  * Functional programming context utilities for React.
+ * Provides generic context factories and composable state management patterns.
  */
 
 import React, { useMemo, useCallback, createContext, useReducer } from "react";

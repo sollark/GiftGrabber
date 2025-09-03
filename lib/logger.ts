@@ -11,24 +11,34 @@
  */
 
 // Utility to check if running in browser
+// @returns {boolean} True if running in browser
 const isBrowser = typeof window !== "undefined";
 // Utility to check if in development mode
+// @returns {boolean} True if NODE_ENV is 'development'
 const isDev = process.env.NODE_ENV === "development";
 
 // Logger interface for type safety
+/**
+ * Logger interface for type-safe logging methods.
+ * @property log - Standard log method
+ * @property info - Info log method
+ * @property warn - Warning log method
+ * @property error - Error log method
+ * @property important - Prints an important message in bold text (dev mode only)
+ */
 interface Logger {
   log: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
   warn: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
-  /**
-   * Prints an important message in bold text in the console (dev mode only).
-   * @param args - Arguments to print
-   */
   important: (...args: unknown[]) => void;
 }
 
-// Factory function to create a logger
+/**
+ * Factory function to create a logger.
+ * Only logs in browser and dev mode, otherwise no-ops.
+ * @returns {Logger} Logger instance
+ */
 function createLogger(): Logger {
   // Only log in browser and dev mode
   if (isBrowser && isDev) {

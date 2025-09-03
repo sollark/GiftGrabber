@@ -1,6 +1,7 @@
 /**
- * Usage examples for the i18n-enabled Excel import functionality
- * Demonstrates automatic format detection with multi-language support
+ * Usage examples for the i18n-enabled Excel import functionality.
+ * Demonstrates automatic format detection with multi-language support.
+ * All examples are for documentation and testing purposes only.
  */
 
 import {
@@ -18,7 +19,9 @@ import {
 } from "@/types/excel.types";
 
 /**
- * Example 1: Basic automatic detection with multi-language support
+ * Example 1: Basic automatic detection with multi-language support.
+ * @param file - Excel file to import
+ * @returns {Promise<any>} Import result
  */
 export async function importExcelWithAutoDetection(file: File) {
   try {

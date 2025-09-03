@@ -67,10 +67,9 @@ import { Result, success, failure } from "@/utils/fp";
 /**
  * Result-based wrapper for Excel file parsing with enhanced error handling.
  * Provides safe parsing that returns Result<T, Error> instead of throwing.
- *
  * @param file - Excel file to process
  * @param config - Configuration options for import behavior
- * @returns Promise<Result<ExcelImportResult, Error>> - Parse result or error
+ * @returns Promise<Result<ExcelImportResult, Error>> Parse result or error
  */
 export async function parseExcelFileSafe(
   file: File,
@@ -91,6 +90,7 @@ export async function parseExcelFileSafe(
 /**
  * Fallback format names in English when translations fail to load.
  * Provides user-friendly display names for each supported Excel format.
+ * @type {Record<ExcelFormatType, string>}
  */
 const FALLBACK_FORMAT_NAMES = {
   [ExcelFormatType.COMPLETE_EMPLOYEE]: "Complete Employee Data",
@@ -102,6 +102,7 @@ const FALLBACK_FORMAT_NAMES = {
 /**
  * Configuration for format pattern matching.
  * Defines which fields are required for each format type with confidence scores.
+ * @type {Record<ExcelFormatType, { requiredFields: string[]; confidence: number }>}
  */
 const FORMAT_PATTERNS = {
   [ExcelFormatType.COMPLETE_EMPLOYEE]: {
@@ -129,12 +130,14 @@ const FORMAT_PATTERNS = {
 /**
  * Cache for loaded translations to avoid repeated file loads.
  * Maps language codes to their respective translation objects.
+ * @type {Map<SupportedLanguage, ExcelTranslations>}
  */
 const translationCache = new Map<SupportedLanguage, ExcelTranslations>();
 
 /**
  * Cache for format detection results using WeakMap for automatic cleanup.
  * Provides O(1) lookup for previously analyzed files.
+ * @type {WeakMap<File, FormatDetectionResult>}
  */
 const formatDetectionCache = new WeakMap<File, FormatDetectionResult>();
 
@@ -145,9 +148,8 @@ const formatDetectionCache = new WeakMap<File, FormatDetectionResult>();
 /**
  * Normalizes header strings for consistent matching across languages.
  * Converts to lowercase, trims whitespace, and normalizes internal spacing.
- *
  * @param header - The raw header string from Excel file
- * @returns Normalized header string for comparison
+ * @returns {string} Normalized header string for comparison
  */
 function normalizeHeader(header: string): string {
   return header.trim().toLowerCase().replace(/\s+/g, " ");
@@ -156,7 +158,6 @@ function normalizeHeader(header: string): string {
 /**
  * Determines if a row should be considered empty based on configuration.
  * Checks if all values are null, undefined, or empty strings after trimming.
- *
  * @param row - Excel row data as key-value pairs
  * @returns True if the row should be considered empty
  */

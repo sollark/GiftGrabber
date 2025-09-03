@@ -31,10 +31,9 @@ import {
 
 /**
  * useResultState (Public API)
- *
  * React hook for managing state with functional Result-based updates, ensuring only successful updates are applied.
- * @param initialValue T - Initial state value
- * @returns [T, setResultState, resetState] - State, updater, and reset function
+ * @param initialValue - Initial state value
+ * @returns {[T, Function, Function]} State, updater, and reset function
  * @sideEffects Updates React state
  * @notes Only applies updates if Result is Success; ignores on Failure
  */

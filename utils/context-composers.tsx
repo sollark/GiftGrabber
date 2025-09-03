@@ -5,9 +5,10 @@ import { EventProvider } from "@/app/contexts/EventContext";
 import { GiftProvider } from "@/app/contexts/gift/GiftContext";
 
 /**
- * Composes all app context providers into a single component.
+ * AppProviders
+ * Composes all app context providers into a single component for global state management.
  * @param children - React children to be wrapped by providers
- * @returns Children wrapped in all context providers
+ * @returns {React.ReactNode} Children wrapped in all context providers
  */
 const AppProviders: FC<{ children: React.ReactNode }> = ({ children }) => (
   <ApplicantProvider>

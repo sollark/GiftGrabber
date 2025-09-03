@@ -1,12 +1,10 @@
-/* @file Context Integration Examples
- *
- * Purpose: Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
- *
+/**
+ * Context Integration Examples
+ * Provides advanced integration patterns for combining multiple functional React contexts (Applicant, Gift, Order, Multistep) in a single provider tree.
  * Main Responsibilities:
  * - Defines a combined provider for orchestrating context setup and data flow across the app's main business workflows (order creation, approval, etc.)
  * - Implements composite hooks that encapsulate multi-context business logic for order creation and approval.
  * - Provides example UI components and utilities for context composition and cross-context state synchronization.
- *
  * Architectural Role:
  * - Sits at the integration layer, bridging domain contexts and UI workflows.
  * - Encapsulates business process logic that spans multiple contexts.
