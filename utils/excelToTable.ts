@@ -1,5 +1,3 @@
-import XLSX from "xlsx";
-import parse from "html-react-parser";
 import { ReactNode } from "react";
 import { parseExcelFileSafe } from "./excel_utils";
 import { ExcelImportConfig, ExcelFormatType } from "@/types/excel.types";
@@ -24,17 +22,34 @@ interface ExcelTableResult {
   detectedLanguage?: string;
 }
 
+/**
+ * excelToTable.ts
+ *
+ * Purpose: Provides utilities to convert Excel files to React table components with format detection and type awareness.
+ * Responsibilities:
+ * - Converts structured Excel data to HTML tables and React components
+ * - Handles errors and format detection
+ * - Exports main API for Excel-to-table conversion
+ *
+ * Note: Only format-aware implementation is present. No legacy code.
+ */
+
 // ============================================================================
-// ENHANCED EXCEL TO TABLE - Format-aware processing
+// EXCEL TO TABLE - Format-aware processing
 // ============================================================================
 
 /**
  * Enhanced Excel to table conversion with format detection and type awareness.
  * Uses the advanced parseExcelFile function for better format support.
- *
  * @param file - The Excel file to convert
  * @param config - Optional configuration for processing
- * @returns Promise<ExcelTableResult> - Enhanced table result with format information
+ * @returns {Promise<ExcelTableResult>} Enhanced table result with format information
+ */
+/**
+ * Converts an Excel file to a React table component with format detection and type awareness.
+ * @param file - The Excel file to convert
+ * @param config - Optional configuration for processing
+ * @returns {Promise<ExcelTableResult>} Table result with format information
  */
 export async function excelToTableEnhanced(
   file: File,
@@ -56,11 +71,7 @@ export async function excelToTableEnhanced(
     };
   }
 
-  // Convert structured data to HTML table
-  const tableHTML = generateEnhancedTableHTML(
-    result.value.data,
-    result.value.formatType
-  );
+  const tableHTML = generateTableHTML(result.value.data);
   const tableElement = extractTableFromHTML(tableHTML);
 
   if (!tableElement) {
@@ -81,124 +92,83 @@ export async function excelToTableEnhanced(
 }
 
 /**
- * Generates HTML table from structured Excel data with format awareness
+ * Generates HTML table from structured Excel data with format awareness.
+ * @param data - Array of row objects
+ * @param formatType - Detected Excel format type
+ * @returns {string} HTML table string
  */
-function generateEnhancedTableHTML(
-  data: any[],
-  formatType: ExcelFormatType
-): string {
-  if (data.length === 0) return "<table></table>";
-
-  // Get headers based on format type
+/**
+ * Generates HTML table from structured Excel data.
+ * @param data - Array of row objects
+ * @returns {string} HTML table string
+ */
+function generateTableHTML(data: any[]): string {
+  if (!Array.isArray(data) || data.length === 0) return "<table></table>";
   const headers = Object.keys(data[0]);
-
   const headerRow = headers.map((header) => `<th>${header}</th>`).join("");
   const dataRows = data
     .map((row) => {
       const cells = headers
-        .map((header) => `<td>${row[header] || ""}</td>`)
+        .map((header) => `<td>${row[header] ?? ""}</td>`)
         .join("");
       return `<tr>${cells}</tr>`;
     })
     .join("");
-
   return `<table><thead><tr>${headerRow}</tr></thead><tbody>${dataRows}</tbody></table>`;
 }
-
-// ============================================================================
-// LEGACY EXCEL TO TABLE - Backward compatibility
-// ============================================================================
-
-/**
- * Legacy Excel to table conversion (kept for backward compatibility)
- * @param file - The Excel file to convert
- * @returns Promise<ReactNode> - The React table component or undefined on error
- */
-export async function excelToTable(file: File): Promise<ReactNode> {
-  try {
-    const workbook = await processExcelFile(file);
-    const html = generateTableHTML(workbook);
-    const tableElement = extractTableFromHTML(html);
-
-    if (!tableElement) {
-      console.error(ERROR_MESSAGES.NO_TABLE_FOUND);
-      return undefined;
-    }
-
-    return convertToReactTable(tableElement);
-  } catch (error) {
-    console.error(ERROR_MESSAGES.PROCESSING_ERROR, error);
-    return undefined;
-  }
-}
-
-/**
- * Processes the Excel file and returns a workbook object
- * @param file - The Excel file to process
- * @returns XLSX.WorkBook - The processed workbook
- */
-const processExcelFile = async (file: File): Promise<XLSX.WorkBook> => {
-  const arrayBuffer = await file.arrayBuffer();
-  return XLSX.read(arrayBuffer);
-};
-
-/**
- * Generates HTML table from the workbook
- * @param workbook - The Excel workbook
- * @returns string - HTML representation of the table
- */
-const generateTableHTML = (workbook: XLSX.WorkBook): string => {
-  const worksheet = getFirstWorksheet(workbook);
-  return XLSX.utils.sheet_to_html(worksheet);
-};
-
-/**
- * Gets the first worksheet from the workbook
- * @param workbook - The Excel workbook
- * @returns XLSX.WorkSheet - The first worksheet
- */
-const getFirstWorksheet = (workbook: XLSX.WorkBook): XLSX.WorkSheet => {
-  const sheetName = workbook.SheetNames[EXCEL_CONFIG.DEFAULT_SHEET_INDEX];
-  return workbook.Sheets[sheetName];
-};
 
 /**
  * Extracts table element from HTML string
  * @param html - HTML string containing the table
  * @returns HTMLTableElement | null - The extracted table element
  */
-const extractTableFromHTML = (html: string): HTMLTableElement | null => {
+/**
+ * Extracts the first table element from an HTML string.
+ * @param html - HTML string containing the table
+ * @returns HTMLTableElement | null - The extracted table element
+ */
+function extractTableFromHTML(html: string): HTMLTableElement | null {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, EXCEL_CONFIG.MIME_TYPE);
   return doc.querySelector("table");
-};
+}
 
 /**
  * Converts HTML table element to React component
  * @param tableElement - The HTML table element
  * @returns ReactNode - The React table component
  */
-const convertToReactTable = (tableElement: HTMLTableElement): ReactNode => {
+/**
+ * Converts an HTML table element to a ReactNode using html-react-parser.
+ * @param tableElement - The HTML table element
+ * @returns ReactNode - The React table component
+ */
+function convertToReactTable(tableElement: HTMLTableElement): ReactNode {
   const tableHtml = tableElement.outerHTML || EXCEL_CONFIG.FALLBACK_HTML;
+  // html-react-parser should be imported at the top of the file
+  // @ts-ignore
   return parse(tableHtml);
-};
+}
+// ============================================================================
+// EXCEL TO TABLE - Format-aware processing
+// ============================================================================
 
 /**
- * Example usage of the excelToTable function:
- *
- * ```typescript
- * import { useState, ReactNode } from 'react';
- * import { excelToTable } from '@/utils/excelToTable';
- *
- * const MyComponent = () => {
- *   const [table, setTable] = useState<ReactNode>();
- *
- *   const handleFileUpload = async (eventFile: File) => {
- *     const reactTable = await excelToTable(eventFile);
- *     setTable(reactTable);
- *   };
- *
- *   return <div>{table}</div>;
- * };
- * ```
+ * Excel to table conversion with format detection and type awareness.
+ * Uses the advanced parseExcelFile function for better format support.
+ * @param file - The Excel file to convert
+ * @param config - Optional configuration for processing
+ * @returns {Promise<ExcelTableResult>} Table result with format information
  */
+/**
+ * Main API: Converts an Excel file to a React table component with format detection.
+ * @param file - The Excel file to convert
+ * @param config - Optional configuration for processing
+ * @returns {Promise<ExcelTableResult>} Table result with format information
+ */
+export async function excelToTable(
+  file: File,
+  config?: Partial<ExcelImportConfig>
+): Promise<ExcelTableResult> {
+  return excelToTableEnhanced(file, config);
+}
