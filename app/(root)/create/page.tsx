@@ -24,10 +24,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 
 /**
  * Event creation page component with form and layout structure
- * Wrapped with necessary context providers for form functionality
  *
  * @returns JSX.Element containing section layout with event creation form
- *
  * @sideEffects None - pure presentational component
  * @performance Lightweight component delegating heavy lifting to CreateEventForm
  * @notes Uses Section layout component for consistent page structure and styling

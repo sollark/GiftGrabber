@@ -18,18 +18,15 @@ export interface ProcessFormDataOutput {
   applicantList: NewPerson[];
 }
 
-export const processFormData = async (
-  data: ProcessFormDataInput,
+export const processApplicantsFile = async (
+  file: File,
   errorMessages: { APPLICANT_LIST_ERROR: string }
-): Promise<Result<ProcessFormDataOutput, string>> => {
-  const { eventName: name, eventEmail: email, applicantsFile } = data;
-
-  const applicantList = await excelFileToPersonList(applicantsFile);
+): Promise<Result<NewPerson[], string>> => {
+  const applicantList = await excelFileToPersonList(file);
   if (!applicantList) {
     return failure(errorMessages.APPLICANT_LIST_ERROR);
   }
-
-  return success({ name, email, applicantList });
+  return success(applicantList);
 };
 
 export type GenerateQRCodesOutput = {
