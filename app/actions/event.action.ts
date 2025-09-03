@@ -1,6 +1,6 @@
+"use server";
+
 /**
- * event.action.ts
- *
  * Server actions for event management using publicId strategy.
  * - Exposes only publicId-based APIs to the client.
  * - Handles event creation, retrieval, and validation.
