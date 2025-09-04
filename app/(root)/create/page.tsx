@@ -33,7 +33,7 @@ import logger from "@/lib/logger";
  * @publicAPI Next.js page component rendered by app router at /create route
  */
 const CreatePage: FC = () => {
-  logger.important("Rendering Create Event Page");
+  console.log("🔥 [IMPORTANT] Rendering Create Event Page");
 
   return (
     <Section>

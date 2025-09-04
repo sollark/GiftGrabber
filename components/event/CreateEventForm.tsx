@@ -75,7 +75,8 @@ interface ErrorState {
  */
 
 const CreateEventForm: FC = () => {
-  logger.important("Rendering CreateEventForm Component");
+  // Test the important method with debug info
+  logger.log("CreateEventForm Component Rendered");
 
   // --- Enhanced Error Tracking ---
   const { handleError, errorCount, lastError, clearErrors } =

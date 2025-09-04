@@ -12,7 +12,9 @@
     "clear-db": "node scripts/clearDatabase.js",
     "clear-db:force": "node scripts/clearDatabase.js --force",
     "clear-logs": "node scripts/clearLogs.js",
-    "clear-logs:force": "node scripts/clearLogs.js --force"
+    "clear-logs:force": "node scripts/clearLogs.js --force",
+    "clean-cache": "bash scripts/cleanCache.sh",
+    "reset": "bash scripts/cleanCache.sh && npm run dev"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

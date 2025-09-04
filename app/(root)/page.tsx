@@ -34,7 +34,7 @@ import logger from "@/lib/logger";
 const Home: FC = () => {
   // This will run during hydration on client-side
   console.log("🔥 DIRECT CONSOLE LOG - Should always appear");
-  logger.important("🚀 LOGGER TEST - Should appear in browser only");
+  console.log("🔥 [IMPORTANT] 🚀 LOGGER TEST - Should appear in browser only");
 
   return <HeroSection />;
 };

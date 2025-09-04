@@ -13,7 +13,7 @@ export const LoggerDemo: React.FC = () => (
         logger.info("This is an info log");
         logger.warn("This is a warning");
         logger.error("This is an error");
-        logger.important("This is an IMPORTANT message!");
+        console.log("🔥 [IMPORTANT] This is an IMPORTANT message!");
       }}
       style={{
         padding: "0.5rem 1rem",

@@ -24,14 +24,12 @@ const isDev = process.env.NODE_ENV === "development";
  * @property info - Info log method
  * @property warn - Warning log method
  * @property error - Error log method
- * @property important - Prints an important message in bold text (dev mode only)
  */
 interface Logger {
   log: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
   warn: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
-  important: (...args: unknown[]) => void;
 }
 
 /**
@@ -40,22 +38,16 @@ interface Logger {
  * @returns {Logger} Logger instance
  */
 function createLogger(): Logger {
+  console.log("🚀 CREATING LOGGER:", { isBrowser, isDev });
+
   // Only log in browser and dev mode
   if (isBrowser && isDev) {
+    console.log("✅ LOGGER: Creating active logger");
     return {
       log: (...args) => console.log("[LOG]", ...args),
       info: (...args) => console.info("[INFO]", ...args),
       warn: (...args) => console.warn("[WARN]", ...args),
       error: (...args) => console.error("[ERROR]", ...args),
-      important: (...args) => {
-        if (args.length > 0) {
-          const [first, ...rest] = args;
-          // Print first argument in bold, rest as normal
-          console.log("%c[IMPORTANT]", "font-weight:bold;", first, ...rest);
-        } else {
-          console.log("%c[IMPORTANT]", "font-weight:bold;");
-        }
-      },
     };
   }
   // No-ops in production or server
@@ -64,7 +56,6 @@ function createLogger(): Logger {
     info: () => {},
     warn: () => {},
     error: () => {},
-    important: () => {},
   };
 }
 
