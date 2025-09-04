@@ -1,6 +1,6 @@
 "use client";
 import { FC, ReactNode, useMemo } from "react";
-import { BaseMultistepProvider } from "@/app/contexts/multistep/MultistepContext";
+import { MultistepProvider } from "@/app/contexts/multistep/MultistepContext";
 import { useStepNavigationActions } from "@/app/contexts/multistep/useStepNavigationActions";
 
 /**
@@ -44,9 +44,9 @@ const MultistepNavigator: FC<MultistepNavigatorProps> = ({ children }) => {
   );
 
   return (
-    <BaseMultistepProvider steps={steps}>
+    <MultistepProvider steps={steps}>
       <StepRenderer>{children}</StepRenderer>
-    </BaseMultistepProvider>
+    </MultistepProvider>
   );
 };
 

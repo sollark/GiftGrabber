@@ -26,7 +26,7 @@ import {
   useOrderTracking,
 } from "@/app/contexts/order/OrderContext";
 import {
-  BaseMultistepProvider,
+  MultistepProvider,
   useStepNavigation,
   useStepData,
 } from "@/app/contexts/multistep/MultistepContext";
@@ -85,9 +85,9 @@ export const CombinedContextProvider: React.FC<FlexibleProviderProps> = ({
   // Apply contexts conditionally based on configuration
   if (contexts.multistep) {
     wrappedChildren = (
-      <BaseMultistepProvider steps={contexts.multistep.steps}>
-        {wrappedChildren}
-      </BaseMultistepProvider>
+      <MultistepProvider steps={contexts.multistep.steps}>
+        {children}
+      </MultistepProvider>
     );
   }
 

@@ -256,7 +256,7 @@ const SelectedGiftList: FC<SelectedGiftListProps> = ({ isLoading = false }) => {
       accessor: (gift: Gift) => (col.getValue ? col.getValue(gift) : ""),
       className: col.width,
     }));
-  }, [ownerFormat, applicantFormat, applicantGifts]);
+  }, [ownerFormat, applicantFormat]);
 
   /**
    * columns

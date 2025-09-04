@@ -51,6 +51,7 @@ import {
 import { sendMailToClient } from "@/service/mailService";
 import { useEventContext } from "@/app/contexts/EventContext";
 import { useApplicantContext } from "@/app/contexts/ApplicantContext";
+import { withPerformance } from "@/hooks/usePerformanceOptimization";
 
 /**
  * Error state structure for consolidated error management
@@ -359,4 +360,5 @@ const CreateEventForm: FC = () => {
   );
 };
 
-export default CreateEventForm;
+// Apply performance optimization with memoization
+export default withPerformance(CreateEventForm);

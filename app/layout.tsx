@@ -8,6 +8,7 @@
  * - Imports global CSS styles for consistent application theming
  * - Provides semantic HTML structure with accessibility considerations
  * - Establishes responsive design foundation with flexbox layout
+ * - Initializes performance monitoring for development and optimization
  *
  * Architecture Role:
  * - Entry point for all application pages through Next.js app router
@@ -19,6 +20,7 @@
 
 "use client";
 import "@/styles/main.css";
+import { useEffect } from "react";
 
 /**
  * Root layout component providing HTML structure and global styling for all pages
@@ -47,6 +49,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Initialize performance monitoring in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      import("@/utils/performance-monitor").then(({ startMonitoring }) => {
+        startMonitoring();
+      });
+    }
+  }, []);
+
   // Wrap all pages in global context providers to preserve state across navigation
   // This fixes context loss when navigating between CreateEventForm and EventDetailsClient
   // Providers are imported from their respective modules

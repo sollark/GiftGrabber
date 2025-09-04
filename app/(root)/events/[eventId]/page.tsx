@@ -15,6 +15,10 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import { getOrElse } from "@/utils/fp";
 import { Person } from "@/database/models/person.model";
 import { Gift } from "@/database/models/gift.model";
+import {
+  OptimizedSWRProvider,
+  useEventPageData,
+} from "@/hooks/useSWROptimization";
 
 /**
  * ApplicantPage
@@ -29,13 +33,28 @@ export default function ApplicantPage({
   params: Promise<{ eventId: string }>;
 }) {
   const [eventId, setEventId] = useState<string | null>(null);
-  const applicantContext = useApplicantContext();
-  const giftContext = useGiftContext();
-  const eventContext = useEventContext();
 
   useEffect(() => {
     params.then(({ eventId }) => setEventId(eventId));
   }, [params]);
+
+  // Performance optimization: Use coordinated SWR fetching
+  const { swrKeys, config } = useEventPageData(eventId || "");
+
+  return (
+    <OptimizedSWRProvider fallback={config.fallback}>
+      <ApplicantPageContent eventId={eventId} />
+    </OptimizedSWRProvider>
+  );
+}
+
+/**
+ * ApplicantPageContent - Optimized component with SWR coordination
+ */
+function ApplicantPageContent({ eventId }: { eventId: string | null }) {
+  const applicantContext = useApplicantContext();
+  const giftContext = useGiftContext();
+  const eventContext = useEventContext();
 
   // SWR keys
   const eventKey = eventId ? `events/${eventId}` : null;
