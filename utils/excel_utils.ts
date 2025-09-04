@@ -63,7 +63,7 @@ import {
   SupportedLanguage,
   ExcelTranslations,
 } from "@/types/excel.types";
-import { Result, success, failure } from "@/utils/fp";
+import { Result, success, failure, isSuccess } from "@/utils/fp";
 
 /**
  * Result-based wrapper for Excel file parsing with enhanced error handling.
@@ -669,6 +669,30 @@ class ErrorMessageFactory {
 }
 
 // ============================================================================
+// EXCEL TO JSON DIRECT CONVERSION (to avoid circular dependency)
+// ============================================================================
+
+/**
+ * Direct Excel to JSON conversion without using excel_utils to avoid circular dependency.
+ * This is a simplified version that only extracts raw data for format detection.
+ * @param file - Excel file to convert
+ * @returns Promise resolving to array of JSON objects
+ */
+async function convertExcelToJsonDirect(
+  file: File
+): Promise<Record<string, any>[]> {
+  const XLSX = await import("xlsx");
+  const arrayBuffer = await file.arrayBuffer();
+  const workbook = XLSX.read(arrayBuffer, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+
+  // Get data as JSON objects directly
+  const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, any>[];
+  return jsonData.filter((record) => record && Object.keys(record).length > 0);
+}
+
+// ============================================================================
 // MAIN EXCEL PROCESSING FUNCTION
 // ============================================================================
 
@@ -695,7 +719,7 @@ export async function parseExcelFile(
   // Check cache for previously detected format
   const cachedResult = formatDetectionCache.get(file);
   const formatResult =
-    cachedResult && !config.language
+    cachedResult && (!config.language || config.language === "auto")
       ? cachedResult
       : await detectFormatFromFile(file, config);
 
@@ -707,9 +731,8 @@ export async function parseExcelFile(
 
   logger.log("parseExcelFile 3");
 
-  // Import and process Excel data
-  const { convertExcelToJson } = await import("@/utils/excelToJson");
-  const jsonData = await convertExcelToJson(file);
+  // Import and process Excel data using direct conversion
+  const jsonData = await convertExcelToJsonDirect(file);
 
   logger.log("parseExcelFile 4");
 
@@ -749,9 +772,10 @@ async function detectFormatFromFile(
   file: File,
   config: ExcelImportConfig
 ): Promise<FormatDetectionResult> {
-  const { convertExcelToJson } = await import("@/utils/excelToJson");
-  const jsonData = await convertExcelToJson(file);
+  logger.log("detectFormatFromFile 1");
+  const jsonData = await convertExcelToJsonDirect(file);
 
+  logger.log("detectFormatFromFile 2");
   if (!jsonData || jsonData.length === 0) {
     const language =
       config.language && config.language !== "auto" ? config.language : "en";
@@ -916,7 +940,40 @@ function getHeadersForFormat(
 // ============================================================================
 
 /**
- * Converts Excel file to NewPerson array format for backward compatibility.
+ * Converts Excel file to NewPerson array format with Result pattern for consistent error handling.
+ * Maps different Excel formats to proper Person fields for database creation.
+ * This function maintains compatibility with the legacy person creation workflow while providing
+ * type-safe error handling consistent with the application's functional programming patterns.
+ *
+ * @param file - Excel file to process
+ * @returns Promise<Result<NewPerson[], string>> Success with person array or failure with error message
+ */
+export async function excelFileToPersonListSafe(
+  file: File
+): Promise<Result<NewPerson[], string>> {
+  try {
+    const result = await parseExcelFile(file, {
+      language: "auto",
+      skipEmptyRows: true,
+      validateRequired: false,
+    });
+
+    const personList = result.data.map(
+      (record): NewPerson => convertRecordToPerson(record, result.formatType)
+    );
+
+    return success(personList);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Excel file processing failed";
+    logger.error("Excel file processing failed:", error);
+    return failure(errorMessage);
+  }
+}
+
+/**
+ * @deprecated Use excelFileToPersonListSafe for consistent Result-based error handling
+ * Legacy function maintained for backward compatibility.
  * Maps different Excel formats to proper Person fields for database creation.
  * This function maintains compatibility with the legacy person creation workflow.
  *
@@ -926,20 +983,9 @@ function getHeadersForFormat(
 export async function excelFileToPersonList(
   file: File
 ): Promise<NewPerson[] | null> {
-  try {
-    const result = await parseExcelFile(file, {
-      language: "auto",
-      skipEmptyRows: true,
-      validateRequired: false,
-    });
-
-    return result.data.map(
-      (record): NewPerson => convertRecordToPerson(record, result.formatType)
-    );
-  } catch (error) {
-    console.error("Excel file processing failed:", error);
-    return null;
-  }
+  logger.info("excelFileToPersonList - Processing applicants file");
+  const result = await excelFileToPersonListSafe(file);
+  return isSuccess(result) ? result.value : null;
 }
 
 /**

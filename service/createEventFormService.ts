@@ -1,6 +1,7 @@
-import { excelFileToPersonList } from "@/utils/excel_utils";
-import { Result, success, failure } from "@/utils/fp";
+import { excelFileToPersonListSafe } from "@/utils/excel_utils";
+import { Result } from "@/utils/fp";
 import { NewPerson } from "@/types/common.types";
+import logger from "@/lib/logger";
 
 // ============================================================================
 // FORM DATA TYPES - Local to this service
@@ -18,15 +19,19 @@ export interface ProcessFormDataOutput {
   applicantList: NewPerson[];
 }
 
+/**
+ * @deprecated Direct usage of excelFileToPersonListSafe is recommended for better performance.
+ * This function adds unnecessary service layer overhead without business logic value.
+ *
+ * Legacy service function for processing applicants file.
+ * Consider migrating to direct usage of excelFileToPersonListSafe for optimal performance.
+ */
 export const processApplicantsFile = async (
   file: File,
   errorMessages: { APPLICANT_LIST_ERROR: string }
 ): Promise<Result<NewPerson[], string>> => {
-  const applicantList = await excelFileToPersonList(file);
-  if (!applicantList) {
-    return failure(errorMessages.APPLICANT_LIST_ERROR);
-  }
-  return success(applicantList);
+  // Direct delegation to the optimized utility function
+  return excelFileToPersonListSafe(file);
 };
 
 export type GenerateQRCodesOutput = {

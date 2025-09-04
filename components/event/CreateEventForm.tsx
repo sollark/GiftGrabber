@@ -40,7 +40,7 @@ import Form from "@/ui/form/Form";
 import FormInputSection from "./FormInputSection";
 import FormFileSection from "./FormFileSection";
 import QRCodeSection from "./QRCodeSection";
-import { processApplicantsFile } from "@/service/createEventFormService";
+import { excelFileToPersonListSafe } from "@/utils/excel_utils";
 import { generateQRCodes } from "@/utils/qrcodeUtils";
 import { success, isFailure } from "@/utils/fp";
 import {
@@ -177,15 +177,15 @@ const CreateEventForm: FC = () => {
   // --- Core Processing Functions ---
 
   /**
-   * Parses Excel applicants file and extracts person data.
+   * Parses Excel applicants file and extracts person data using optimized direct integration.
    *
    * @param {File} file The Excel file containing applicant data
    * @returns {Promise<Result<NewPerson[], string>>} Success with person array or failure with error message
-   * @sideEffects Calls external file processing service
-   * @notes Uses Result pattern for consistent error handling
+   * @sideEffects Calls Excel processing utilities directly for optimal performance
+   * @notes Uses Result pattern for consistent error handling and direct integration eliminates service layer overhead
    */
   const parseApplicantsFile = useCallback(
-    async (file: File) => processApplicantsFile(file, ERROR_MESSAGES),
+    (file: File) => excelFileToPersonListSafe(file),
     []
   );
 
