@@ -17,7 +17,7 @@
  * - Foundation for user onboarding and feature discovery
  */
 
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { HeroSection } from "@/ui/layout";
 import logger from "@/lib/logger";
 
@@ -32,7 +32,9 @@ import logger from "@/lib/logger";
  * @publicAPI Root page component rendered by Next.js app router
  */
 const Home: FC = () => {
-  logger.important("Rendering Home Page");
+  // This will run during hydration on client-side
+  console.log("🔥 DIRECT CONSOLE LOG - Should always appear");
+  logger.important("🚀 LOGGER TEST - Should appear in browser only");
 
   return <HeroSection />;
 };
