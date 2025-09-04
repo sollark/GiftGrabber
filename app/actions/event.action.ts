@@ -8,7 +8,6 @@
  * - Wraps all DB operations for reliability.
  */
 
-import logger from "@/lib/logger";
 import { Event } from "@/database/models/event.model";
 import { Person } from "@/database/models/person.model";
 import { NewPerson } from "@/types/common.types";
@@ -47,19 +46,19 @@ export interface EventCreationData {
 export const createEvent = async (
   event: EventCreationData
 ): Promise<Result<boolean, string>> => {
-  logger.info("[CREATE] createEvent", {
+  console.info("[CREATE] createEvent", {
     name: event.name,
     timestamp: Date.now(),
   });
   const result = await withDatabaseResult(createEventInternal)(event);
   if (result._tag === "Success") {
-    logger.info("[CREATE:SUCCESS] createEvent", {
+    console.info("[CREATE:SUCCESS] createEvent", {
       name: event.name,
       timestamp: Date.now(),
     });
     return success(true);
   } else {
-    logger.error("[CREATE:FAILURE] createEvent", {
+    console.error("[CREATE:FAILURE] createEvent", {
       name: event.name,
       error: result.error,
       timestamp: Date.now(),
@@ -75,17 +74,17 @@ export const createEvent = async (
  */
 export const getEvent = withDatabase(
   async (eventId: string): Promise<Result<Event, string>> => {
-    logger.info("[FETCH] getEvent", { eventId, timestamp: Date.now() });
+    console.info("[FETCH] getEvent", { eventId, timestamp: Date.now() });
     const result = await getEventWithDetails(eventId);
     if (isSuccess(result)) {
-      logger.info("[FETCH:RESULT] getEvent", {
+      console.info("[FETCH:RESULT] getEvent", {
         eventId,
         found: !!result.value,
         timestamp: Date.now(),
       });
       return success(result.value);
     } else {
-      logger.error("[FETCH:ERROR] getEvent", {
+      console.error("[FETCH:ERROR] getEvent", {
         eventId,
         error: result.error,
         timestamp: Date.now(),
@@ -108,11 +107,11 @@ export interface EventDetails {
 
 export const getEventDetails = withDatabase(
   async (eventId: string): Promise<Result<EventDetails, string>> => {
-    logger.info("[FETCH] getEventDetails", { eventId, timestamp: Date.now() });
+    console.info("[FETCH] getEventDetails", { eventId, timestamp: Date.now() });
     const result = await getEventWithDetails(eventId);
     if (isSuccess(result) && result.value) {
       const { publicId, name, email } = result.value;
-      logger.info("[FETCH:RESULT] getEventDetails", {
+      console.info("[FETCH:RESULT] getEventDetails", {
         eventId,
         publicId,
         name,
@@ -121,14 +120,14 @@ export const getEventDetails = withDatabase(
       });
       return success({ publicId, name, email });
     } else if (result._tag === "Failure") {
-      logger.error("[FETCH:ERROR] getEventDetails", {
+      console.error("[FETCH:ERROR] getEventDetails", {
         eventId,
         error: result.error,
         timestamp: Date.now(),
       });
       return failure(result.error?.message || "Failed to fetch event details");
     } else {
-      logger.error("[FETCH:ERROR] getEventDetails", {
+      console.error("[FETCH:ERROR] getEventDetails", {
         eventId,
         error: "Unknown error",
         timestamp: Date.now(),
@@ -146,20 +145,20 @@ export const getEventDetails = withDatabase(
  */
 export const getEventApplicants = withDatabase(
   async (eventId: string): Promise<Result<Person[], string>> => {
-    logger.info("[FETCH] getEventApplicants", {
+    console.info("[FETCH] getEventApplicants", {
       eventId,
       timestamp: Date.now(),
     });
     const result = await fetchEventApplicants(eventId);
     if (isSuccess(result)) {
-      logger.info("[FETCH:RESULT] getEventApplicants", {
+      console.info("[FETCH:RESULT] getEventApplicants", {
         eventId,
         count: Array.isArray(result.value) ? result.value.length : undefined,
         timestamp: Date.now(),
       });
       return success(result.value);
     } else {
-      logger.error("[FETCH:ERROR] getEventApplicants", {
+      console.error("[FETCH:ERROR] getEventApplicants", {
         eventId,
         error: result.error,
         timestamp: Date.now(),
@@ -176,10 +175,10 @@ export const getEventApplicants = withDatabase(
  */
 export const getAllEvents = withDatabase(
   async (): Promise<Result<Event[], string>> => {
-    logger.info("[FETCH] getAllEvents", { timestamp: Date.now() });
+    console.info("[FETCH] getAllEvents", { timestamp: Date.now() });
     const result = await fetchAllEvents();
     if (isSuccess(result)) {
-      logger.info("[FETCH:RESULT] getAllEvents", {
+      console.info("[FETCH:RESULT] getAllEvents", {
         count: Array.isArray(result.value) ? result.value.length : undefined,
         timestamp: Date.now(),
       });
@@ -187,7 +186,7 @@ export const getAllEvents = withDatabase(
         result.value.map((event) => serializeForClient<Event>(event))
       );
     } else {
-      logger.error("[FETCH:ERROR] getAllEvents", {
+      console.error("[FETCH:ERROR] getAllEvents", {
         error: result.error,
         timestamp: Date.now(),
       });
@@ -205,20 +204,20 @@ export const getAllEvents = withDatabase(
 
 export const getGifts = withDatabase(
   async (eventId: string): Promise<Result<Gift[], string>> => {
-    logger.info("[FETCH] getGifts", {
+    console.info("[FETCH] getGifts", {
       eventId,
       timestamp: Date.now(),
     });
     const result = await fetchEventGifts(eventId);
     if (isSuccess(result)) {
-      logger.info("[FETCH:RESULT] getGifts", {
+      console.info("[FETCH:RESULT] getGifts", {
         eventId,
         count: Array.isArray(result.value) ? result.value.length : undefined,
         timestamp: Date.now(),
       });
       return success(result.value);
     } else {
-      logger.error("[FETCH:ERROR] getGifts", {
+      console.error("[FETCH:ERROR] getGifts", {
         eventId,
         error: result.error,
         timestamp: Date.now(),

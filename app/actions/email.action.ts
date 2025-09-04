@@ -1,5 +1,4 @@
 "use server";
-import logger from "@/lib/logger";
 /**
  * email.action.ts
  *
@@ -79,7 +78,7 @@ interface EmailParameters {
  */
 
 const logEmailSending = (recipient: string): void => {
-  logger.info(LOG_MESSAGES.SENDING(recipient), {
+  console.info(LOG_MESSAGES.SENDING(recipient), {
     recipient,
     timestamp: Date.now(),
   });
@@ -95,7 +94,7 @@ const logEmailSending = (recipient: string): void => {
  */
 
 const logEmailSuccess = (): void => {
-  logger.info(LOG_MESSAGES.SUCCESS, {
+  console.info(LOG_MESSAGES.SUCCESS, {
     timestamp: Date.now(),
   });
 };
@@ -112,7 +111,7 @@ const logEmailSuccess = (): void => {
  */
 
 const logEmailError = (error: unknown): void => {
-  logger.error(LOG_MESSAGES.FAILED, {
+  console.error(LOG_MESSAGES.FAILED, {
     error,
     timestamp: Date.now(),
   });
@@ -191,7 +190,7 @@ const sendEmailToRecipient = async (
 const sendQRCodesToOwner = async (
   data: EmailPayload
 ): Promise<Result<{ to: string }, Error>> => {
-  logger.info("[EMAIL] sendQRCodesToOwner", {
+  console.info("[EMAIL] sendQRCodesToOwner", {
     to: data.to,
     timestamp: Date.now(),
   });
@@ -200,7 +199,7 @@ const sendQRCodesToOwner = async (
   try {
     const emailParameters = createEmailParameters(data);
     await sendEmailToRecipient(emailParameters);
-    logger.info("[EMAIL:RESULT] sendQRCodesToOwner", {
+    console.info("[EMAIL:RESULT] sendQRCodesToOwner", {
       to: data.to,
       status: "sent",
       timestamp: Date.now(),
@@ -208,7 +207,7 @@ const sendQRCodesToOwner = async (
     logEmailSuccess();
     return success({ to: data.to });
   } catch (error) {
-    logger.error("[EMAIL:RESULT] sendQRCodesToOwner", {
+    console.error("[EMAIL:RESULT] sendQRCodesToOwner", {
       to: data.to,
       status: "failed",
       error,

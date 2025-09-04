@@ -1,5 +1,4 @@
 "use server";
-import logger from "@/lib/logger";
 import { Order } from "@/database/models/order.model";
 import { withDatabase } from "@/lib/withDatabase";
 import {
@@ -35,7 +34,7 @@ const ERROR_MESSAGES = {
  * Logs order creation success using logger
  */
 const logOrderCreation = (order: Order): void => {
-  logger.info(LOG_MESSAGES.NEW_ORDER_CREATED(order), {
+  console.info(LOG_MESSAGES.NEW_ORDER_CREATED(order), {
     publicId: order.publicId,
     timestamp: Date.now(),
   });
@@ -45,7 +44,7 @@ const logOrderCreation = (order: Order): void => {
  * Logs order-related errors using logger
  */
 const logOrderError = (message: string, error?: unknown): void => {
-  logger.error(message, {
+  console.error(message, {
     error,
     timestamp: Date.now(),
   });
@@ -55,7 +54,7 @@ const logOrderError = (message: string, error?: unknown): void => {
  * Logs order retrieval start using logger
  */
 const logOrderRetrieval = (): void => {
-  logger.info(LOG_MESSAGES.GET_ORDER_START, {
+  console.info(LOG_MESSAGES.GET_ORDER_START, {
     timestamp: Date.now(),
   });
 };
@@ -71,7 +70,7 @@ const makeOrderInternal = async (
   confirmationRQCode: string
 ): Promise<Result<string, Error>> => {
   try {
-    logger.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
+    console.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
 
     const orderData: OrderCreationPublicData = {
       applicantPublicId,
@@ -119,12 +118,12 @@ export const makeOrder = async (
 export const getOrderInternal = async (
   orderPublicId: string
 ): Promise<Result<Record<string, unknown>, Error>> => {
-  logger.info("[FETCH] getOrderInternal", {
+  console.info("[FETCH] getOrderInternal", {
     orderPublicId,
     timestamp: Date.now(),
   });
   try {
-    logger.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
+    console.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
     const orderResult = await findOrderByPublicId(orderPublicId);
 
     if (orderResult._tag === "Failure") {
@@ -139,7 +138,7 @@ export const getOrderInternal = async (
       return failure(err);
     }
 
-    logger.info("[FETCH:RESULT] getOrderInternal", {
+    console.info("[FETCH:RESULT] getOrderInternal", {
       orderPublicId,
       order: orderResult.value
         ? {
@@ -173,7 +172,7 @@ const confirmOrderInternalAction = async (
   orderPublicId: string
 ): Promise<Result<Record<string, unknown>, Error>> => {
   try {
-    logger.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
+    console.info(LOG_MESSAGES.USING_PUBLIC_ID, { timestamp: Date.now() });
 
     const result = await confirmOrderInternal(orderPublicId);
 

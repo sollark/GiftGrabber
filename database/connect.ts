@@ -24,7 +24,6 @@ import GiftModel from "./models/gift.model";
 import OrderModel from "./models/order.model";
 import PersonModel from "./models/person.model";
 import { enableQueryPerformanceMonitoring } from "./performance";
-import logger from "@/lib/logger";
 
 const mongoUrl = process.env.MONGO_URL;
 
@@ -57,7 +56,7 @@ export const connectToDatabase = async () => {
   }
 
   if (mongoose.connection.readyState) {
-    logger.info("Already connected to MongoDB");
+    console.info("Already connected to MongoDB");
     return;
   }
 
@@ -81,9 +80,9 @@ export const connectToDatabase = async () => {
     EventModel.init();
     OrderModel.init();
 
-    logger.info("Connected to MongoDB with performance monitoring enabled");
+    console.info("Connected to MongoDB with performance monitoring enabled");
   } catch (error) {
-    logger.error(error);
+    console.error(error);
   }
 
   return;

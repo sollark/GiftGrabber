@@ -33,7 +33,6 @@
 import { Result, success, failure } from "@/utils/fp";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
-import logger from "@/lib/logger";
 import { OrderCreationPublicData } from "@/types/common.types";
 import {
   OrderService as DatabaseOrderService,
@@ -194,7 +193,7 @@ export const confirmOrderInternal = async (
 
     // TODO: Implement DatabaseOrderService.confirm method
     // For now, return the order as-is
-    logger.info(
+    console.info(
       "confirmOrderInternal: DatabaseOrderService.confirm not yet implemented"
     );
     return success(order);
@@ -216,7 +215,7 @@ export const getAllOrdersInternal = async (): Promise<
 > => {
   try {
     // TODO: Implement DatabaseOrderService.findAll method
-    logger.info(
+    console.info(
       "getAllOrdersInternal: DatabaseOrderService.findAll not yet implemented"
     );
     return success([]);
