@@ -1,7 +1,5 @@
 "use client";
 /**
- * @file fp-contexts.tsx
- *
  * Purpose: Provides a functional programming abstraction layer for React context providers, enabling immutable state management, action-based updates, and composable context patterns.
  *
  * Main Responsibilities:
@@ -29,6 +27,7 @@ import {
   objectUtils,
   memoize,
 } from "@/utils/fp";
+import logger from "@/lib/logger";
 import { useSafeContext } from "@/app/hooks/useSafeContext";
 
 // Helper type for Maybe context value
@@ -163,8 +162,8 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
   const enhancedReducer = (state: S, action: A): S => {
     if (debugMode) {
       console.group(`🔄 ${name} Action: ${action.type}`);
-      console.log("Previous State:", state);
-      console.log("Action:", action);
+      logger.log("Previous State:", state);
+      logger.log("Action:", action);
     }
 
     try {
@@ -196,7 +195,7 @@ export function createFunctionalContext<S, A extends FunctionalAction>(
         const finalState = debugMode ? Object.freeze(newState) : newState;
 
         if (debugMode) {
-          console.log("New State:", finalState);
+          logger.log("New State:", finalState);
           console.groupEnd();
         }
 
@@ -419,8 +418,8 @@ export const loggingMiddleware = <S extends any, A extends FunctionalAction>(
 ): void => {
   if (process.env.NODE_ENV === "development") {
     console.group(`📝 Action: ${action.type}`);
-    console.log("Payload:", action.payload);
-    console.log("Current State:", state);
+    logger.log("Payload:", action.payload);
+    logger.log("Current State:", state);
     console.groupEnd();
   }
 };

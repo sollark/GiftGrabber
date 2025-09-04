@@ -19,6 +19,8 @@
  */
 
 import nodemailer from "nodemailer";
+import { EMAIL_CONFIG } from "@/config/emailConfig";
+import logger from "./logger";
 
 /**
  * Email attachment structure for nodemailer
@@ -39,11 +41,6 @@ interface EmailPayload {
   html: string;
   attachments: EmailAttachment[];
 }
-
-/**
- * SMTP configuration for email transport
- */
-import { EMAIL_CONFIG } from "@/config/emailConfig";
 
 /**
  * Creates and configures nodemailer SMTP transporter with environment-based settings
@@ -88,7 +85,7 @@ const createEmailTransporter = () => {
  * @publicAPI Core email sending function used by email actions and services
  */
 export const sendEmail = async (data: EmailPayload) => {
-  console.log("Sending email...");
+  logger.info("sendEmail to:", data.to);
 
   const transporter = createEmailTransporter();
 

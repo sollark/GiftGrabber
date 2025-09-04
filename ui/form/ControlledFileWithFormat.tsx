@@ -26,6 +26,7 @@ import FormatDetectionInfo from "@/ui/data-display/FormatDetectionInfo";
 import { ExcelFormatType } from "@/types/excel.types";
 import { parseExcelFile } from "@/utils/excel_utils";
 import { useErrorHandler } from "@/components/ErrorBoundary";
+import logger from "@/lib/logger";
 
 /**
  * Format information structure for Excel file detection results
@@ -121,12 +122,14 @@ const ControlledFileWithFormat: React.FC<ControlledFileWithFormatProps> = memo(
         setIsDetecting(true);
 
         try {
+          logger.info("Starting format detection for file:", file.name);
           // Parse Excel file with auto-detection settings
           const detectionResult = await parseExcelFile(file, {
             language: "auto",
             skipEmptyRows: true,
             validateRequired: false,
           });
+          logger.info("Format detection result:", detectionResult);
 
           // Build format information object
           const formatUpdate: FormatInfo = {
@@ -175,6 +178,7 @@ const ControlledFileWithFormat: React.FC<ControlledFileWithFormatProps> = memo(
      */
     useEffect(() => {
       if (file instanceof File) {
+        logger.info("File selected for format detection:", file.name);
         void detectFileFormat(file);
       }
     }, [file, detectFileFormat]);

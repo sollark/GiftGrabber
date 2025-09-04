@@ -10,7 +10,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "clear-db": "node scripts/clearDatabase.js",
-    "clear-db:force": "node scripts/clearDatabase.js --force"
+    "clear-db:force": "node scripts/clearDatabase.js --force",
+    "clear-logs": "node scripts/clearLogs.js",
+    "clear-logs:force": "node scripts/clearLogs.js --force"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

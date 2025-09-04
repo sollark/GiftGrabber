@@ -5,6 +5,7 @@
  */
 
 import React, { useMemo, useCallback } from "react";
+import logger from "@/lib/logger";
 import {
   Result,
   Maybe,
@@ -260,7 +261,7 @@ export function useOrderCreationFlow(eventId: string) {
         localStorage.removeItem("orderDraft");
       }
       // Would redirect to success page in real app
-      console.log(
+      logger.info(
         `Order created: ${result.value.publicId || result.value._id}`
       );
     } else {
@@ -399,7 +400,7 @@ const checkGiftAvailability = async (
  * Mock function for order confirmation
  */
 const sendOrderConfirmation = async (order: any): Promise<void> => {
-  console.log(`Sending confirmation for order ${order.publicId || order._id}`);
+  logger.info(`Sending confirmation for order ${order.publicId || order._id}`);
 };
 
 /**

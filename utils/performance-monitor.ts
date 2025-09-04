@@ -8,6 +8,8 @@
  * 4. Memory usage and leaks
  */
 
+import logger from "@/lib/logger";
+
 interface PerformanceMetrics {
   bundleLoadTime: number;
   componentRenderTime: number;
@@ -175,7 +177,7 @@ class PerformanceMonitor {
       this.measureMemoryUsage();
     }, 10000); // Every 10 seconds
 
-    console.log("Performance monitoring started");
+    logger.info("Performance monitoring started");
   }
 
   // Stop monitoring and cleanup

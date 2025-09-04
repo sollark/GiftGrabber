@@ -14,6 +14,7 @@
  */
 
 import { FunctionalAction, ContextMiddleware } from "@/utils/fp-contexts";
+import logger from "@/lib/logger";
 
 /**
  * loggingMiddleware (Public API)
@@ -30,8 +31,8 @@ export const loggingMiddleware = <S, A extends FunctionalAction>(
   return (action: A, state: S): A => {
     if (process.env.NODE_ENV === "development") {
       const prefix = `[${contextName || "Context"}]`;
-      console.log(`${prefix} Action:`, action);
-      console.log(`${prefix} State:`, state);
+      logger.log(`${prefix} Action:`, action);
+      logger.log(`${prefix} State:`, state);
     }
 
     return action;

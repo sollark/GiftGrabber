@@ -48,6 +48,7 @@
  */
 
 import { NewPerson } from "@/types/common.types";
+import logger from "@/lib/logger";
 import {
   ExcelFormatType,
   ExcelImportFormat,
@@ -690,6 +691,7 @@ export async function parseExcelFile(
   file: File,
   config: ExcelImportConfig = {}
 ): Promise<ExcelImportResult> {
+  logger.log("parseExcelFile 1");
   // Check cache for previously detected format
   const cachedResult = formatDetectionCache.get(file);
   const formatResult =
@@ -697,18 +699,25 @@ export async function parseExcelFile(
       ? cachedResult
       : await detectFormatFromFile(file, config);
 
+  logger.log("parseExcelFile 2");
+
   if (!cachedResult) {
     formatDetectionCache.set(file, formatResult);
   }
+
+  logger.log("parseExcelFile 3");
 
   // Import and process Excel data
   const { convertExcelToJson } = await import("@/utils/excelToJson");
   const jsonData = await convertExcelToJson(file);
 
+  logger.log("parseExcelFile 4");
+
   // Get header mappings for data conversion
   const headers = Object.keys(jsonData[0]);
   const headerMappings = await mapHeaders(headers, config.language);
 
+  logger.log("parseExcelFile 5");
   // Process all rows with conversion, validation, and error handling
   const { convertedData, validRecords, errors } = await processExcelRows(
     jsonData,
@@ -717,6 +726,7 @@ export async function parseExcelFile(
     config
   );
 
+  logger.log("parseExcelFile 6");
   return {
     formatType: formatResult.formatType,
     data: convertedData,

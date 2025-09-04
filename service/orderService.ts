@@ -33,13 +33,12 @@
 import { Result, success, failure } from "@/utils/fp";
 import { Order } from "@/database/models/order.model";
 import { Person } from "@/database/models/person.model";
-// Removed unused direct model imports; use service layer only
+import logger from "@/lib/logger";
 import { OrderCreationPublicData } from "@/types/common.types";
 import {
   OrderService as DatabaseOrderService,
   PersonService,
 } from "./databaseService";
-import { populateOrder } from "./mongoPopulationService";
 import { Types } from "mongoose";
 
 // ============================================================================
@@ -195,7 +194,7 @@ export const confirmOrderInternal = async (
 
     // TODO: Implement DatabaseOrderService.confirm method
     // For now, return the order as-is
-    console.log(
+    logger.info(
       "confirmOrderInternal: DatabaseOrderService.confirm not yet implemented"
     );
     return success(order);
@@ -217,7 +216,7 @@ export const getAllOrdersInternal = async (): Promise<
 > => {
   try {
     // TODO: Implement DatabaseOrderService.findAll method
-    console.log(
+    logger.info(
       "getAllOrdersInternal: DatabaseOrderService.findAll not yet implemented"
     );
     return success([]);

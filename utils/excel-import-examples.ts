@@ -4,6 +4,7 @@
  * All examples are for documentation and testing purposes only.
  */
 
+import logger from "@/lib/logger";
 import {
   parseExcelFile,
   getFormatDisplayName,
@@ -32,9 +33,9 @@ export async function importExcelWithAutoDetection(file: File) {
       validateRequired: true,
     });
 
-    console.log(`Detected format: ${result.formatType}`);
-    console.log(`Detected language: ${result.language}`);
-    console.log(`Valid records: ${result.validRecords}/${result.totalRecords}`);
+    logger.info(`Detected format: ${result.formatType}`);
+    logger.info(`Detected language: ${result.language}`);
+    logger.info(`Valid records: ${result.validRecords}/${result.totalRecords}`);
 
     if (result.errors) {
       console.warn("Import warnings:", result.errors);
@@ -65,7 +66,7 @@ export async function importExcelWithSpecificLanguage(
 
   // Get localized format name
   const formatName = await getFormatDisplayName(result.formatType, language);
-  console.log(`Format: ${formatName}`);
+  logger.info(`Format: ${formatName}`);
 
   return result;
 }
@@ -78,39 +79,39 @@ export async function processExcelByFormat(file: File) {
 
   switch (result.formatType) {
     case ExcelFormatType.COMPLETE_EMPLOYEE:
-      console.log("Processing complete employee data...");
+      logger.info("Processing complete employee data...");
       result.data.forEach((record) => {
         if (isCompleteEmployeeFormat(record)) {
-          console.log(
-            `Employee: ${record.firstName} ${record.lastName} (ID: ${record.id}, #${record.employee_number})`
+          logger.info(
+            `Employee: ${record.firstName} ${record.lastName} (${record.employee_number})`
           );
         }
       });
       break;
 
     case ExcelFormatType.BASIC_NAME:
-      console.log("Processing basic name data...");
+      logger.info("Processing basic name data...");
       result.data.forEach((record) => {
         if (isBasicNameFormat(record)) {
-          console.log(`Person: ${record.firstName} ${record.lastName}`);
+          logger.info(`Person: ${record.firstName} ${record.lastName}`);
         }
       });
       break;
 
     case ExcelFormatType.EMPLOYEE_ID_ONLY:
-      console.log("Processing worker ID list...");
+      logger.info("Processing worker ID list...");
       result.data.forEach((record) => {
         if (isWorkerIdOnlyFormat(record)) {
-          console.log(`Worker ID: ${record.worker_id}`);
+          logger.info(`Worker ID: ${record.worker_id}`);
         }
       });
       break;
 
     case ExcelFormatType.PERSON_ID_ONLY:
-      console.log("Processing person ID list...");
+      logger.info("Processing person ID list...");
       result.data.forEach((record) => {
         if (isPersonIdOnlyFormat(record)) {
-          console.log(`Person ID: ${record.person_id_number}`);
+          logger.info(`Person ID: ${record.person_id_number}`);
         }
       });
       break;
@@ -135,12 +136,12 @@ export async function showExpectedHeaders() {
   ];
 
   for (const format of formats) {
-    console.log(`\n${format.toUpperCase()}:`);
+    logger.info(`\n${format.toUpperCase()}:`);
 
     for (const lang of languages) {
       const headers = await getExpectedHeaders(format, lang);
       const formatName = await getFormatDisplayName(format, lang);
-      console.log(`  ${lang}: ${formatName} - [${headers.join(", ")}]`);
+      logger.info(`  ${lang}: ${formatName} - [${headers.join(", ")}]`);
     }
   }
 }
@@ -160,13 +161,13 @@ export async function importWithErrorHandling(
     });
 
     if (result.errors && result.errors.length > 0) {
-      console.log("Import completed with warnings:");
+      logger.warn("Import completed with warnings:");
       result.errors.forEach((error, index) => {
-        console.log(`  ${index + 1}. ${error}`);
+        logger.warn(`  ${index + 1}. ${error}`);
       });
     }
 
-    console.log(`Successfully imported ${result.validRecords} records`);
+    logger.info(`Successfully imported ${result.validRecords} records`);
     return result;
   } catch (error) {
     if (error instanceof Error) {
@@ -174,14 +175,14 @@ export async function importWithErrorHandling(
 
       // Error messages are already localized based on detected language
       if (error.message.includes("זמינות") || error.message.includes("ריק")) {
-        console.log("Hebrew error detected");
+        logger.warn("Hebrew error detected");
       } else if (
         error.message.includes("Доступные") ||
         error.message.includes("пустой")
       ) {
-        console.log("Russian error detected");
+        logger.warn("Russian error detected");
       } else {
-        console.log("English error detected");
+        logger.warn("English error detected");
       }
     }
     throw error;
@@ -205,18 +206,18 @@ export async function importWithPerformanceMonitoring(file: File) {
     const processingTime = endTime - startTime;
 
     // Performance metrics
-    console.log("Performance Metrics:");
-    console.log(`- File size: ${(file.size / 1024).toFixed(2)} KB`);
-    console.log(`- Processing time: ${processingTime.toFixed(2)}ms`);
-    console.log(`- Records processed: ${result.totalRecords}`);
-    console.log(`- Valid records: ${result.validRecords}`);
-    console.log(
+    logger.info("Performance Metrics:");
+    logger.info(`- File size: ${(file.size / 1024).toFixed(2)} KB`);
+    logger.info(`- Processing time: ${processingTime.toFixed(2)}ms`);
+    logger.info(`- Records processed: ${result.totalRecords}`);
+    logger.info(`- Valid records: ${result.validRecords}`);
+    logger.info(
       `- Speed: ${(result.totalRecords / (processingTime / 1000)).toFixed(
         2
       )} records/second`
     );
-    console.log(`- Detected format: ${result.formatType}`);
-    console.log(`- Detected language: ${result.language}`);
+    logger.info(`- Detected format: ${result.formatType}`);
+    logger.info(`- Detected language: ${result.language}`);
 
     return result;
   } catch (error) {
@@ -237,7 +238,7 @@ export async function processBatchFiles(files: File[]) {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    console.log(`Processing file ${i + 1}/${files.length}: ${file.name}`);
+    logger.info(`Processing file ${i + 1}/${files.length}: ${file.name}`);
 
     try {
       const result = await parseExcelFile(file, {
@@ -265,7 +266,7 @@ export async function processBatchFiles(files: File[]) {
 
   // Summary
   const successful = results.filter((r) => r.success).length;
-  console.log(
+  logger.info(
     `\nBatch processing complete: ${successful}/${files.length} files processed successfully`
   );
 

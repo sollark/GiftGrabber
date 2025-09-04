@@ -6,6 +6,7 @@
  */
 
 import mongoose from "mongoose";
+import logger from "@/lib/logger";
 
 // Query performance monitoring
 const SLOW_QUERY_THRESHOLD = 100; // milliseconds
@@ -31,7 +32,7 @@ const queryPerformancePlugin = function (schema: mongoose.Schema) {
         });
       }
       if (process.env.NODE_ENV === "development") {
-        console.log(`📊 Query Performance:`, {
+        logger.info(`📊 Query Performance:`, {
           model: (this as any).model?.modelName,
           operation: (this as any).op || "query",
           duration: `${duration}ms`,
@@ -47,7 +48,7 @@ const queryPerformancePlugin = function (schema: mongoose.Schema) {
  */
 export const enableQueryPerformanceMonitoring = () => {
   mongoose.plugin(queryPerformancePlugin);
-  console.log("✅ Query performance monitoring enabled");
+  logger.info("✅ Query performance monitoring enabled");
 };
 
 /**
