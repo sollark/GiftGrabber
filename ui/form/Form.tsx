@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, ReactElement, ReactNode, memo } from "react";
+import { FC, ReactElement, ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { AccentButton as StyledButton } from "../primitives";
 

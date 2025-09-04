@@ -5,7 +5,6 @@
  *
  * Responsibilities:
  * - Extracts QR code data from DOM canvas elements and converts to base64 format or Buffer
- * - Validates QR code DOM references for availability
  * - Handles QR code processing for email attachments, event access, and owner verification
  * - Implements functional error handling for QR code generation failures
  * - Promotes maintainable, readable, and type-safe QR code operations
@@ -99,21 +98,4 @@ export const generateQRCodes = async (
   } catch (error) {
     return failure(QR_CODE_ERRORS.QR_CODE_ERROR);
   }
-};
-
-/**
- * Validates QR code DOM references for availability and accessibility.
- * Pure function, does not access DOM.
- * @param eventQRCodeRef - React ref to event QR code DOM container
- * @param ownerQRCodeRef - React ref to owner QR code DOM container
- * @returns {Result<boolean, string>} indicating validation success or error message
- */
-export const validateQRCodeRefs = (
-  eventQRCodeRef: React.RefObject<HTMLDivElement>,
-  ownerQRCodeRef: React.RefObject<HTMLDivElement>
-): Result<boolean, string> => {
-  if (!eventQRCodeRef.current || !ownerQRCodeRef.current) {
-    return failure("QR code references are not available");
-  }
-  return success(true);
 };
