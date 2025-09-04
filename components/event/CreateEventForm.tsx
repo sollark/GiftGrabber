@@ -52,6 +52,7 @@ import { sendMailToClient } from "@/service/mailService";
 import { useEventContext } from "@/app/contexts/EventContext";
 import { useApplicantContext } from "@/app/contexts/ApplicantContext";
 import { withPerformance } from "@/hooks/usePerformanceOptimization";
+import logger from "@/lib/logger";
 
 /**
  * Error state structure for consolidated error management
@@ -74,6 +75,8 @@ interface ErrorState {
  */
 
 const CreateEventForm: FC = () => {
+  logger.important("Rendering CreateEventForm Component");
+
   // --- Enhanced Error Tracking ---
   const { handleError, errorCount, lastError, clearErrors } =
     useErrorHandler("CreateEventForm");

@@ -17,10 +17,11 @@
  * - Entry point for Excel import and event configuration workflows
  */
 
-import CreateEventForm from "@/components/event/CreateEventForm";
-import { Section } from "@/ui/layout";
 import { FC } from "react";
+import { Section } from "@/ui/layout";
+import CreateEventForm from "@/components/event/CreateEventForm";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import logger from "@/lib/logger";
 
 /**
  * Event creation page component with form and layout structure
@@ -32,6 +33,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
  * @publicAPI Next.js page component rendered by app router at /create route
  */
 const CreatePage: FC = () => {
+  logger.important("Rendering Create Event Page");
+
   return (
     <Section>
       <Section.Title>Create New Event</Section.Title>

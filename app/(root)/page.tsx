@@ -17,8 +17,9 @@
  * - Foundation for user onboarding and feature discovery
  */
 
-import { HeroSection } from "@/ui/layout";
 import { FC } from "react";
+import { HeroSection } from "@/ui/layout";
+import logger from "@/lib/logger";
 
 /**
  * Home page component providing the main landing interface
@@ -31,6 +32,8 @@ import { FC } from "react";
  * @publicAPI Root page component rendered by Next.js app router
  */
 const Home: FC = () => {
+  logger.important("Rendering Home Page");
+
   return <HeroSection />;
 };
 
